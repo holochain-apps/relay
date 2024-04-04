@@ -1,2 +1,3 @@
-# volla-chat
-Chat app for the Volla ecosystem!
+# Volla Messenger
+
+Using Tauri + Skeleton + Svelte
