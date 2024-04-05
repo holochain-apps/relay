@@ -1,20 +1,24 @@
 <script lang="ts">
-	import Greet from '$lib/Greet.svelte';
+	import Header from '$lib/Header.svelte';
 </script>
+
+<Header>
+	<img src="/logo.png" alt="Logo" />
+</Header>
 
 <div class="container h-full mx-auto flex justify-center items-center">
 	<div class="space-y-5">
-		<h1 class="h1">Skeleton + Tauri = ❤️</h1>
-		<Greet />
-		<section class="space-y-4">
+		<h1 class="h1">Relay</h1>
+		<a class="anchor" href="/conversations">
+			Conversations
+		</a>
+		<!-- <section class="space-y-4">
 			<h2 class="h2">Learn More</h2>
 			<dl class="list-dl">
 				<div>
 					<span class="badge-icon variant-soft-secondary p-4"> ➜ </span>
 					<span class="flex-auto">
-						<a class="anchor" href="https://kit.svelte.dev/docs/introduction" target="_blank">
-							Official SvelteKit Documentation &rarr;
-						</a>
+
 					</span>
 				</div>
 				<div>
@@ -46,6 +50,6 @@
 					</span>
 				</div>
 			</dl>
-		</section>
+		</section>  -->
 	</div>
 </div>

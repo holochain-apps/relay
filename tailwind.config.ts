@@ -2,6 +2,7 @@ import { join } from 'path';
 import type { Config } from 'tailwindcss';
 import { skeleton } from '@skeletonlabs/tw-plugin';
 import forms from '@tailwindcss/forms';
+import { vollaTheme } from './volla-theme'
 
 export default {
 	darkMode: 'class',
@@ -21,6 +22,9 @@ export default {
 						name: 'skeleton',
 						enhancements: true
 					}
+				],
+				custom: [
+					vollaTheme
 				]
 			}
 		})
