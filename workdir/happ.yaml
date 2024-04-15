@@ -1,0 +1,18 @@
+---
+manifest_version: "1"
+name: relay
+description: ~
+roles:
+  - name: relay
+    provisioning:
+      strategy: create
+      deferred: false
+    dna:
+      bundled: "../dnas/snapmail/workdir/dSnapmail.dna"
+      modifiers:
+        network_seed: ~
+        properties: ~
+        origin_time: ~
+        quantum_time: ~
+      version: ~
+      clone_limit: 0

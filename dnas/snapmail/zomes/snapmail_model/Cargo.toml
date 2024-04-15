@@ -1,0 +1,30 @@
+[package]
+name = "snapmail_model"
+version.workspace = true
+rust-version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "snapmail_model"
+crate-type = [ "cdylib", "rlib" ]
+
+[dependencies]
+shrinkwraprs = "=0.3.0"
+strum = "=0.19"
+strum_macros = "=0.19"
+derive_more = "=0.99.17"
+bincode = "=1.3.3"
+base64 = {version = "0.13"}
+
+tracing = { version = "0.1", default-features = false }
+
+serde.workspace = true
+hdi.workspace = true
+
+
+#[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+#thiserror = "1.0.24"
+#holochain_serialized_bytes.workspace = true
+#holochain.workspace = true
+#holochain_util.workspace = true
+#holochain_conductor_api.workspace = true
