@@ -22,7 +22,11 @@ interface Message {
   text: string;
 }
 
-interface ChatStore {
-  messages: Message[];
-  addMessage: (message: Message) => void;
+// interface ChatStore {
+//   messages: Message[];
+//   addMessage: (message: Message) => void;
+// }
+
+interface User {
+  name: string;
 }

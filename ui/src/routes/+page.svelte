@@ -1,5 +1,23 @@
 <script lang="ts">
+	import { getContext } from 'svelte';
+	import { type Writable } from "svelte/store";
 	import Header from '$lib/Header.svelte';
+  import type { UserStore } from "$store/User";
+
+	// Retrieve user store from context
+	const userStore: UserStore = getContext('user');
+
+	$: userName = userStore.name
+
+	let newUserName = "";
+	function submitName(e: MouseEvent) {
+    newUserName = newUserName.trim();
+		if (newUserName) {
+      userStore.login(newUserName)
+      newUserName = ''; // Clear input after sending
+    }
+    e.preventDefault();
+  }
 </script>
 
 <Header>
@@ -9,47 +27,15 @@
 <div class="container mx-auto flex justify-center items-center">
 	<div class="space-y-5">
 		<h1 class="h1">Relay</h1>
-		<a class="anchor" href="/conversations">
-			Conversations
-		</a>
-		<!-- <section class="space-y-4">
-			<h2 class="h2">Learn More</h2>
-			<dl class="list-dl">
-				<div>
-					<span class="badge-icon variant-soft-secondary p-4"> ➜ </span>
-					<span class="flex-auto">
-
-					</span>
-				</div>
-				<div>
-					<span class="badge-icon variant-soft-secondary p-4"> ➜ </span>
-					<span class="flex-auto">
-						<a class="anchor" href="https://www.skeleton.dev" target="_blank">
-							Official Skeleton Documentation &rarr;
-						</a>
-					</span>
-				</div>
-				<div>
-					<span class="badge-icon variant-soft-secondary p-4"> ➜ </span>
-					<span class="flex-auto">
-						<a
-							class="anchor"
-							href="https://tauri.app/v1/guides/development/development-cycle"
-							target="_blank"
-						>
-							Official Tauri Documentation &rarr;
-						</a>
-					</span>
-				</div>
-				<div>
-					<span class="badge-icon variant-soft-secondary p-4"> ➜ </span>
-					<span class="flex-auto">
-						<a class="anchor" href="https://doc.rust-lang.org/book/" target="_blank"
-							>The Rust Book &rarr;</a
-						>
-					</span>
-				</div>
-			</dl>
-		</section>  -->
+		{#if $userName}
+			<p>Welcome, {$userName}!</p>
+			<a class="anchor" href="/conversations">
+				Conversations
+			</a>
+		{:else}
+			<p>Create an Account</p>
+			<input type="text" placeholder="Enter your display name" bind:value={newUserName} />
+			<button on:click={submitName}>Submit</button>
+		{/if}
 	</div>
 </div>
