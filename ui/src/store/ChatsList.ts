@@ -1,18 +1,19 @@
 // src/stores/ChatRoomsStore.ts
 import { writable, get, type Subscriber, type Invalidator, type Unsubscriber, type Writable } from 'svelte/store';
-import { ChatStore } from './Chat';
+import { ChatStore } from './ChatStore';
+import { RelayClient } from '$store/RelayClient'
 
 export class ChatsListStore {
   private chats: Writable<ChatStore[]>;
   public subscribe: (this: void, run: Subscriber<ChatStore[]>, invalidate?: Invalidator<ChatStore[]>) => Unsubscriber;
 
-  constructor() {
+  constructor(public client: RelayClient) {
     this.chats = writable([]);
     this.subscribe = this.chats.subscribe;
   }
 
   addChat(name: string): void {
-    const newChat = new ChatStore(String(get(this.chats).length + 1), name);
+    const newChat = new ChatStore(this.client, String(get(this.chats).length + 1), name);
     this.chats.update(chats => [...chats, newChat]);
   }
 

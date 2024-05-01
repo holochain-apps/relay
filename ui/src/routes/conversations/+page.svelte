@@ -14,6 +14,7 @@
 </script>
 
 <Header>
+  <a class='text-4xl mr-5' href="/">⟨</a>
 	<h1>Inbox</h1>
 </Header>
 

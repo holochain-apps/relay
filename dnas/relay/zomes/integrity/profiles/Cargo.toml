@@ -1,0 +1,12 @@
+[package]
+authors = ["guillem.cordoba@gmail.com"]
+edition = "2018"
+name = "profiles_integrity"
+version = "0.0.1"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "profiles_integrity"
+
+[dependencies]
+hc_zome_profiles_integrity = { git = "https://github.com/holochain-open-dev/profiles", branch = "for-hdk-v0.3.0-beta-dev.33" }

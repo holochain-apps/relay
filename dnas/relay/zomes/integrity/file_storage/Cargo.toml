@@ -1,0 +1,14 @@
+[package]
+name = "file_storage_integrity"
+version = "0.2.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "file_storage_integrity"
+
+[dependencies]
+hc_zome_file_storage_integrity = { git = "https://github.com/holochain-open-dev/file-storage", branch = "for-hdk-0.3.0-beta-dev" }
+hdi = { workspace = true }
+
+serde = { workspace = true }

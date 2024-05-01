@@ -1,46 +1,45 @@
-[workspace]
-resolver = "2"
-members = [
-  "dnas/snapmail/zomes/snapmail_model",
-  "dnas/snapmail/zomes/snapmail"
-]
-
-[workspace.package]
-version = "0.1.0"
-rust-version = "1.74.0"
-edition = "2021"
-
-[workspace.dependencies]
-serde = { version = "=1.0.197", default-features = false }
-hdi = { version = "=0.4.0-beta-dev.30", default-features = false }
-hdk = { version = "=0.3.0-beta-dev.34", default-features = false }
-holochain = "0.3.0-beta-dev.44"
-
-zome_utils = { git = "https://github.com/ddd-mtl/zome-utils", branch = "hdk-3.0" }
-
-#holochain = { version = "=0.3.0-beta-dev.40" }
-#holochain_conductor_api = { version = "^0.3.0-beta-dev.39", default-features = false }
-#holochain_util = { version = "^0.3.0-beta-dev.5", default-features = false }
-#holochain_serialized_bytes = "=0.0.53"
-
-# [workspace.dependencies.snapmail]
-# path = "dnas/snapmail/zomes/snapmail"
-
-# [workspace.dependencies.snapmail_integrity]
-# path = "dnas/snapmail/zomes/snapmail_model"
-
 [profile.dev]
 lto = false
 opt-level = 0
 overflow-checks = false
 
-#[profile.release.package.snapmail_sweettest]
-#opt-level = 0
-#overflow-checks = false
-
 [profile.release]
+lto = true
 opt-level = "z"
-lto = true # link time optimization
 
 [profile.release.build-override]
 opt-level = "z"
+
+[workspace]
+
+members = ["dnas/*/zomes/coordinator/*", "dnas/*/zomes/integrity/*"]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.74.0"
+version = "0.0.1"
+
+[workspace.dependencies]
+hdi = "=0.4.0-beta-dev.30"
+hdk = "=0.3.0-beta-dev.34"
+holochain = "0.3.0-beta-dev.44"
+serde = "1.0"
+
+[workspace.dependencies.relay]
+path = "dnas/relay/zomes/coordinator/relay"
+
+[workspace.dependencies.relay_integrity]
+path = "dnas/relay/zomes/integrity/relay"
+
+[workspace.dependencies.profiles]
+path = "dnas/relay/zomes/coordinator/profiles"
+
+[workspace.dependencies.profiles_integrity]
+path = "dnas/relay/zomes/integrity/profiles"
+
+[workspace.dependencies.file_storage]
+path = "dnas/relay/zomes/coordinator/file_storage"
+
+[workspace.dependencies.file_storage_integrity]
+path = "dnas/relay/zomes/integrity/file_storage"

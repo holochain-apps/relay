@@ -1,9 +1,10 @@
 import { writable, get, type Writable } from 'svelte/store';
+import { RelayClient } from '$store/RelayClient'
 
 export class ChatStore {
   private chat: Writable<Chat>;
 
-  constructor(id: string, name: string) {
+  constructor( public client: RelayClient, id: string, name: string) {
     this.chat = writable({ id, name, messages: [] });
   }
 
@@ -20,5 +21,6 @@ export class ChatStore {
       const message = { id: String(chat.messages.length + 1), author, text, timestamp: new Date() };
       return { ...chat, messages: [...chat.messages, message] };
     });
+    this.client.sendMessage('1', { type: "Message", text, created: Date.now() }, []);
   }
 }

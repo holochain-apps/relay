@@ -1,25 +1,32 @@
 <script lang="ts">
-	import { getContext } from 'svelte';
+	import { getContext, onMount } from 'svelte';
   import Time from "svelte-time";
   import Header from '$lib/Header.svelte';
   import type { ActionData, PageData } from './$types';
 	// import { enhance } from '$app/forms';
+  import { get } from "svelte/store";
+	import { ProfilesStore } from '@holochain-open-dev/profiles';
 
-	export let data: PageData;
 	//export let form : ActionData;
 
   //import { chat, sendMessage as addMessage, loadChat } from '$store/Chat';
-  import type { UserStore } from "$store/User";
+  // import type { UserStore } from "$store/UserStore";
+  // // Retrieve user store from context
+	// const userStore: UserStore = getContext('user');
+  // $: userName = userStore.name
 
-  // Retrieve user store from context
-	const userStore: UserStore = getContext('user');
+  const profilesContext: { getStore: () => ProfilesStore } = getContext('profiles')
+	const profilesStore = profilesContext.getStore()
+	$: myProfileNow = profilesStore ? get(profilesStore.myProfile) : null
+	$: myProfileValue = myProfileNow && myProfileNow.status === 'complete' && myProfileNow.value as any
+  $: userName = myProfileValue ? myProfileValue.entry.nickname  : ""
 
-  $: userName = userStore.name
+  export let data: PageData;
+
   $: chat = data.chat;
 
-  import { onMount, onDestroy } from 'svelte';
-
   let messages: Message[] = [];
+
 
   onMount(() => {
     if (chat) {
@@ -37,8 +44,8 @@
   let newMessageText = '';
 
   function sendMessage(e: SubmitEvent) {
-    if (chat && $userName && newMessageText.trim()) {
-      chat.addMessage($userName, newMessageText);
+    if (chat && userName && newMessageText.trim()) {
+      chat.addMessage(userName, newMessageText);
       newMessageText = ''; // Clear input after sending
       // TODO: wait a minute for latest to load
       const el = document.querySelector('#message-box > ul > li:last-child');
@@ -78,6 +85,7 @@
     <div class="w-full p-2 bg-surface-400 flex-shrink-0">
       <!-- have this input when submitted add a conversation to the page data -->
       <form class="flex" method='POST' on:submit={sendMessage} >
+        <!-- svelte-ignore a11y-autofocus -->
         <input type="text" bind:value={newMessageText} autofocus class="w-full bg-surface-400 placeholder:text-gray-400 focus:border-gray-500 focus:ring-0 border-0" placeholder="Type a message...">
         <button>Send</button>
       </form>
