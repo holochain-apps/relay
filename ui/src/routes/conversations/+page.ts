@@ -1,5 +1,5 @@
 import type { PageLoad } from './$types';
-import { chatsListStore } from '$store/ChatsList';
+import { RelayStore } from '$store/RelayStore';
 
 export const load: PageLoad = ({ params }) => {
 

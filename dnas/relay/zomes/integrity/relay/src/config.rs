@@ -23,11 +23,7 @@ pub fn validate_delete_config(
     _original_action: EntryCreationAction,
     _original_config: Config,
 ) -> ExternResult<ValidateCallbackResult> {
-    Ok(
-        ValidateCallbackResult::Invalid(
-            String::from("Config cannot be deleted"),
-        ),
-    )
+    Ok(ValidateCallbackResult::Invalid(String::from("Config cannot be deleted")))
 }
 pub fn validate_create_link_config_updates(
     _action: CreateLink,

@@ -4,8 +4,11 @@
 	import { type AppAgentClient, AppAgentWebsocket, AdminWebsocket } from '@holochain/client';
 	import { ProfilesClient, ProfilesStore } from '@holochain-open-dev/profiles';
 
+	import { goto } from '$app/navigation';
+
 	import { onMount, setContext } from 'svelte';
   import { RelayClient } from '$store/RelayClient';
+  import { RelayStore } from '$store/RelayStore';
 
 	//	export let data: LayoutData;
 
@@ -17,26 +20,57 @@
 
 	let client: AppAgentWebsocket
 	let relayClient: RelayClient
+	let relayStore: RelayStore
 	let connected = false
 	//let profilesStore : ProfilesStore | Writable<null> = writable(null)
 	let profilesStore : ProfilesStore|null = null
 
-	onMount(async () => {
-		if (adminPort) {
-			const adminWebsocket = await AdminWebsocket.connect({ url: new URL(`ws://localhost:${adminPort}`) })
-			const x = await adminWebsocket.listApps({})
-			console.log("apps", x)
-			const cellIds = await adminWebsocket.listCellIds()
-			console.log("CELL IDS",cellIds)
-			await adminWebsocket.authorizeSigningCredentials(cellIds[0])
+	onMount(() => {
+		async function initHolochain() {
+			if (adminPort) {
+				const adminWebsocket = await AdminWebsocket.connect({ url: new URL(`ws://localhost:${adminPort}`) })
+				const x = await adminWebsocket.listApps({})
+				console.log("apps", x)
+				const cellIds = await adminWebsocket.listCellIds()
+				console.log("CELL IDS",cellIds)
+				await adminWebsocket.authorizeSigningCredentials(cellIds[0])
+			}
+			console.log("appPort and Id is", appPort, appId)
+			client = await AppAgentWebsocket.connect(appId, { url: new URL(url) })
+			let profilesClient = new ProfilesClient(client, appId);
+			relayClient = new RelayClient(client, "relay");
+			profilesStore = new ProfilesStore(profilesClient);
+			relayStore = new RelayStore(relayClient)
+			await relayStore.initialize()
+			connected = true
+			console.log("connected. profiles store", profilesStore)
 		}
-		console.log("appPort and Id is", appPort, appId)
-		client = await AppAgentWebsocket.connect(appId, { url: new URL(url) })
-		let profilesClient = new ProfilesClient(client, appId);
-		relayClient = new RelayClient(client, "");
-		profilesStore = new ProfilesStore(profilesClient);
-		connected = true
-		console.log("connected. profiles store", profilesStore)
+
+		initHolochain()
+
+		// Prevent internal links from opening in the browser when using Tauri
+		const handleLinkClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+			// Ensure the clicked element is an anchor and has a href attribute
+			if (target.closest('a[href]')) {
+        const anchor = target.closest('a') as HTMLAnchorElement;
+				// Prevent default action if it's an internal link
+				if (anchor && anchor.origin === window.location.origin) {
+					event.preventDefault();
+					event.stopPropagation();
+					goto(anchor.pathname); // Navigate internally using SvelteKit's goto
+				} else if (anchor) {
+					// Handle external links using Tauri's API
+					event.preventDefault();
+					window.__TAURI__.shell.open(anchor.href);
+				}
+      }
+    };
+
+    document.addEventListener('click', handleLinkClick);
+    return () => {
+      document.removeEventListener('click', handleLinkClick);
+    };
 	})
 
 	setContext('relayClient', {
@@ -45,6 +79,10 @@
 
 	setContext('profiles', {
     getStore: () => profilesStore
+  });
+
+	setContext('relayStore', {
+    getStore: () => relayStore
   });
 
 	$: prof = profilesStore ? profilesStore.myProfile : undefined
@@ -65,7 +103,7 @@
 			<h1 class="h1 mb-10"><img src="/logo.png" alt="Logo" class='inline'/>elay</h1>
 			<div class="create-profile">
 				<create-profile store={profilesStore}
-					on:profile-created={(e) => { console.log("profile created", a)}}
+					on:profile-created={(a) => { console.log("profile created", a)}}
 				></create-profile>
 			</div>
 		{:else if $prof.status=="error"}

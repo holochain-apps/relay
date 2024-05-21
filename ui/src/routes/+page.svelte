@@ -3,7 +3,7 @@
 	import { get, type Writable } from "svelte/store";
 	import Header from '$lib/Header.svelte';
   import type { UserStore } from "$store/UserStore";
-	import { ProfilesClient, ProfilesStore } from '@holochain-open-dev/profiles';
+	import { ProfilesStore } from '@holochain-open-dev/profiles';
   import "@holochain-open-dev/profiles/dist/elements/create-profile.js";
 
 	const profilesContext: { getStore: () => ProfilesStore } = getContext('profiles')
@@ -12,7 +12,6 @@
 	$: myProfileNow = profilesStore ? get(profilesStore.myProfile) : null
 	$: myProfileValue = myProfileNow && myProfileNow.status === 'complete' && myProfileNow.value as any
   $: userName = myProfileValue ? myProfileValue.entry.nickname  : ""
-
 
 	// Retrieve user store from context
 	//const userStore: UserStore = getContext('user');

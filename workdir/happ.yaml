@@ -15,4 +15,4 @@ roles:
         origin_time: ~
         quantum_time: ~
       version: ~
-      clone_limit: 0
+      clone_limit: 100

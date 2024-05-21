@@ -1,24 +1,139 @@
 use hdk::prelude::*;
 use relay_integrity::*;
+// use chrono::{DateTime, Utc, Datelike};
+// use crate::utils::*;
 
-// Auto created below from scaffold
+#[derive(Serialize, Deserialize, Debug)]
+pub struct MessageRecord {
+    original_action: ActionHash,
+    signed_action: SignedActionHashed,
+    message: Option<Message>,
+}
+
 #[hdk_extern]
 pub fn create_message(message: Message) -> ExternResult<Record> {
+    debug!("create_message 1 {:?}", message);
     let message_hash = create_entry(&EntryTypes::Message(message.clone()))?;
-    let record = get(message_hash.clone(), GetOptions::default())?
+    debug!("create_message 2 {:?}", message_hash);
+    let record: Record = get(message_hash.clone(), GetOptions::default())?
         .ok_or(
             wasm_error!(
                 WasmErrorInner::Guest("Could not find the newly created Message"
                 .to_string())
             ),
         )?;
+    debug!("create_message 3 {:?}", record);
+    // let now: DateTime<Utc> = Utc::now();
+    // let year = now.year();
+    // let month = now.month();
+    // let week = now.iso_week().week();
+    // let formatted_date = format!("{}/{}/{}", year, month, week);
+    // let path = Path::from(formatted_date);
+    // create_link_relaxed(
+    //     path.path_entry_hash()?,
+    //     AnyLinkableHash::try_from(record.action_address().clone())?,
+    //     LinkTypes::MessageBlock,
+    //     (),
+    // )?;
+    let path = Path::from("all_messages");
+    debug!("create_message path {:?}", path);
+    let link = create_link(
+        path.path_entry_hash()?,
+        message_hash.clone(),
+        LinkTypes::AllMessages,
+        (),
+    )?;
+    debug!("create message all messages link: {:?}", link);
     Ok(record)
+}
+
+// pub struct MessageBlock {
+//     week: String,
+//     count: u32,
+//     hashes: SignedActionHashed,
+// }
+
+// pub struct GetMessageHashesForWeekInput {
+//     pub week: String,
+//     pub message_count_already_loaded: u8,
+// }
+// #[hdk_extern]
+// pub fn get_messages_hashes_for_week(
+//     input: GetMessageHashesForWeekInput,
+// ) -> ExternResult<MessageBlock> {
+//     let weekString = input.week;
+//     if (weekString.is_empty()) {
+//         let now: DateTime<Utc> = Utc::now();
+//         let year = now.year();
+//         let month = now.month();
+//         let week = now.iso_week().week();
+//         weekString = format!("{}/{}/{}", year, month, week);
+//     }
+//     let path = Path::from(weekString);
+//     //let links = get_links(path.path_entry_hash()?, LinkTypes::MessageBlock, None)?;
+//     let links = get_links(
+//         GetLinksInputBuilder::try_new(path.path_entry_hash()?, LinkTypes::MessageBlock)?
+//             .build(),
+//     );
+//     let mut results = Vec::new();
+//     for l in links {
+//         let hash = ActionHash::try_from(l.target).map_err(|e| wasm_error!(e))?;
+//         if let Some(r) = get_latest_message(hash)? {
+//             results.push(r);
+//         }
+//     }
+//     Ok(results)
+// }
+
+#[hdk_extern]
+pub fn get_all_messages(_: ()) -> ExternResult<Vec<Link>> {
+    let path = Path::from("all_messages");
+    debug!("path: {:?}", path);
+    let links = get_links(
+        GetLinksInputBuilder::try_new(path.path_entry_hash()?, LinkTypes::AllMessages)?
+            .build(),
+    )?;
+    debug!("links: {:?}", links);
+    Ok(links)
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct GetAgenProfileInput {
+    agent_key: AgentPubKey,
+}
+
+#[hdk_extern]
+pub fn get_all_message_entries(_: ()) -> ExternResult<Vec<MessageRecord>> {
+    let links = get_all_messages(())?;
+    let mut results: Vec<MessageRecord> = Vec::new();
+    for l in links {
+        let hash  = ActionHash::try_from(l.target).map_err(|e|wasm_error!(e))?;
+        if let Some(mut r) = get_latest_message(hash)? {
+            // TODO: make a call to the profiles zome to get the agent profile
+            // let call_input = GetAgenProfileInput {
+            //     agent_key: r.signed_action.hashed.author().clone(),
+            // };
+            // let agent = call(
+            //     None,
+            //     "profiles",
+            //     "get_agent_profile".into(),
+            //     None,
+            //     call_input,
+            // );
+            // debug!("agent {:?}", agent);
+
+            //r.message.unwrap().author_name = agent.unwra
+            results.push (r);
+        }
+    }
+
+    Ok(results)
 }
 
 #[hdk_extern]
 pub fn get_latest_message(
     original_message_hash: ActionHash,
-) -> ExternResult<Option<Record>> {
+) -> ExternResult<Option<MessageRecord>> {
     let links = get_links(
         GetLinksInputBuilder::try_new(
                 original_message_hash.clone(),
@@ -43,8 +158,19 @@ pub fn get_latest_message(
         }
         None => original_message_hash.clone(),
     };
-    get(latest_message_hash, GetOptions::default())
+    // get(latest_message_hash, GetOptions::default())
+    match get(latest_message_hash, GetOptions::default())? {
+        Some(record) => {
+            Ok(Some(MessageRecord {
+                original_action: original_message_hash,
+                signed_action: record.signed_action().clone(),
+                message: record.entry().to_app_option().map_err(|e| wasm_error!(e))?,
+            }))
+        },
+        None => Ok(None)
+    }
 }
+
 #[hdk_extern]
 pub fn get_original_message(
     original_message_hash: ActionHash,
@@ -146,6 +272,18 @@ pub fn delete_message(original_message_hash: ActionHash) -> ExternResult<ActionH
             )
         }
     }?;
+    let path = Path::from("all_messages");
+    let links = get_links(
+        GetLinksInputBuilder::try_new(path.path_entry_hash()?, LinkTypes::AllMessages)?
+            .build(),
+    )?;
+    for link in links {
+        if let Some(hash) = link.target.into_action_hash() {
+            if hash.eq(&original_message_hash) {
+                delete_link(link.create_link_hash)?;
+            }
+        }
+    }
     delete_entry(original_message_hash)
 }
 #[hdk_extern]

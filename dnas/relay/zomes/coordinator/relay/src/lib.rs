@@ -1,9 +1,8 @@
 pub mod message;
 pub mod config;
+// pub mod utils;
 use hdk::prelude::*;
 use relay_integrity::*;
-
-
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct SendMessageInput {
@@ -11,36 +10,39 @@ pub struct SendMessageInput {
     pub content: String,
     pub agents: Vec<AgentPubKey>,
 }
-
 #[derive(Serialize, Deserialize, Debug, SerializedBytes)]
 pub struct Message {
     pub conversation_id: String,
     pub content: String,
 }
 #[hdk_extern]
-fn send_message(input: SendMessageInput)-> ExternResult<()> {
-    send_remote_signal(Message{conversation_id: input.conversation_id, content: input.content}, input.agents)
+fn send_message(input: SendMessageInput) -> ExternResult<()> {
+    send_remote_signal(
+        Message {
+            conversation_id: input.conversation_id,
+            content: input.content,
+        },
+        input.agents,
+    )
 }
-
 #[hdk_extern]
 fn recv_remote_signal(message: Message) -> ExternResult<()> {
     let info = call_info()?;
-    let signal = Signal::Message { conversation_id: message.conversation_id, content: message.content, from: info.provenance };
+    let signal = Signal::Message {
+        conversation_id: message.conversation_id,
+        content: message.content,
+        from: info.provenance,
+    };
     emit_signal(signal)
 }
-
-
-
 #[hdk_extern]
 pub fn init(_: ()) -> ExternResult<InitCallbackResult> {
     Ok(InitCallbackResult::Pass)
 }
-
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
 pub enum Signal {
-    Message {conversation_id: String, content: String, from: AgentPubKey},
-
+    Message { conversation_id: String, content: String, from: AgentPubKey },
     LinkCreated { action: SignedActionHashed, link_type: LinkTypes },
     LinkDeleted {
         action: SignedActionHashed,

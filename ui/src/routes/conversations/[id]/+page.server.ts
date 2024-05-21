@@ -4,7 +4,7 @@ export const load: PageServerLoad = ({ params }) => {
 	return {
     conversation: {
       id: 1,
-      title: `Terran Collective`,
+      name: `Terran Collective`,
       icon: '🚀',
       purpose: `Eact more cheese`,
       messages: [

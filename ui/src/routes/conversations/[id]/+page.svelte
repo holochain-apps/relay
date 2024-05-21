@@ -6,6 +6,8 @@
 	// import { enhance } from '$app/forms';
   import { get } from "svelte/store";
 	import { ProfilesStore } from '@holochain-open-dev/profiles';
+  import { page } from '$app/stores';
+  import type { Conversation, Message } from '../../../types';
 
 	//export let form : ActionData;
 
@@ -21,16 +23,30 @@
 	$: myProfileValue = myProfileNow && myProfileNow.status === 'complete' && myProfileNow.value as any
   $: userName = myProfileValue ? myProfileValue.entry.nickname  : ""
 
-  export let data: PageData;
+  // export let data: PageData;
 
-  $: chat = data.chat;
+//  $: chat = data.chat;
+
+  import { RelayStore } from '$store/RelayStore';
+
+  $: conversationId = $page.params.id;
+
+  const relayStoreContext: { getStore: () => RelayStore } = getContext('relayStore')
+  let relayStore = relayStoreContext.getStore()
+
+  $: conversation = relayStore.getConversation(conversationId);
+
+  // if (chat) {
+  //   // You may need to await an async function if fetching from an API
+  //   const messages = chat.data.messages;  // This should be a method in your ChatRoom class
+  //   return { chat, messages };
 
   let messages: Message[] = [];
 
 
   onMount(() => {
-    if (chat) {
-      chat.subscribe((c: Chat) => {
+    if (conversation) {
+      conversation.subscribe((c: Conversation) => {
         messages = c.messages;
       });
     }
@@ -44,8 +60,8 @@
   let newMessageText = '';
 
   function sendMessage(e: SubmitEvent) {
-    if (chat && userName && newMessageText.trim()) {
-      chat.addMessage(userName, newMessageText);
+    if (conversation && userName && newMessageText.trim()) {
+      conversation.addMessage(userName, newMessageText);
       newMessageText = ''; // Clear input after sending
       // TODO: wait a minute for latest to load
       const el = document.querySelector('#message-box > ul > li:last-child');
@@ -64,12 +80,12 @@
 
 <Header>
   <a class='text-4xl mr-5' href="/conversations">⟨</a>
-  <h1 class="flex-1">{chat?.data.name}</h1>
+  <h1 class="flex-1">Inbox</h1>
 </Header>
 
-{#if chat}
+{#if conversation}
   <div class="container mx-auto flex justify-center items-center flex-col flex-1 overflow-hidden">
-    <h1 class='text-4xl flex-shrink-0'>{@html chat.data.name}</h1>
+    <h1 class='text-4xl flex-shrink-0'>{@html conversation.data.name}</h1>
     <div id='message-box' class="flex-1 overflow-y-auto p-4 flex flex-col-reverse w-full">
       <ul>
         <!-- {#each data.conversation.messages as message (message.id)} -->
@@ -77,7 +93,7 @@
           <li class='mt-auto mb-5'>
             <div class="text-center text-sm text-secondary-500"><Time timestamp={message.timestamp} format="ddd, MMM D @ h:m" /></div>
             <span class="font-bold">{@html message.author}: </span>
-            <span class="p-2 max-w-xs self-end mb-2">{@html message.text}</span>
+            <span class="p-2 max-w-xs self-end mb-2">{@html message.content}</span>
           </li>
         {/each}
       </ul>

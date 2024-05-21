@@ -8,25 +8,17 @@ declare namespace App {
 	// interface Platform {}
 }
 
-interface Chat {
-  id: string;
+export interface User {
   name: string;
-  description?: string;
-  messages: Message[];
 }
 
-interface Message {
-  id: string;
-  author: string;
-  timestamp: Date;
-  text: string;
-}
-
-// interface ChatStore {
-//   messages: Message[];
-//   addMessage: (message: Message) => void;
-// }
-
-interface User {
-  name: string;
+// For tauri
+declare global {
+  interface Window {
+    __TAURI__: {
+      shell: {
+        open: (url: string) => Promise<void>;
+      };
+    };
+  }
 }
