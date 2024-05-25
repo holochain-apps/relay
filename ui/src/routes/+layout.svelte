@@ -38,8 +38,8 @@
 			console.log("appPort and Id is", appPort, appId)
 			client = await AppAgentWebsocket.connect(appId, { url: new URL(url) })
 			let profilesClient = new ProfilesClient(client, appId);
-			relayClient = new RelayClient(client, "relay");
 			profilesStore = new ProfilesStore(profilesClient);
+			relayClient = new RelayClient(client, "relay", profilesStore);
 			relayStore = new RelayStore(relayClient)
 			await relayStore.initialize()
 			connected = true

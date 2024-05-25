@@ -1,13 +1,15 @@
 <script lang="ts">
-	import { getContext, onMount } from 'svelte';
+	import { getContext, onDestroy, onMount } from 'svelte';
   import Time from "svelte-time";
   import Header from '$lib/Header.svelte';
-  import type { ActionData, PageData } from './$types';
+  import type { PageData } from './$types';
 	// import { enhance } from '$app/forms';
   import { get } from "svelte/store";
-	import { ProfilesStore } from '@holochain-open-dev/profiles';
+	import { ProfilesStore, type Profile } from '@holochain-open-dev/profiles';
   import { page } from '$app/stores';
   import type { Conversation, Message } from '../../../types';
+  import { RelayStore } from '$store/RelayStore';
+  import type { Unsubscriber } from 'svelte/motion';
 
 	//export let form : ActionData;
 
@@ -25,9 +27,7 @@
 
   // export let data: PageData;
 
-//  $: chat = data.chat;
-
-  import { RelayStore } from '$store/RelayStore';
+  // $: conversation = data.conversation;
 
   $: conversationId = $page.params.id;
 
@@ -35,33 +35,29 @@
   let relayStore = relayStoreContext.getStore()
 
   $: conversation = relayStore.getConversation(conversationId);
-
-  // if (chat) {
-  //   // You may need to await an async function if fetching from an API
-  //   const messages = chat.data.messages;  // This should be a method in your ChatRoom class
-  //   return { chat, messages };
-
   let messages: Message[] = [];
-
+  let agentProfiles: Profile[] = [];
+  let unsubscribe : Unsubscriber;
 
   onMount(() => {
     if (conversation) {
-      conversation.subscribe((c: Conversation) => {
+      unsubscribe = conversation.subscribe((c: Conversation) => {
         messages = c.messages;
+        agentProfiles = Object.values(c.agentProfiles)
       });
     }
   });
 
   // Cleanup the subscription
-  // onDestroy(() => {
-  //   unsubscribe();
-  // });
+  onDestroy(() => {
+    unsubscribe();
+  });
 
   let newMessageText = '';
 
   function sendMessage(e: SubmitEvent) {
     if (conversation && userName && newMessageText.trim()) {
-      conversation.addMessage(userName, newMessageText);
+      conversation.sendMessage(userName, newMessageText);
       newMessageText = ''; // Clear input after sending
       // TODO: wait a minute for latest to load
       const el = document.querySelector('#message-box > ul > li:last-child');
@@ -81,14 +77,17 @@
 <Header>
   <a class='text-4xl mr-5' href="/conversations">⟨</a>
   <h1 class="flex-1">Inbox</h1>
+  {#if conversation}
+    <a class='' href="/conversations/{conversation.data.id}/invite">Invite People</a>
+  {/if}
 </Header>
 
 {#if conversation}
   <div class="container mx-auto flex justify-center items-center flex-col flex-1 overflow-hidden">
     <h1 class='text-4xl flex-shrink-0'>{@html conversation.data.name}</h1>
+    <p>{@html agentProfiles.length } {#if agentProfiles.length === 1}Member{:else}Members{/if}</p>
     <div id='message-box' class="flex-1 overflow-y-auto p-4 flex flex-col-reverse w-full">
       <ul>
-        <!-- {#each data.conversation.messages as message (message.id)} -->
         {#each messages as message (message.id)}
           <li class='mt-auto mb-5'>
             <div class="text-center text-sm text-secondary-500"><Time timestamp={message.timestamp} format="ddd, MMM D @ h:m" /></div>

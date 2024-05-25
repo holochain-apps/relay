@@ -14,6 +14,8 @@ import type {
   MembraneProof
 } from '@holochain/client';
 
+import type { Profile } from '@holochain-open-dev/profiles'
+
 export type RelaySignal = {
   type: 'EntryCreated';
   action: SignedActionHashed<Create>;
@@ -51,7 +53,7 @@ export type EntryTypes =
 }
 
 export interface Message {
-  id: string;
+  id?: string;
   content: string;
   author: string;
   timestamp: Date;
@@ -64,10 +66,12 @@ export interface MessageRecord {
 }
 
 export interface Conversation {
-  id: string;
+  id: string; // the clone id
+  cellDnaHash: DnaHash;
   name: string;
   description?: string;
   messages: Message[];
+  agentProfiles: { [key: AgentPubKeyB64]: Profile };
 }
 
 export interface MembraneProofData {

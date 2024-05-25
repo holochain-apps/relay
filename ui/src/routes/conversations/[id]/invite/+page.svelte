@@ -1,0 +1,69 @@
+<script lang="ts">
+	import { getContext } from 'svelte';
+	import { get, type Writable } from "svelte/store";
+  import { encode } from '@msgpack/msgpack';
+  import { Base64 } from 'js-base64';
+  import { type AgentPubKey, decodeHashFromBase64, encodeHashToBase64 } from "@holochain/client";
+  import { page } from '$app/stores';
+  import Header from '$lib/Header.svelte';
+  import { copyToClipboard } from '$lib/utils';
+  import type { UserStore } from "$store/UserStore";
+	import { ProfilesStore } from '@holochain-open-dev/profiles';
+  import { RelayStore } from '$store/RelayStore';
+  import { type Invitation } from '../../../../types'
+
+	$: conversationId = $page.params.id;
+
+  const relayStoreContext: { getStore: () => RelayStore } = getContext('relayStore')
+  let relayStore = relayStoreContext.getStore()
+
+  $: conversation = relayStore.getConversation(conversationId);
+
+  let inviteAgent = '';
+  let inviteCode : string;
+
+  const createInviteCode = async () => {
+    if (!conversation) return
+    console.log("crete invite code", inviteAgent, conversationId)
+    const agent: AgentPubKey = decodeHashFromBase64(inviteAgent)
+    const proof = await relayStore.inviteAgentToConversation(conversationId, agent)
+    const progenitor = relayStore.client?.myPubKey()
+    console.log("crete invite code proof", proof, progenitor)
+    if (proof !== undefined && progenitor != undefined) {
+      const invitation: Invitation = {
+        conversationName: conversation.data.name,
+        progenitor,
+        proof,
+      }
+      const msgpck = encode(invitation);
+      inviteCode = Base64.fromUint8Array(msgpck);
+      console.log("crete invite code 3", invitation, msgpck, inviteCode)
+      copyToClipboard(inviteCode)
+      alert("Invitation code copied to clipboard")
+    }
+    else {
+      alert("Unable to create invitation code")
+    }
+  }
+</script>
+
+{#if conversation}
+<Header>
+  <a class='text-4xl mr-5' href="/conversations/{conversation.data.id}">⟨</a>
+  <h1 class="flex-1">Add Members</h1>
+</Header>
+
+<div class="container mx-auto flex justify-center items-center">
+	<div class="space-y-5">
+		<h1 class="h1">{conversation.data.name}</h1>
+    <p>Invite members to this conversation</p>
+    <div class='max-w-sm'>
+      Invite Agent: <input type="text" placeholder="Enter agent public key" bind:value={inviteAgent} />
+      <button on:click={createInviteCode}>Invite</button>
+      {#if inviteCode}
+        <p class='overflow-hidden text-ellipsis'>Invite code: {inviteCode}</p>
+      {/if}
+    </div>
+	</div>
+</div>
+{/if}

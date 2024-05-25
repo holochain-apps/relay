@@ -1,30 +1,24 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 	import { get, type Writable } from "svelte/store";
-	import Header from '$lib/Header.svelte';
-  import type { UserStore } from "$store/UserStore";
-	import { ProfilesStore } from '@holochain-open-dev/profiles';
+	import { type AgentPubKey, decodeHashFromBase64, encodeHashToBase64 } from "@holochain/client";
+	import { type Profile, ProfilesStore } from '@holochain-open-dev/profiles';
   import "@holochain-open-dev/profiles/dist/elements/create-profile.js";
+	import { EntryRecord, LazyHoloHashMap, ZomeClient } from '@holochain-open-dev/utils';
+	import { copyToClipboard } from '$lib/utils';
+	import Header from '$lib/Header.svelte';
+	import Avatar from '$lib/Avatar.svelte';
+  import { RelayClient } from '$store/RelayClient';
 
-	const profilesContext: { getStore: () => ProfilesStore } = getContext('profiles')
-	let profilesStore = profilesContext.getStore()
-	// $: myProfile = profilesStore ? profilesStore.myProfile : null
-	$: myProfileNow = profilesStore ? get(profilesStore.myProfile) : null
-	$: myProfileValue = myProfileNow && myProfileNow.status === 'complete' && myProfileNow.value as any
-  $: userName = myProfileValue ? myProfileValue.entry.nickname  : ""
+	const relayClientContext: { getClient: () => RelayClient } = getContext('relayClient')
+	let relayClient = relayClientContext.getClient()
+	const agentPublicKey64 = encodeHashToBase64(relayClient.myPubKey())
 
-	// Retrieve user store from context
-	//const userStore: UserStore = getContext('user');
-	// $: userName = profilesStore.myProfile.name
-	// let newUserName = "";
-	// function submitName(e: MouseEvent) {
-  //   newUserName = newUserName.trim();
-	// 	if (newUserName) {
-  //     // userStore.login(newUserName)
-  //     newUserName = ''; // Clear input after sending
-  //   }
-  //   e.preventDefault();
-  // }
+	// const profilesContext: { getStore: () => ProfilesStore } = getContext('profiles')
+	// let profilesStore = profilesContext.getStore()
+	// $: myProfileNow = profilesStore ? get(profilesStore.myProfile) : null
+	// $: myProfileValue = myProfileNow && myProfileNow.status === 'complete' && myProfileNow.value as EntryRecord<Profile>
+  // $: userName = myProfileValue ? myProfileValue.entry.nickname  : ""
 </script>
 
 <Header>
@@ -34,7 +28,12 @@
 <div class="container mx-auto flex justify-center items-center">
 	<div class="space-y-5">
 		<h1 class="h1">Relay</h1>
-		<p>Welcome, {userName}!</p>
+		<p class='flex'>
+			Welcome, &nbsp; <Avatar size={24} agentPubKey={relayClient.myPubKey()} placeholder={true} />
+			<button on:click={() => copyToClipboard(agentPublicKey64)} class='ml-2'>
+				<img src="/copy.svg" alt="Copy Icon" width='16' />
+			</button>
+		</p>
 		<a class="anchor" href="/conversations">
 			Conversations
 		</a>

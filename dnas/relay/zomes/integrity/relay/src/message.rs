@@ -3,7 +3,8 @@ use hdi::prelude::*;
 #[derive(Clone, PartialEq)]
 pub struct Message {
     pub content: String,
-    pub author_name: String
+    // pub author_name: Option<String>,
+    // pub author: Option<AgentPubKey>
 }
 pub fn validate_create_message(
     _action: EntryCreationAction,

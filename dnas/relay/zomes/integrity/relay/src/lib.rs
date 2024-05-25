@@ -18,18 +18,86 @@ pub enum LinkTypes {
     MessageUpdates,
     AllMessages,
 }
+
+#[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone)]
+pub struct MembraneProofData {
+    pub conversation_name: String,
+    pub for_agent: AgentPubKey,
+    pub as_role: u32,
+}
+
+#[derive(Serialize, Deserialize, Debug, SerializedBytes)]
+pub struct MembraneProofEnvelope {
+    pub signature: Signature,
+    pub data: MembraneProofData,
+}
+
+#[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone)]
+pub struct Properties {
+    pub name: String,
+    pub progenitor: AgentPubKey,
+}
+
+pub fn check_agent(agent_pub_key: AgentPubKey, membrane_proof: Option<MembraneProof>) -> ExternResult<ValidateCallbackResult> {
+    let info = dna_info()?;
+    // we have no properties so this is a conversation anyone can join
+    if info.modifiers.properties.bytes().len() == 1 {
+        return Ok(ValidateCallbackResult::Valid);
+    }
+    let props = Properties::try_from(info.modifiers.properties).map_err(|e| wasm_error!(e))?;
+
+    // agent is the progenitor so check out
+    if agent_pub_key == props.progenitor {
+        return Ok(ValidateCallbackResult::Valid);
+    }
+    match membrane_proof {
+        None => Ok(ValidateCallbackResult::Invalid("membrane proof must be provided".to_string())),
+        Some(serialized_proof) => {
+            let envelope  = MembraneProofEnvelope::try_from((*serialized_proof).clone()).map_err(|e| wasm_error!(e))?;
+            // if envelope.data.space_type != props.space_type {
+            //     return Ok(ValidateCallbackResult::Invalid("membrane proof is not for this space type".to_string()));
+            // }
+            if envelope.data.conversation_name != props.name {
+                return Ok(ValidateCallbackResult::Invalid("membrane proof is not for this conversation".to_string()));
+            }
+            if envelope.data.for_agent != agent_pub_key {
+                return Ok(ValidateCallbackResult::Invalid("membrane proof is not for this agent".to_string()));
+            }
+            if verify_signature(props.progenitor, envelope.signature, envelope.data)? {
+                return Ok(ValidateCallbackResult::Valid);
+            }
+            Ok(ValidateCallbackResult::Invalid("membrane proof signature invalid".to_string()))
+        }
+    }
+}
+
+// #[hdk_extern]
+// pub fn genesis_self_check(
+//     _data: GenesisSelfCheckData,
+// ) -> ExternResult<ValidateCallbackResult> {
+//     Ok(ValidateCallbackResult::Valid)
+// }
+// pub fn validate_agent_joining(
+//     _agent_pub_key: AgentPubKey,
+//     _membrane_proof: &Option<MembraneProof>,
+// ) -> ExternResult<ValidateCallbackResult> {
+//     Ok(ValidateCallbackResult::Valid)
+// }
+
 #[hdk_extern]
 pub fn genesis_self_check(
-    _data: GenesisSelfCheckData,
+    data: GenesisSelfCheckData,
 ) -> ExternResult<ValidateCallbackResult> {
-    Ok(ValidateCallbackResult::Valid)
+    check_agent(data.agent_key, data.membrane_proof)
 }
+
 pub fn validate_agent_joining(
-    _agent_pub_key: AgentPubKey,
-    _membrane_proof: &Option<MembraneProof>,
+    agent_pub_key: AgentPubKey,
+    membrane_proof: &Option<MembraneProof>,
 ) -> ExternResult<ValidateCallbackResult> {
-    Ok(ValidateCallbackResult::Valid)
+    check_agent(agent_pub_key, (*membrane_proof).clone())
 }
+
 #[hdk_extern]
 pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
     match op.flattened::<EntryTypes, LinkTypes>()? {

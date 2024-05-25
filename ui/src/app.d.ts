@@ -19,6 +19,9 @@ declare global {
       shell: {
         open: (url: string) => Promise<void>;
       };
+      clipboard: {
+        writeText: (text: string) => Promise<void>;
+      };
     };
   }
 }

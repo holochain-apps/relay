@@ -3,46 +3,50 @@ pub mod config;
 // pub mod utils;
 use hdk::prelude::*;
 use relay_integrity::*;
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct SendMessageInput {
-    pub conversation_id: String,
-    pub content: String,
-    pub agents: Vec<AgentPubKey>,
-}
-#[derive(Serialize, Deserialize, Debug, SerializedBytes)]
-pub struct Message {
-    pub conversation_id: String,
-    pub content: String,
-}
-#[hdk_extern]
-fn send_message(input: SendMessageInput) -> ExternResult<()> {
-    send_remote_signal(
-        Message {
-            conversation_id: input.conversation_id,
-            content: input.content,
-        },
-        input.agents,
-    )
-}
+
+// #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone)]
+// pub struct Message {
+//     // pub conversation_id: String,
+//     pub content: String,
+// }
+// #[hdk_extern]
+// fn send_message(input: SendMessageInput) -> ExternResult<()> {
+//     send_remote_signal(
+//         Message {
+//             conversation_id: input.conversation_id,
+//             content: input.content,
+//         },
+//         input.agents,
+//     )
+// }
+
 #[hdk_extern]
 fn recv_remote_signal(message: Message) -> ExternResult<()> {
-    let info = call_info()?;
+    let info: CallInfo = call_info()?;
     let signal = Signal::Message {
-        conversation_id: message.conversation_id,
         content: message.content,
         from: info.provenance,
     };
     emit_signal(signal)
 }
+
 #[hdk_extern]
 pub fn init(_: ()) -> ExternResult<InitCallbackResult> {
+    let mut fns = BTreeSet::new();
+    fns.insert((zome_info()?.name, "recv_remote_signal".into()));
+    let functions = GrantedFunctions::Listed(fns);
+    create_cap_grant(CapGrantEntry {
+        tag: "".into(),
+        access: CapAccess::Unrestricted,
+        functions,
+    })?;
+
     Ok(InitCallbackResult::Pass)
 }
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
 pub enum Signal {
-    Message { conversation_id: String, content: String, from: AgentPubKey },
+    Message { content: String, from: AgentPubKey },
     LinkCreated { action: SignedActionHashed, link_type: LinkTypes },
     LinkDeleted {
         action: SignedActionHashed,
@@ -172,4 +176,51 @@ fn get_entry_for_action(action_hash: &ActionHash) -> ExternResult<Option<EntryTy
         }
     };
     EntryTypes::deserialize_from_type(*zome_index, *entry_index, entry)
+}
+
+#[hdk_extern]
+pub fn generate_membrane_proof(input: MembraneProofData) -> ExternResult<SerializedBytes> {
+    let me: HoloHash<holo_hash::hash_type::Agent> = agent_info()?.agent_latest_pubkey;
+
+    let result = MembraneProofEnvelope {
+        signature: sign(me,input.clone())?,
+        data: input,
+    };
+    let proof = SerializedBytes::try_from(result).map_err(|e| wasm_error!(e))?;
+    Ok(proof)
+}
+
+#[hdk_extern]
+pub fn get_membrane_proof(agent: AgentPubKey) -> ExternResult<Option<MembraneProofData>> {
+    match get_details(agent, GetOptions::default())? {
+        None => Ok(None),
+        Some(details) => {
+            match details {
+                Details::Entry(entry_details) => {
+                    let prev = entry_details.actions[0].action().prev_action().unwrap();
+                    let maybe_record = get(prev.clone(), GetOptions::default())?;
+                    match maybe_record {
+                        None => Err(wasm_error!("expected agent validation record")),
+                        Some(record) => {
+                            match record.action() {
+                                Action::AgentValidationPkg(
+                                    AgentValidationPkg { membrane_proof, .. },
+                                ) => match membrane_proof {
+                                    Some(proof) => {
+                                        let envelope = MembraneProofEnvelope::try_from((**proof).clone()).map_err(|e| wasm_error!(e))?;
+                                        Ok(Some(envelope.data))
+                                    }
+                                    None => Ok(None)
+                                },
+                                _ => {
+                                    Err(wasm_error!("expected AgentValidationPkg"))
+                                }
+                            }
+                        },
+                    }
+                },
+                _ => Err(wasm_error!("unexpected entry type"))
+            }
+        }
+    }
 }

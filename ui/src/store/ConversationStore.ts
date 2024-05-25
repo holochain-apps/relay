@@ -1,4 +1,4 @@
-import { type AgentPubKey, decodeHashFromBase64, encodeHashToBase64 } from "@holochain/client";
+import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64 } from "@holochain/client";
 import { writable, get, type Writable } from 'svelte/store';
 import { RelayClient } from '$store/RelayClient'
 import type { Conversation, MessageRecord } from '../types';
@@ -6,18 +6,14 @@ import type { Conversation, MessageRecord } from '../types';
 export class ConversationStore {
   private conversation: Writable<Conversation>;
 
-  constructor( public client: RelayClient, id: string, name: string, public progenitor: AgentPubKey|undefined) {
+  constructor( public client: RelayClient, id: string, cellDnaHash: DnaHash, name: string, public progenitor: AgentPubKey|undefined) {
     console.log("new onversation store", id, name, progenitor)
-    this.conversation = writable({ id, name, messages: [], progenitor });
+    this.conversation = writable({ id, cellDnaHash, name, messages: [], progenitor, agentProfiles: {} });
   }
 
-  async initialize() {
-    // await this.getMyNickname()
-    //await this.getNicknames()
-    //await this.getNavigators()
-    //await this.getSidekicks()
-    //await this.getResources()
+async initialize() {
     await this.getMessages()
+    await this.getAgents()
   }
 
   get data() {
@@ -37,13 +33,6 @@ export class ConversationStore {
         try {
           const message = messageRecord.message
           if (message) {
-            // const text = JSON.parse(message.text)
-            // const resource: Resource = {
-            //   type: r.type,
-            //   details: JSON.parse(r.details), //json blob
-            //   sidekick: decodeHashFromBase64(r.sidekick)
-            // }
-            // TODO validate that we actually got a resource
             message.id = encodeHashToBase64(messageRecord.original_action)
             message.timestamp = new Date(messageRecord.signed_action.hashed.content.timestamp / 1000)
             this.conversation.update(c => {
@@ -61,13 +50,25 @@ export class ConversationStore {
     }
   }
 
+  async getAgents() {
+    const agentProfiles = await this.client.getAllAgents(this.data.id)
+    this.conversation.update(c => {
+      c.agentProfiles = {...c.agentProfiles, ...agentProfiles}
+      return c
+    })
+    console.log("got agents:", agentProfiles, this.data.agentProfiles)
+  }
+
+  sendMessage(author: string, content: string): void {
+    console.log("sendMessage", content)
+    this.addMessage(author, content)
+    this.client.sendMessage(this.data.id, content, Object.keys(this.data.agentProfiles).map(k => decodeHashFromBase64(k)));
+  }
+
   addMessage(author: string, content: string): void {
-    console.log("addMessage", content)
     this.conversation.update(conversation => {
       const message = { id: String(conversation.messages.length + 1), author, content, timestamp: new Date() };
       return { ...conversation, messages: [...conversation.messages, message] };
     });
-    const message = this.client.sendMessage(this.data.id, content, []);
-    console.log("addMessage complete", message)
   }
 }

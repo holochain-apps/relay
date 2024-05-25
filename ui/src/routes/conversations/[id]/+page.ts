@@ -1,8 +1,8 @@
+import { getContext } from 'svelte';
 import type { PageLoad } from './$types';
-// import { chatsListStore } from '$store/ChatsList';
+import { RelayStore } from '$store/RelayStore';
 
 export const load: PageLoad = ({ params }) => {
-	// const { hash } = params as { hash: string };
 
   // // Assume chatRoomsStore can fetch a room by ID
   // const chat = chatsListStore.getChat(hash);
@@ -13,4 +13,13 @@ export const load: PageLoad = ({ params }) => {
   // } else {
   //   return { status: 404, error: new Error('Chat not found') };
   // }
+
+  // let conversationId = params.id;
+
+  // const relayStoreContext: { getStore: () => RelayStore } = getContext('relayStore')
+  // let relayStore = relayStoreContext.getStore()
+
+  // let conversation = relayStore.getConversation(conversationId);
+
+  // return { conversation }
 }

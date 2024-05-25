@@ -1,9 +1,10 @@
 import { decode } from '@msgpack/msgpack';
+import { isEqual } from 'lodash-es';
 import { writable, get, type Subscriber, type Invalidator, type Unsubscriber, type Writable } from 'svelte/store';
-import { type AgentPubKey, decodeHashFromBase64 } from "@holochain/client";
+import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64, type Dna } from "@holochain/client";
 import { ConversationStore } from './ConversationStore';
 import { RelayClient } from '$store/RelayClient'
-import type { Conversation, Invitation, Properties } from '../types';
+import type { Conversation, Invitation, Message, Properties } from '../types';
 
 export class RelayStore {
   private conversations: Writable<ConversationStore[]>;
@@ -15,102 +16,89 @@ export class RelayStore {
   }
 
   async initialize() {
-    await this.client.initConversations()
+    await this.client.initConversations();
 
     for (const conversation of Object.values(this.client.conversations)) {
-      console.log("conversation store", conversation)
-      const name = conversation.name
-      const properties: Properties = decode(conversation.dna_modifiers.properties) as Properties
-      const progenitor = properties.progenitor ? decodeHashFromBase64(properties.progenitor) : undefined
-      await this._addConversation(conversation.clone_id, name, progenitor)
+      const properties: Properties = decode(conversation.dna_modifiers.properties) as Properties;
+      const progenitor = properties.progenitor ? decodeHashFromBase64(properties.progenitor) : undefined;
+      await this._addConversation(conversation.clone_id, conversation.cell_id[0], conversation.name, progenitor);
     }
 
     this.client.client.on('signal', async (signal)=>{
       console.log("Got Signal:", signal)
 
-      // // @ts-ignore
-      // if (signal.type == "Message") {
-      //     // @ts-ignore
-      //     const from: AgentPubKey = signal.from
-      //     // @ts-ignore
-      //     const streamId = signal.stream_id
-      //     // @ts-ignore
-      //     const payload: Payload = JSON.parse(signal.content)
-      //     const message: Message = {
-      //         payload,
-      //         from,
-      //         received: Date.now()
-      //     }
-      //     this.addMessageToStream(streamId, message)
-      //     let messageList = this.expectations.get(message.from)
-      //     if (messageList) {
-      //         if (payload.type == "Ack") {
-      //             const idx = messageList.findIndex((created) => created == payload.created)
-      //             if (idx >= 0) {
-      //                 messageList.splice(idx,1)
-      //                 this.expectations.set(message.from, messageList)
-      //             }
-      //         }
-      //         // we just received a message from someone who we are expecting
-      //         // to have acked something but they haven't so we retry to send the message
-      //         if (messageList.length > 0) {
-      //             const streams = Object.values(get(this.streams))
-      //             for (const msgId of messageList) {
-      //                 for (const stream of streams) {
-      //                     const msg = stream.findMessage(msgId)
-      //                     if (msg) {
-      //                         console.log("Resending", msg)
-      //                         await this.client.sendMessage(stream.id, msg.payload, [message.from])
-      //                     }
-      //                 }
-      //             }
-      //         }
-      //     }
-      // }
+      // @ts-ignore
+      if (signal.payload.type == "Message") {
+          // @ts-ignore
+          // const streamId = signal.stream_id
+          const conversation = this.getConversationByCellDnaHash(signal.cell_id[0])
+          console.log("Got conversation for signal", conversation)
+
+          // @ts-ignore
+          const payload: Payload = signal.payload
+          // @ts-ignore
+          const from: AgentPubKey = payload.from
+          const message: Message = {
+              content: payload.content,
+              author: conversation?.data.agentProfiles[encodeHashToBase64(from)]?.nickname || encodeHashToBase64(from),
+              timestamp: new Date()
+          }
+
+          if (conversation && encodeHashToBase64(from) !== encodeHashToBase64(this.client.myPubKey())) {
+            conversation.addMessage(message.author, message.content)
+          }
+          // let messageList = this.expectations.get(message.from)
+          // if (messageList) {
+          //     if (payload.type == "Ack") {
+          //         const idx = messageList.findIndex((created) => created == payload.created)
+          //         if (idx >= 0) {
+          //             messageList.splice(idx,1)
+          //             this.expectations.set(message.from, messageList)
+          //         }
+          //     }
+          //     // we just received a message from someone who we are expecting
+          //     // to have acked something but they haven't so we retry to send the message
+          //     if (messageList.length > 0) {
+          //         const streams = Object.values(get(this.streams))
+          //         for (const msgId of messageList) {
+          //             for (const stream of streams) {
+          //                 const msg = stream.findMessage(msgId)
+          //                 if (msg) {
+          //                     console.log("Resending", msg)
+          //                     await this.client.sendMessage(stream.id, msg.payload, [message.from])
+          //                 }
+          //             }
+          //         }
+          //     }
+          //}
+      }
     })
   }
 
-  async _addConversation(id: string, name: string, progenitor: AgentPubKey|undefined) {
+  async _addConversation(id: string, cellDnaHash: DnaHash, name: string, progenitor: AgentPubKey|undefined) {
     if (!this.client) return;
-
-    const newConversation = new ConversationStore(this.client, id, name, progenitor)
-    //this.conversations[name] =  newConversation
+    const newConversation = new ConversationStore(this.client, id, cellDnaHash, name, progenitor)
     this.conversations.update(conversations => [...conversations, newConversation])
     newConversation.initialize()
+    return newConversation
   }
 
-  // async _addSpace(spaceType: SpaceType, name: string, spaceId: string, progenitor: AgentPubKey|undefined) {
-  //   if (!this.client) return;
-
-  //   if (spaceType == SpaceType.Nav) {
-  //     const newSpace = new NavSpace(new NavClient(this.client.client, spaceId), progenitor)
-  //     this.navSpaces[name] =  newSpace
-  //     newSpace.initialize()
-
-  //   } else if (spaceType == SpaceType.Mission) {
-  //     const newSpace = new Mission(new BlobClient(this.client.client, spaceId), progenitor)
-  //     this.missions[name] =  newSpace
-  //     newSpace.initialize()
-  //   }
-
-  // },
-
-  async createConversation(nickname: string, name: string) {
+  async createConversation(name: string) {
     if (!this.client) return;
-    const cloneId = await this.client.createConversation(name)
-    this._addConversation(cloneId, name, this.client.agentPubKey())
+    const conversationCell = await this.client.createConversation(name)
+    return this._addConversation(conversationCell.clone_id, conversationCell.cell_id[0], name, this.client.myPubKey())
   }
 
   async joinConversation(invitation: Invitation) {
     if (!this.client) return;
-    const cloneId = await this.client.joinConversation(invitation.conversationName, invitation.progenitor, invitation.proof)
-    this._addConversation(cloneId, invitation.conversationName, invitation.progenitor)
+    const conversationCell = await this.client.joinConversation(invitation.conversationName, invitation.progenitor, invitation.proof)
+    return this._addConversation(conversationCell.clone_id, conversationCell.cell_id[0], invitation.conversationName, invitation.progenitor)
   }
 
-  // addConversation(name: string): void {
-  //   const newConversation = new Conversation(this.client, String(get(this.conversations).length + 1), name);
-  //   this.conversations.update(conversations => [...conversations, newConversation]);
-  // }
+  async inviteAgentToConversation(conversationId: string, agent: AgentPubKey, role: number = 0) {
+    if (!this.client) return;
+    return await this.client.inviteAgentToConversation(conversationId, agent, role)
+  }
 
   // removeConversations(id: string): void {
   //   this.conversations.update(conversations =>
@@ -124,7 +112,15 @@ export class RelayStore {
       foundConversation = conversations.find(conversation => conversation.data.id === id);
     })();
 
-    //return get(this.chats).find(chat => chat.data.id === id);
+    return foundConversation;
+  }
+
+  getConversationByCellDnaHash(cellDnaHash: DnaHash): ConversationStore | undefined {
+    let foundConversation
+    this.conversations.subscribe(conversations => {
+      foundConversation = conversations.find(conversation => isEqual(conversation.data.cellDnaHash, cellDnaHash));
+    })();
+
     return foundConversation;
   }
 }

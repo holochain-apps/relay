@@ -5,18 +5,20 @@ import {
   type AppAgentClient,
   type AppCreateCloneCellRequest,
   type AppAgentCallZomeRequest,
-  type ClonedCell,
+  type CellId,
   type CellInfo,
+  type ClonedCell,
   type RoleName,
-  type MembraneProof
+  type MembraneProof,
+  type AgentPubKeyB64
 } from '@holochain/client';
 import { decode } from '@msgpack/msgpack';
-import { EntryRecord, LazyHoloHashMap, ZomeClient } from '@holochain-open-dev/utils';
+import { EntryRecord } from '@holochain-open-dev/utils';
 import type { ActionCommittedSignal } from '@holochain-open-dev/utils';
-import type { Profile } from '@holochain-open-dev/profiles'
-// import { type Message, Stream, type Payload } from './stream';
-import type { EntryTypes, Message, MessageInput, MessageRecord, Properties } from '../types';
-import type { Agent } from 'http';
+import type { Profile, ProfilesStore } from '@holochain-open-dev/profiles'
+import { get } from 'svelte/store';
+import type { EntryTypes, MembraneProofData, MessageRecord, Properties } from '../types';
+import { encode } from 'punycode';
 
 const ZOME_NAME = 'relay'
 
@@ -30,16 +32,15 @@ export type RelaySignal = ActionCommittedSignal<EntryTypes, any>;
 
 //export class RelayClient extends ZomeClient<RelaySignal> {
 export class RelayClient {
-  //conversations: Array<ClonedCell> = []
   // conversations is a map of string to ClonedCell
   conversations: {[key: string]: ClonedCell} = {}
-  nickname: string = ""
+  zomeName = ZOME_NAME
 
-  constructor(public client: AppAgentClient, public roleName: RoleName, public zomeName = ZOME_NAME) {
+  constructor(public client: AppAgentClient, public roleName: RoleName, public profilesStore: ProfilesStore) {
     //super(client, roleName, zomeName);
   }
 
-  agentPubKey() : AgentPubKey {
+  myPubKey() : AgentPubKey {
     return this.client.myPubKey
   }
 
@@ -48,27 +49,27 @@ export class RelayClient {
     console.log("appInfo", appInfo)
 
     if (appInfo) {
-      appInfo.cell_info.modifiers
+      // appInfo.cell_info.modifiers
 
       const cells: CellInfo[] = appInfo.cell_info[this.roleName].filter(
         (c) => CellType.Cloned in c
       );
       // @ts-ignore
-      const conversations = cells.reduce((result, c:CellInfo) => { console.log("mee", c, result); result[c[CellType.Cloned].clone_id] = c[CellType.Cloned]; return result }, {})
-      console.log("conversations111", conversations)
+      const conversations = cells.reduce((result, c:CellInfo) => { result[c[CellType.Cloned].clone_id] = c[CellType.Cloned]; return result }, {})
+      console.log("Init conversations", conversations)
       this.conversations = conversations
     }
   }
 
-  async createConversation(name: string) : Promise<string> {
+  async createConversation(name: string) : Promise<ClonedCell> {
     return this._createConversation(name, this.client.myPubKey, undefined)
   }
 
-  async joinConversation(name: string, progenitor: AgentPubKey, proof: MembraneProof) : Promise<string> {
+  async joinConversation(name: string, progenitor: AgentPubKey, proof: MembraneProof) : Promise<ClonedCell> {
     return this._createConversation(name, progenitor, proof)
   }
 
-  async _createConversation(name: string, progenitor: AgentPubKey, membrane_proof: MembraneProof|undefined) : Promise<string> {
+  async _createConversation(name: string, progenitor: AgentPubKey, membrane_proof: MembraneProof|undefined) : Promise<ClonedCell> {
     const properties: Properties = {
       progenitor: encodeHashToBase64(progenitor),
       name
@@ -86,20 +87,22 @@ export class RelayClient {
     console.log("creating clone cell", cloneReq)
     const cell = await this.client.createCloneCell(cloneReq)
     console.log("created clone cell", cell)
-    // await this.setMyNicknameForConversation(cell.clone_id, this.nickname)
+    await this.setMyProfileForConversation(cell.cell_id)
 
+    // TODO: why get all conversations when creating/joining a new one? why not only the new one?
     await this.initConversations()
-    return cell.clone_id
+    return cell
   }
 
   public async getAllMessages(conversationId: string) : Promise<Array<MessageRecord>> {
     const messages = await this.callZome("get_all_message_entries", null, this.conversations[conversationId].cell_id);
     await Promise.all(
+      // TODO: we can load author from the agents list now, don't need to do it here
       messages.map(async (messageRecord: MessageRecord) => {
         if (messageRecord.message) {
           const req: AppAgentCallZomeRequest = {
-            role_name: 'relay',
-            // cell_id: this.conversations[conversationId].cell_id,
+            // role_name: 'relay',
+            cell_id: this.conversations[conversationId].cell_id,
             zome_name: 'profiles',
             fn_name: 'get_agent_profile',
             payload: messageRecord.signed_action.hashed.content.author,
@@ -116,14 +119,40 @@ export class RelayClient {
     return this.callZome("get_messages_hashes_for_week", { week }, this.conversations[conversationId].cell_id);
   }
 
+  public async getAllAgents(conversationId: string) : Promise<{ [key: AgentPubKeyB64]: Profile }> {
+    const cellId = this.conversations[conversationId].cell_id;
+
+    const req: AppAgentCallZomeRequest = {
+      cell_id: cellId,
+      zome_name: 'profiles',
+      fn_name: 'get_agents_with_profile',
+      payload: null,
+    };
+    const agentsResponse = await this.client.callZome(req, 30000);
+    console.log("got agents", agentsResponse)
+
+    return await agentsResponse.reduce(async (resultsPromise: { [key: AgentPubKeyB64]: Profile }, a: any) => {
+        const agentRecord = await this.client.callZome({
+          cell_id: cellId,
+          zome_name: 'profiles',
+          fn_name: 'get_agent_profile',
+          payload: a
+        }, 30000);
+        console.log("agentRecord", agentRecord, decode(agentRecord.entry.Present.entry))
+        const results = await resultsPromise;
+        results[encodeHashToBase64(a)] = decode(agentRecord.entry.Present.entry) as Profile
+        return results
+      }, Promise.resolve<{ [key: AgentPubKeyB64]: Profile }>({})
+    )
+  }
+
   public async sendMessage(conversationId: string, content: string, agents: AgentPubKey[]) {
     console.log("sending message", conversationId, content, this.conversations[conversationId])
     const message = await this.callZome(
       'create_message',
       {
-        // conversationId,
-        content
-        // agents
+        message: { content },
+        agents
       },
       this.conversations[conversationId].cell_id
     )
@@ -131,15 +160,38 @@ export class RelayClient {
     return message
   }
 
-  public async setMyNickname(nickname:string) {
-    this.nickname = nickname
-    Object.values(this.conversations).forEach((cell) => {
-      this.setMyNicknameForConversation(cell.clone_id, nickname)
-    })
+  public async setMyProfileForConversation(cellId: CellId) : Promise<null> {
+    const myProfile = get(this.profilesStore.myProfile)
+    const myProfileValue = myProfile && myProfile.status === 'complete' && myProfile.value as EntryRecord<Profile>
+    const profile = myProfileValue ? myProfileValue.entry : undefined
+
+    const req: AppAgentCallZomeRequest = {
+      //role_name: cell_id ? undefined : this.roleName,
+      cell_id: cellId,
+      zome_name: 'profiles',
+      fn_name: 'create_profile',
+      payload: profile,
+    };
+    return await this.client.callZome(req, 30000);
   }
 
-  public async setMyNicknameForConversation(conversationId: string, nickname:string) : Promise<null> {
-    return this.callZome("set_nickname", { nickname }, this.conversations[conversationId].cell_id)
+  public async inviteAgentToConversation(conversationId: string, forAgent: AgentPubKey, role: number = 0): Promise<MembraneProof | undefined> {
+    try {
+      const conversation = this.conversations[conversationId]
+      console.log("client.inviteAgentToConversation", conversationId, forAgent, role, conversation)
+
+      const data: MembraneProofData = {
+        conversation_name: conversation.name,
+        for_agent: forAgent,
+        as_role: role,
+      }
+      const r = await this.callZome("generate_membrane_proof", data, conversation.cell_id);
+      console.log("client.inviteAgentToConversation returning proof", r)
+      return r
+    } catch(e) {
+      console.log("Error generating membrane proof", e)
+    }
+    return undefined
   }
 
   protected async callZome(fn_name: string, payload: any, cell_id: any) {

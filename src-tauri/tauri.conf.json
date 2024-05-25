@@ -7,7 +7,7 @@
 		"distDir": "../build"
 	},
 	"package": {
-		"productName": "skeleton-starter-tauri",
+		"productName": "Relay",
 		"version": "0.1.0"
 	},
 	"tauri": {
@@ -15,7 +15,12 @@
 			"all": false,
 			"shell": {
 				"open": true
-			}
+			},
+			"clipboard": {
+        "all": true,
+        "writeText": true,
+        "readText": true
+      }
 		},
 		"bundle": {
 			"active": true,
@@ -61,7 +66,7 @@
 				"fullscreen": false,
 				"height": 600,
 				"resizable": true,
-				"title": "Skeleton starter Tauri",
+				"title": "Relay",
 				"width": 800
 			}
 		]

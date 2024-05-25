@@ -10,10 +10,17 @@ pub struct MessageRecord {
     message: Option<Message>,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct SendMessageInput {
+    pub message: Message,
+    pub agents: Vec<AgentPubKey>,
+}
+
 #[hdk_extern]
-pub fn create_message(message: Message) -> ExternResult<Record> {
-    debug!("create_message 1 {:?}", message);
-    let message_hash = create_entry(&EntryTypes::Message(message.clone()))?;
+pub fn create_message(input: SendMessageInput) -> ExternResult<Record> {
+    debug!("create_message 1 {:?}, {:?}", input.message, input.agents);
+    let message_hash = create_entry(&EntryTypes::Message(input.message.clone()))?;
     debug!("create_message 2 {:?}", message_hash);
     let record: Record = get(message_hash.clone(), GetOptions::default())?
         .ok_or(
@@ -43,6 +50,15 @@ pub fn create_message(message: Message) -> ExternResult<Record> {
         LinkTypes::AllMessages,
         (),
     )?;
+
+    // TODO: handle errors. look for ack, try again on fail
+    let _ = send_remote_signal(
+        Message {
+            content: input.message.content
+        },
+        input.agents,
+    );
+
     debug!("create message all messages link: {:?}", link);
     Ok(record)
 }
@@ -114,15 +130,20 @@ pub fn get_all_message_entries(_: ()) -> ExternResult<Vec<MessageRecord>> {
             //     agent_key: r.signed_action.hashed.author().clone(),
             // };
             // let agent = call(
-            //     None,
+            //     CallTargetCell::Local,
             //     "profiles",
             //     "get_agent_profile".into(),
             //     None,
             //     call_input,
             // );
-            // debug!("agent {:?}", agent);
+            // if let ZomeCallResponse::Ok(response) = call(CallTargetCell::Local,"profiles",FunctionName::new("get_agent_profile"), None, call_input)? {
+            //     let agent : Record<Profile> = response.decode().map_err(|_e| wasm_error!(WasmErrorInner::Guest(String::from("could not decode agent profile"))))?;
+            //     // let me = agent_info()?.agent_latest_pubkey;
+            //     //let agents = agents.into_iter().filter(|a| a != &me).collect();
+            //     debug!("agent {:?}", agent);
+            //     r.message.unwrap().author_name = agent;
+            // }
 
-            //r.message.unwrap().author_name = agent.unwra
             results.push (r);
         }
     }
