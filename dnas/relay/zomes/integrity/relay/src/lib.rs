@@ -51,7 +51,7 @@ pub fn check_agent(agent_pub_key: AgentPubKey, membrane_proof: Option<MembranePr
         return Ok(ValidateCallbackResult::Valid);
     }
     match membrane_proof {
-        None => Ok(ValidateCallbackResult::Invalid("membrane proof must be provided".to_string())),
+        None => Ok(ValidateCallbackResult::Valid), // Ok(ValidateCallbackResult::Invalid("membrane proof must be provided".to_string())),
         Some(serialized_proof) => {
             let envelope  = MembraneProofEnvelope::try_from((*serialized_proof).clone()).map_err(|e| wasm_error!(e))?;
             // if envelope.data.space_type != props.space_type {

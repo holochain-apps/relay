@@ -45,6 +45,7 @@
         messages = c.messages;
         agentProfiles = Object.values(c.agentProfiles)
       });
+      conversation.initialize();
     }
   });
 
@@ -90,7 +91,7 @@
       <ul>
         {#each messages as message (message.id)}
           <li class='mt-auto mb-5'>
-            <div class="text-center text-sm text-secondary-500"><Time timestamp={message.timestamp} format="ddd, MMM D @ h:m" /></div>
+            <div class="text-center text-sm text-secondary-500"><Time timestamp={message.timestamp} format="ddd, MMM D @ h:mm" /></div>
             <span class="font-bold">{@html message.author}: </span>
             <span class="p-2 max-w-xs self-end mb-2">{@html message.content}</span>
           </li>

@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import {
   CellType,
   encodeHashToBase64,
@@ -62,14 +63,14 @@ export class RelayClient {
   }
 
   async createConversation(name: string) : Promise<ClonedCell> {
-    return this._createConversation(name, this.client.myPubKey, undefined)
+    return this._createConversation(name, this.client.myPubKey, undefined, undefined)
   }
 
-  async joinConversation(name: string, progenitor: AgentPubKey, proof: MembraneProof) : Promise<ClonedCell> {
-    return this._createConversation(name, progenitor, proof)
+  async joinConversation(name: string, progenitor: AgentPubKey, proof: MembraneProof|undefined, networkSeed: string) : Promise<ClonedCell> {
+    return this._createConversation(name, progenitor, proof, networkSeed)
   }
 
-  async _createConversation(name: string, progenitor: AgentPubKey, membrane_proof: MembraneProof|undefined) : Promise<ClonedCell> {
+  async _createConversation(name: string, progenitor: AgentPubKey, membrane_proof: MembraneProof|undefined, networkSeed: string|undefined) : Promise<ClonedCell> {
     const properties: Properties = {
       progenitor: encodeHashToBase64(progenitor),
       name
@@ -80,6 +81,7 @@ export class RelayClient {
       name,
       membrane_proof,
       modifiers: {
+        network_seed: networkSeed || uuidv4(),
         properties
       },
     }

@@ -51,8 +51,7 @@
 <div class="container h-full mx-auto flex flex-col">
   <h1 class="text-2xl mx-auto p-2 flex-shrink-0">Conversations</h1>
   <ul class="flex-1">
-    {#each $relayStore as $conversation ($conversation.data.name)}
-      {@debug $conversation}
+    {#each $relayStore as $conversation ($conversation.data.id)}
       <li class='text-xl'>
         <a href="/conversations/{$conversation.data.id}">
           <span>{@html $conversation.data.name}</span>

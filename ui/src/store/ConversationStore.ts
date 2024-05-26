@@ -1,17 +1,18 @@
+import { encode } from '@msgpack/msgpack';
+import { Base64 } from 'js-base64';
 import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64 } from "@holochain/client";
 import { writable, get, type Writable } from 'svelte/store';
 import { RelayClient } from '$store/RelayClient'
-import type { Conversation, MessageRecord } from '../types';
+import type { Conversation, Invitation, MessageRecord } from '../types';
 
 export class ConversationStore {
   private conversation: Writable<Conversation>;
 
-  constructor( public client: RelayClient, id: string, cellDnaHash: DnaHash, name: string, public progenitor: AgentPubKey|undefined) {
-    console.log("new onversation store", id, name, progenitor)
-    this.conversation = writable({ id, cellDnaHash, name, messages: [], progenitor, agentProfiles: {} });
+  constructor(public client: RelayClient, id: string, cellDnaHash: DnaHash, name: string, public progenitor: AgentPubKey, networkSeed: string) {
+    this.conversation = writable({ id, cellDnaHash, name, networkSeed, progenitor, agentProfiles: {}, messages: [] });
   }
 
-async initialize() {
+  async initialize() {
     await this.getMessages()
     await this.getAgents()
   }
@@ -28,17 +29,19 @@ async initialize() {
     try {
       //const messages: Array<MessageRecord> = await this.client.getMessagesByWeek()
       const messages: Array<MessageRecord> = await this.client.getAllMessages(this.data.id)
-      console.log("getMessages returned", messages)
       for (const messageRecord of messages) {
         try {
           const message = messageRecord.message
           if (message) {
             message.id = encodeHashToBase64(messageRecord.original_action)
             message.timestamp = new Date(messageRecord.signed_action.hashed.content.timestamp / 1000)
-            this.conversation.update(c => {
-              c.messages = [...c.messages, message]
-              return c
-            })
+            const exists = this.data.messages.some(m => m.id === message.id);
+            if (!exists) {
+              this.conversation.update(c => {
+                c.messages = [...c.messages, message]
+                return c
+              })
+            }
           }
         } catch(e) {
           console.log("Unable to parse message, ignoring", messageRecord, e)
@@ -56,11 +59,9 @@ async initialize() {
       c.agentProfiles = {...c.agentProfiles, ...agentProfiles}
       return c
     })
-    console.log("got agents:", agentProfiles, this.data.agentProfiles)
   }
 
   sendMessage(author: string, content: string): void {
-    console.log("sendMessage", content)
     this.addMessage(author, content)
     this.client.sendMessage(this.data.id, content, Object.keys(this.data.agentProfiles).map(k => decodeHashFromBase64(k)));
   }
@@ -70,5 +71,15 @@ async initialize() {
       const message = { id: String(conversation.messages.length + 1), author, content, timestamp: new Date() };
       return { ...conversation, messages: [...conversation.messages, message] };
     });
+  }
+
+  get publicInviteCode() {
+    const invitation: Invitation = {
+      conversationName: this.data.name,
+      progenitor: this.data.progenitor,
+      networkSeed: this.data.networkSeed
+    }
+    const msgpck = encode(invitation);
+    return Base64.fromUint8Array(msgpck);
   }
 }

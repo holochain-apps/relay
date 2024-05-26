@@ -24,20 +24,17 @@
 
   const createInviteCode = async () => {
     if (!conversation) return
-    console.log("crete invite code", inviteAgent, conversationId)
     const agent: AgentPubKey = decodeHashFromBase64(inviteAgent)
     const proof = await relayStore.inviteAgentToConversation(conversationId, agent)
-    const progenitor = relayStore.client?.myPubKey()
-    console.log("crete invite code proof", proof, progenitor)
-    if (proof !== undefined && progenitor != undefined) {
+    if (proof !== undefined) {
       const invitation: Invitation = {
         conversationName: conversation.data.name,
-        progenitor,
+        progenitor: conversation.data.progenitor,
         proof,
+        networkSeed: conversation.data.networkSeed
       }
       const msgpck = encode(invitation);
       inviteCode = Base64.fromUint8Array(msgpck);
-      console.log("crete invite code 3", invitation, msgpck, inviteCode)
       copyToClipboard(inviteCode)
       alert("Invitation code copied to clipboard")
     }
@@ -57,6 +54,12 @@
 	<div class="space-y-5">
 		<h1 class="h1">{conversation.data.name}</h1>
     <p>Invite members to this conversation</p>
+    <div class='max-w-sm'>
+      <p class='overflow-hidden text-ellipsis'>Public Invite Code: {conversation.publicInviteCode}</p>
+      <button on:click={() => copyToClipboard(conversation.publicInviteCode)} class='ml-2'>
+				<img src="/copy.svg" alt="Copy Icon" width='16' />
+			</button>
+    </div>
     <div class='max-w-sm'>
       Invite Agent: <input type="text" placeholder="Enter agent public key" bind:value={inviteAgent} />
       <button on:click={createInviteCode}>Invite</button>

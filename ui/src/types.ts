@@ -60,28 +60,31 @@ export interface Message {
 }
 
 export interface MessageRecord {
-  original_action: ActionHash,
-  signed_action: SignedActionHashed,
-  message?: Message
+  original_action: ActionHash;
+  signed_action: SignedActionHashed;
+  message?: Message;
 }
 
 export interface Conversation {
   id: string; // the clone id
   cellDnaHash: DnaHash;
-  name: string;
   description?: string;
+  name: string;
+  networkSeed: string;
+  progenitor: AgentPubKey;
   messages: Message[];
   agentProfiles: { [key: AgentPubKeyB64]: Profile };
 }
 
 export interface MembraneProofData {
-  conversation_name: string,
-  for_agent: AgentPubKey,
-  as_role: number,
+  conversation_name: string;
+  for_agent: AgentPubKey;
+  as_role: number;
 }
 
 export interface Invitation {
-  conversationName: string,
-  progenitor: AgentPubKey,
-  proof: MembraneProof,
+  conversationName: string;
+  progenitor: AgentPubKey;
+  proof?: MembraneProof;
+  networkSeed: string;
 }
