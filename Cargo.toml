@@ -15,9 +15,9 @@ members = ["dnas/*/zomes/coordinator/*", "dnas/*/zomes/integrity/*", "src-tauri"
 resolver = "2"
 
 [workspace.dependencies]
-hdi = "=0.4.0-beta-dev.30"
-hdk = "=0.3.0-beta-dev.34"
-holochain = "0.3.0-beta-dev.44"
+hdi = "=0.4.1-rc.0"
+hdk = "=0.3.1-rc.0"
+holochain = "0.3.1-rc.0"
 serde = "1.0"
 
 [workspace.dependencies.file_storage]

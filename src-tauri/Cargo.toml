@@ -1,5 +1,5 @@
 [package]
-name = "relay"
+name = "relayapp"
 version = "0.0.0"
 description = "Relay"
 authors = ["you"]
