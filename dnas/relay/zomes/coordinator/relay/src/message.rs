@@ -4,13 +4,6 @@ use relay_integrity::*;
 // use crate::utils::*;
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct MessageRecord {
-    original_action: ActionHash,
-    signed_action: SignedActionHashed,
-    message: Option<Message>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct SendMessageInput {
     pub message: Message,
@@ -22,7 +15,7 @@ pub fn create_message(input: SendMessageInput) -> ExternResult<Record> {
     debug!("create_message 1 {:?}, {:?}", input.message, input.agents);
     let message_hash = create_entry(&EntryTypes::Message(input.message.clone()))?;
     debug!("create_message 2 {:?}", message_hash);
-    let record: Record = get(message_hash.clone(), GetOptions::default())?
+    let record = get(message_hash.clone(), GetOptions::default())?
         .ok_or(
             wasm_error!(
                 WasmErrorInner::Guest("Could not find the newly created Message"
@@ -53,8 +46,12 @@ pub fn create_message(input: SendMessageInput) -> ExternResult<Record> {
 
     // TODO: handle errors. look for ack, try again on fail
     let _ = send_remote_signal(
-        Message {
-            content: input.message.content
+        MessageRecord {
+            message: Some(Message {
+                content: input.message.content
+            }),
+            original_action: message_hash.clone(),
+            signed_action: record.signed_action().clone()
         },
         input.agents,
     );
@@ -124,7 +121,7 @@ pub fn get_all_message_entries(_: ()) -> ExternResult<Vec<MessageRecord>> {
     let mut results: Vec<MessageRecord> = Vec::new();
     for l in links {
         let hash  = ActionHash::try_from(l.target).map_err(|e|wasm_error!(e))?;
-        if let Some(mut r) = get_latest_message(hash)? {
+        if let Some(r) = get_latest_message(hash)? {
             // TODO: make a call to the profiles zome to get the agent profile
             // let call_input = GetAgenProfileInput {
             //     agent_key: r.signed_action.hashed.author().clone(),

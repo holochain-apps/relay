@@ -4,44 +4,48 @@
   import { getContext } from "svelte";
   import SvgIcon from "./SvgIcon.svelte";
 
-  const profilesContext: { getStore: () => ProfilesStore } =
-    getContext("profiles");
+  const profilesContext: { getStore: () => ProfilesStore } = getContext("profiles");
   const store = profilesContext.getStore();
 
-  export let agentPubKey: AgentPubKey;
-  export let size = 32;
+  export let agentPubKey: AgentPubKey | null = null;
+  export let image: string | undefined = undefined; // If image is passed in this will ignore the agentPubKey
+  export let size : string | number = '32';
   export let namePosition = "row";
   export let showAvatar = true;
   export let showNickname = true;
   export let placeholder = false;
-  export let disableAvatarPointerEvents = false;
+  export let moreClasses = ''
 
   $: agentPubKey;
-  $: agentPubKeyB64 = encodeHashToBase64(agentPubKey);
-  $: profile = store.profiles.get(agentPubKey); // TODO: how to look in a specific cell
-  $: nickname =
-    $profile.status == "complete" && $profile.value
+  $: agentPubKeyB64 = agentPubKey && encodeHashToBase64(agentPubKey);
+  $: profile = agentPubKey && store.profiles.get(agentPubKey); // TODO: how to look in a specific cell
+  $: nickname = $profile && agentPubKeyB64 ?
+    ($profile.status == "complete" && $profile.value
       ? $profile.value.entry.nickname
-      : agentPubKeyB64.slice(5, 9) + "...";
+      : agentPubKeyB64.slice(5, 9) + "...") : "";
 </script>
 
-<div class="avatar-{namePosition}" title={showNickname ? "" : nickname}>
-  {#if $profile.status == "pending"}
+<div class="avatar-{namePosition} {moreClasses}" title={showNickname ? "" : nickname}>
+  {#if image}
+    <div class="avatar-container" style="width: {size}px; height: {size}px">
+      <img src={image} alt="avatar" width={size} height={size} />
+    </div>
+  {:else if $profile && $profile.status == "pending"}
     ...
-  {:else if $profile.status == "complete" && $profile.value}
+  {:else if $profile && $profile.status == "complete" && $profile.value}
     {#if showAvatar}
-      {#if placeholder && !$profile.value.entry.fields.avatar}
-        <SvgIcon
-          icon="faUser"
-          size={`${size}`}
-          style="margin-left:5px; margin-right:0px"
-          color="white"
-        />
-      {:else}
-        <div class="avatar-container" style="width: {size}px; height: {size}px">
+      <div class="avatar-container" style="width: {size}px; height: {size}px">
+        {#if placeholder && !$profile.value.entry.fields.avatar}
+          <SvgIcon
+            icon="person"
+            size={`${size}`}
+            style="margin-left:5px; margin-right:0px"
+            color="white"
+          />
+        {:else}
           <img src={$profile.value.entry.fields.avatar} alt="avatar" width={size} height={size} />
-        </div>
-      {/if}
+        {/if}
+      </div>
     {/if}
     {#if showNickname}
       <div class="nickname">{nickname}</div>

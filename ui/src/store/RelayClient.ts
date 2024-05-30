@@ -45,6 +45,10 @@ export class RelayClient {
     return this.client.myPubKey
   }
 
+  myPubKeyB64() : AgentPubKeyB64 {
+    return encodeHashToBase64(this.client.myPubKey)
+  }
+
   async initConversations() {
     const appInfo = await this.client.appInfo()
     console.log("appInfo", appInfo)
@@ -60,6 +64,18 @@ export class RelayClient {
       console.log("Init conversations", conversations)
       this.conversations = conversations
     }
+  }
+
+  async createProfile(nickname: string, avatar: string) : Promise<Profile> {
+    const req: AppAgentCallZomeRequest = {
+      role_name: 'relay',
+      // cell_id: this.conversations[conversationId].cell_id,
+      zome_name: 'profiles',
+      fn_name: 'create_profile',
+      payload: { nickname, fields: { avatar } }
+    };
+    const profile = await this.client.callZome(req, 30000);
+    return profile
   }
 
   async createConversation(name: string) : Promise<ClonedCell> {
@@ -98,22 +114,6 @@ export class RelayClient {
 
   public async getAllMessages(conversationId: string) : Promise<Array<MessageRecord>> {
     const messages = await this.callZome("get_all_message_entries", null, this.conversations[conversationId].cell_id);
-    await Promise.all(
-      // TODO: we can load author from the agents list now, don't need to do it here
-      messages.map(async (messageRecord: MessageRecord) => {
-        if (messageRecord.message) {
-          const req: AppAgentCallZomeRequest = {
-            // role_name: 'relay',
-            cell_id: this.conversations[conversationId].cell_id,
-            zome_name: 'profiles',
-            fn_name: 'get_agent_profile',
-            payload: messageRecord.signed_action.hashed.content.author,
-          };
-          const authorAgent = await this.client.callZome(req, 30000);
-          messageRecord.message.author = (decode(authorAgent.entry.Present.entry) as Profile).nickname
-        }
-      })
-    )
     return messages
   }
 
@@ -131,7 +131,6 @@ export class RelayClient {
       payload: null,
     };
     const agentsResponse = await this.client.callZome(req, 30000);
-    console.log("got agents", agentsResponse)
 
     return await agentsResponse.reduce(async (resultsPromise: { [key: AgentPubKeyB64]: Profile }, a: any) => {
         const agentRecord = await this.client.callZome({
@@ -140,7 +139,6 @@ export class RelayClient {
           fn_name: 'get_agent_profile',
           payload: a
         }, 30000);
-        console.log("agentRecord", agentRecord, decode(agentRecord.entry.Present.entry))
         const results = await resultsPromise;
         results[encodeHashToBase64(a)] = decode(agentRecord.entry.Present.entry) as Profile
         return results

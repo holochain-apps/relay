@@ -1,23 +1,17 @@
 <script lang="ts">
-	import { getContext, onDestroy, onMount } from 'svelte';
-  import Time from "svelte-time";
-  import Header from '$lib/Header.svelte';
-  import type { PageData } from './$types';
-	// import { enhance } from '$app/forms';
-  import { get } from "svelte/store";
 	import { ProfilesStore, type Profile } from '@holochain-open-dev/profiles';
+  import type { AgentPubKeyB64 } from '@holochain/client';
+  import { getContext, onDestroy, onMount } from 'svelte';
+  import { get, type Readable, type Unsubscriber, derived } from "svelte/store";
+  import Time from "svelte-time";
   import { page } from '$app/stores';
-  import type { Conversation, Message } from '../../../types';
+  import { goto } from '$app/navigation';
+  import Avatar from '$lib/Avatar.svelte';
+  import Header from '$lib/Header.svelte';
+  import SvgIcon from '$lib/SvgIcon.svelte';
   import { RelayStore } from '$store/RelayStore';
-  import type { Unsubscriber } from 'svelte/motion';
-
-	//export let form : ActionData;
-
-  //import { chat, sendMessage as addMessage, loadChat } from '$store/Chat';
-  // import type { UserStore } from "$store/UserStore";
-  // // Retrieve user store from context
-	// const userStore: UserStore = getContext('user');
-  // $: userName = userStore.name
+  import { ConversationStore } from '$store/ConversationStore';
+  import type { Conversation, Message } from '../../../types';
 
   const profilesContext: { getStore: () => ProfilesStore } = getContext('profiles')
 	const profilesStore = profilesContext.getStore()
@@ -25,40 +19,73 @@
 	$: myProfileValue = myProfileNow && myProfileNow.status === 'complete' && myProfileNow.value as any
   $: userName = myProfileValue ? myProfileValue.entry.nickname  : ""
 
-  // export let data: PageData;
-
-  // $: conversation = data.conversation;
-
   $: conversationId = $page.params.id;
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext('relayStore')
   let relayStore = relayStoreContext.getStore()
+  let myPubKey = relayStore.client.myPubKeyB64()
 
   $: conversation = relayStore.getConversation(conversationId);
   let messages: Message[] = [];
-  let agentProfiles: Profile[] = [];
+  let agentProfiles: { [key: AgentPubKeyB64]: Profile } = {};
+  let numMembers = 0;
   let unsubscribe : Unsubscriber;
 
   onMount(() => {
-    if (conversation) {
+    if (!conversation) {
+      goto('/conversations');
+    } else {
       unsubscribe = conversation.subscribe((c: Conversation) => {
+        console.log("subscribe got messages", c.messages, " num members", Object.values(c.agentProfiles).length)
+        agentProfiles = c.agentProfiles
         messages = c.messages;
-        agentProfiles = Object.values(c.agentProfiles)
+        numMembers = Object.values(agentProfiles).length;
       });
       conversation.initialize();
     }
   });
 
+  $: console.log("conversation messages", conversation?.data.messages, messages)
+  $: console.log("agent prpfiles", conversation?.data.agentProfiles, agentProfiles, numMembers)
+
   // Cleanup the subscription
   onDestroy(() => {
-    unsubscribe();
+    unsubscribe && unsubscribe();
   });
+
+  // Derived store to process messages and add headers
+  $: processedMessages = conversation && derived(conversation, ($value) => {
+    const messages = ($value as Conversation).messages;
+    console.log("processing", messages, ($value as Conversation).agentProfiles)
+    const result: Message[] = [];
+
+    let lastDate: Date | null = null;
+
+    messages.forEach(message => {
+      message.author = ($value as Conversation).agentProfiles[message.authorKey].nickname;
+      message.avatar = ($value as Conversation).agentProfiles[message.authorKey].fields.avatar;
+
+      const messageDate: Date = new Date(message.timestamp);
+      const formattedDate: string = messageDate.toLocaleDateString('en-US', {
+        weekday: 'long', month: 'long', day: 'numeric'
+      });
+
+      if (!lastDate || messageDate.toDateString() !== lastDate.toDateString()) {
+        result.push({ ...message, header: formattedDate });
+        lastDate = messageDate;
+      } else {
+        result.push({ ...message });
+      }
+    });
+
+    return result;
+  })
 
   let newMessageText = '';
 
-  function sendMessage(e: SubmitEvent) {
-    if (conversation && userName && newMessageText.trim()) {
-      conversation.sendMessage(userName, newMessageText);
+  async function sendMessage(e: SubmitEvent) {
+    if (conversation && newMessageText.trim()) {
+      await conversation.sendMessage(myPubKey, newMessageText);
       newMessageText = ''; // Clear input after sending
       // TODO: wait a minute for latest to load
       const el = document.querySelector('#message-box > ul > li:last-child');
@@ -76,27 +103,37 @@
 </script>
 
 <Header>
-  <a class='text-4xl mr-5' href="/conversations">⟨</a>
-  <h1 class="flex-1">Inbox</h1>
+  <a class='absolute' href="/conversations"><SvgIcon icon='back' color='white' size='10' /></a>
   {#if conversation}
-    <a class='' href="/conversations/{conversation.data.id}/invite">Invite People</a>
+    <h1 class="flex-1 grow text-center">{@html conversation.data.name}</h1>
+    <a class='absolute right-5' href="/conversations/{conversation.data.id}/invite"><SvgIcon icon='addPerson' color='white' /></a>
   {/if}
 </Header>
 
-{#if conversation}
-  <div class="container mx-auto flex justify-center items-center flex-col flex-1 overflow-hidden">
-    <h1 class='text-4xl flex-shrink-0'>{@html conversation.data.name}</h1>
-    <p>{@html agentProfiles.length } {#if agentProfiles.length === 1}Member{:else}Members{/if}</p>
-    <div id='message-box' class="flex-1 overflow-y-auto p-4 flex flex-col-reverse w-full">
-      <ul>
-        {#each messages as message (message.id)}
-          <li class='mt-auto mb-5'>
-            <div class="text-center text-sm text-secondary-500"><Time timestamp={message.timestamp} format="ddd, MMM D @ h:mm" /></div>
-            <span class="font-bold">{@html message.author}: </span>
-            <span class="p-2 max-w-xs self-end mb-2">{@html message.content}</span>
-          </li>
-        {/each}
-      </ul>
+{#if conversation && typeof $processedMessages !== 'undefined'}
+  <div class="container mx-auto flex justify-center items-center flex-col flex-1 overflow-hidden w-full">
+    <div class='overflow-y-auto flex flex-col grow items-center w-full'>
+      <h1 class='text-4xl flex-shrink-0 mt-10'>{@html conversation.data.name}</h1>
+      <p class='text-surface-300'>{@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}</p>
+      <div id='message-box' class="flex-1 p-4 flex flex-col-reverse w-full">
+        <ul>
+          {#each $processedMessages as message (message.id)}
+            {#if message.header}
+              <li class='mt-auto mb-5'>
+                <div class="text-center text-sm text-secondary-500">{message.header}</div>
+              </li>
+            {/if}
+            <li class='mt-auto mb-5'>
+              <div class='flex items-center'>
+                <Avatar image={message.avatar} size='24' placeholder={true} showNickname={false} moreClasses='-ml-30'/>
+                <span class="font-bold ml-3 grow">{@html message.author}</span>
+                <span class="text-surface-200 text-xs"><Time timestamp={message.timestamp} format="h:mm" /></span>
+              </div>
+              <span class="p-2 max-w-xs self-end mb-2 ml-7">{@html message.content}</span>
+            </li>
+          {/each}
+        </ul>
+      </div>
     </div>
     <div class="w-full p-2 bg-surface-400 flex-shrink-0">
       <!-- have this input when submitted add a conversation to the page data -->

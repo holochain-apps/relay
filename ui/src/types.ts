@@ -55,8 +55,11 @@ export type EntryTypes =
 export interface Message {
   id?: string;
   content: string;
-  author: string;
+  author?: string;
+  authorKey: string;
+  avatar?: string;
   timestamp: Date;
+  header?: string;
 }
 
 export interface MessageRecord {
