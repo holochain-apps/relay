@@ -1,9 +1,20 @@
+import { internalIpV4Sync } from "internal-ip";
 import { purgeCss } from 'vite-plugin-tailwind-purgecss';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-	plugins: [sveltekit(), purgeCss()],
+  server: {
+    host: "0.0.0.0",
+    port: 1420,
+    strictPort: true,
+    hmr: {
+      protocol: "ws",
+      host: internalIpV4Sync(),
+      port: 1421,
+    }
+  },
+  plugins: [sveltekit(), purgeCss()],
 	build: {
     minify: false
   },
