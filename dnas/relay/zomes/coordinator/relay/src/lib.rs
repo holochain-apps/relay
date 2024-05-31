@@ -21,10 +21,11 @@ use relay_integrity::*;
 // }
 
 #[hdk_extern]
-fn recv_remote_signal(message: Message) -> ExternResult<()> {
+fn recv_remote_signal(message_record: MessageRecord) -> ExternResult<()> {
     let info: CallInfo = call_info()?;
     let signal = Signal::Message {
-        content: message.content,
+        action: message_record.signed_action.clone(),
+        content: message_record.message.unwrap().content,
         from: info.provenance,
     };
     emit_signal(signal)
@@ -46,7 +47,7 @@ pub fn init(_: ()) -> ExternResult<InitCallbackResult> {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
 pub enum Signal {
-    Message { content: String, from: AgentPubKey },
+    Message { action: SignedActionHashed, content: String, from: AgentPubKey },
     LinkCreated { action: SignedActionHashed, link_type: LinkTypes },
     LinkDeleted {
         action: SignedActionHashed,

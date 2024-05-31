@@ -3,12 +3,12 @@
 
 	import { type AppClient, AppWebsocket, AdminWebsocket, type AppWebsocketConnectionOptions } from '@holochain/client';
 	import { ProfilesClient, ProfilesStore } from '@holochain-open-dev/profiles';
-
-	import { goto } from '$app/navigation';
-
 	import { onMount, setContext } from 'svelte';
+	import { goto } from '$app/navigation';
   import { RelayClient } from '$store/RelayClient';
   import { RelayStore } from '$store/RelayStore';
+
+	import '../app.postcss';
 
 	//	export let data: LayoutData;
 
@@ -77,6 +77,8 @@
     };
 	})
 
+	$: prof = profilesStore ? profilesStore.myProfile : undefined
+
 	setContext('relayClient', {
     getClient: () => relayClient
   });
@@ -88,61 +90,30 @@
 	setContext('relayStore', {
     getStore: () => relayStore
   });
-
-	$: prof = profilesStore ? profilesStore.myProfile : undefined
-
-	// const userStore = new UserStore()
-	// setContext('user', userStore);
 </script>
 
-<div class="wrapper flex flex-col mx-auto p-2 h-screen items-center">
-	{#if connected}
-		{#if !$prof || $prof.status=="pending"}
-			<div class="flex flex-col items-center justify-center h-full">
-				<p class="text-2xl">
-					Connecting to Holochain...
-				</p>
-			</div>
-		{:else if $prof.status=="complete" && $prof.value == undefined}
-			<h1 class="h1 mb-10"><img src="/logo.png" alt="Logo" class='inline'/>elay</h1>
-			<div class="create-profile">
-				<create-profile store={profilesStore}
-					on:profile-created={(a) => { console.log("profile created", a)}}
-				></create-profile>
-			</div>
-		{:else if $prof.status=="error"}
-			Error when loading profile: {$prof.error}
-		{:else}
-			<slot />
-		{/if}
-	{:else}
-		<div class="flex flex-col items-center justify-center h-full">
-			<p class="text-2xl">
-				Connecting to Holochain...
-			</p>
+<div class="wrapper flex flex-col mx-auto px-5 py-4 h-screen items-center">
+	{#if !connected || ($prof && $prof.status === 'pending')}
+		<div class='flex flex-col items-center justify-center grow'>
+			<img src="/logo.png" alt="Logo" />
+			<h1 class="h1 mb-10">Relay</h1>
+			<p>Peer-to-peer. Encrypted. Secure.</p>
 		</div>
-	{/if}
-	<!-- {#if connected && $prof && $prof.status == "complete"}
+		<div class="flex flex-col items-center justify-center">
+			<p class="text-2xl mb-8">Connecting to Holochain...</p>
+		</div>
+		<div class="flex flex-col items-center justify-center">
+			<p class='text-surface-300 text-xs'>SECURED BY</p>
+			<img src='/holochain.png' alt="holochain" />
+		</div>
+	{:else}
 		<slot />
-	{:else} -->
+	{/if}
 </div>
 
 <style>
 	.wrapper {
 		max-width: 1000px;
 		margin: 0 auto;
-	}
-
-	.create-profile {
-		padding-top: 100px;
-		margin-left: auto;
-		margin-right: auto;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-	}
-
-	.create-profile {
-		box-shadow: 0px 10px 10px rgba(0, 0, 0, .15);
 	}
 </style>

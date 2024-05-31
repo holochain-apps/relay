@@ -6,6 +6,12 @@ pub struct Message {
     // pub author_name: Option<String>,
     // pub author: Option<AgentPubKey>
 }
+#[derive(Serialize, Deserialize, Debug)]
+pub struct MessageRecord {
+    pub original_action: ActionHash,
+    pub signed_action: SignedActionHashed,
+    pub message: Option<Message>,
+}
 pub fn validate_create_message(
     _action: EntryCreationAction,
     _message: Message,

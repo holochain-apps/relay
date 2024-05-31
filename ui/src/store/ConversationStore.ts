@@ -3,7 +3,7 @@ import { Base64 } from 'js-base64';
 import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64 } from "@holochain/client";
 import { writable, get, type Writable } from 'svelte/store';
 import { RelayClient } from '$store/RelayClient'
-import type { Conversation, Invitation, MessageRecord } from '../types';
+import type { Conversation, Invitation, Message, MessageRecord } from '../types';
 
 export class ConversationStore {
   private conversation: Writable<Conversation>;
@@ -13,8 +13,8 @@ export class ConversationStore {
   }
 
   async initialize() {
-    await this.getMessages()
     await this.getAgents()
+    await this.getMessages()
   }
 
   get data() {
@@ -33,8 +33,9 @@ export class ConversationStore {
         try {
           const message = messageRecord.message
           if (message) {
-            message.id = encodeHashToBase64(messageRecord.original_action)
+            message.id = encodeHashToBase64(messageRecord.signed_action.hashed.hash)
             message.timestamp = new Date(messageRecord.signed_action.hashed.content.timestamp / 1000)
+            message.authorKey = encodeHashToBase64(messageRecord.signed_action.hashed.content.author)
             const exists = this.data.messages.some(m => m.id === message.id);
             if (!exists) {
               this.conversation.update(c => {
@@ -61,14 +62,14 @@ export class ConversationStore {
     })
   }
 
-  sendMessage(author: string, content: string): void {
-    this.addMessage(author, content)
+  sendMessage(authorKey: string, content: string): void {
+    this.addMessage({ authorKey, content, timestamp: new Date() })
     this.client.sendMessage(this.data.id, content, Object.keys(this.data.agentProfiles).map(k => decodeHashFromBase64(k)));
   }
 
-  addMessage(author: string, content: string): void {
+  addMessage(message: Message): void {
     this.conversation.update(conversation => {
-      const message = { id: String(conversation.messages.length + 1), author, content, timestamp: new Date() };
+      message.id = message.id || String(conversation.messages.length + 1);
       return { ...conversation, messages: [...conversation.messages, message] };
     });
   }
