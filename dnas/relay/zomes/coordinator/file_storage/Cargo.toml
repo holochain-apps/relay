@@ -14,11 +14,3 @@ serde = { workspace = true }
 
 file_storage_integrity = { workspace = true }
 hc_zome_file_storage_coordinator = { git = "https://github.com/holochain-open-dev/file-storage", branch = "nixify" }
-
-[dev-dependencies]
-futures = { version = "0.3.1", default-features = false }
-hdk = { workspace = true, features = ["encoding", "test_utils"] }
-holochain = { worskpace = true, default-features = false, features = [
-  "test_utils",
-] }
-tokio = { version = "1.3", features = ["full"] }
