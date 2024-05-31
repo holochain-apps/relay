@@ -3,9 +3,9 @@ import {
   CellType,
   encodeHashToBase64,
   type AgentPubKey,
-  type AppAgentClient,
+  type AppClient,
   type AppCreateCloneCellRequest,
-  type AppAgentCallZomeRequest,
+  type AppCallZomeRequest,
   type CellId,
   type CellInfo,
   type ClonedCell,
@@ -37,7 +37,7 @@ export class RelayClient {
   conversations: {[key: string]: ClonedCell} = {}
   zomeName = ZOME_NAME
 
-  constructor(public client: AppAgentClient, public roleName: RoleName, public profilesStore: ProfilesStore) {
+  constructor(public client: AppClient, public roleName: RoleName, public profilesStore: ProfilesStore) {
     //super(client, roleName, zomeName);
   }
 
@@ -102,7 +102,7 @@ export class RelayClient {
       // TODO: we can load author from the agents list now, don't need to do it here
       messages.map(async (messageRecord: MessageRecord) => {
         if (messageRecord.message) {
-          const req: AppAgentCallZomeRequest = {
+          const req: AppCallZomeRequest = {
             // role_name: 'relay',
             cell_id: this.conversations[conversationId].cell_id,
             zome_name: 'profiles',
@@ -124,7 +124,7 @@ export class RelayClient {
   public async getAllAgents(conversationId: string) : Promise<{ [key: AgentPubKeyB64]: Profile }> {
     const cellId = this.conversations[conversationId].cell_id;
 
-    const req: AppAgentCallZomeRequest = {
+    const req: AppCallZomeRequest = {
       cell_id: cellId,
       zome_name: 'profiles',
       fn_name: 'get_agents_with_profile',
@@ -167,7 +167,7 @@ export class RelayClient {
     const myProfileValue = myProfile && myProfile.status === 'complete' && myProfile.value as EntryRecord<Profile>
     const profile = myProfileValue ? myProfileValue.entry : undefined
 
-    const req: AppAgentCallZomeRequest = {
+    const req: AppCallZomeRequest = {
       //role_name: cell_id ? undefined : this.roleName,
       cell_id: cellId,
       zome_name: 'profiles',
@@ -198,7 +198,7 @@ export class RelayClient {
 
   protected async callZome(fn_name: string, payload: any, cell_id: any) {
     console.log("call zome", fn_name, payload, cell_id)
-    const req: AppAgentCallZomeRequest = {
+    const req: AppCallZomeRequest = {
       //role_name: cell_id ? undefined : this.roleName,
       cell_id,
       zome_name: this.zomeName,

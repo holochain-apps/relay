@@ -14,7 +14,7 @@
 		"tool-devx": "BPORT=46263 SPORT=46262; concurrently \"hc run-local-services -b $BPORT -s $SPORT\" \"npm start -w ui\" \"./we_dev/we.AppImage  --dev-config we_dev/config.json --agent-num 1 -b http://127.0.0.1:$BPORT -s ws://127.0.0.1:$SPORT\" \"sleep 10 && ./we_dev/we.AppImage --dev-config we_dev/config.json --agent-num 2 -b http://127.0.0.1:$BPORT -s ws://127.0.0.1:$SPORT\"",
 		"network": "hc s clean && npm run build:happ && UI_PORT=8888 concurrently \"npm start -w ui\" \"npm run launch:happ\" \"holochain-playground\"",
 		"test": "npm run build:zomes && hc app pack workdir --recursive && npm t -w tests",
-		"launch:happ": "concurrently \"hc run-local-services --bootstrap-port $BOOTSTRAP_PORT --signal-port $SIGNAL_PORT\" \"echo pass | RUST_LOG=warn hc launch --piped -n $AGENTS workdir/relay.happ --ui-port $UI_PORT network --bootstrap http://127.0.0.1:\"$BOOTSTRAP_PORT\" webrtc ws://127.0.0.1:\"$SIGNAL_PORT\"\"",
+    "launch:happ": "hc-spin -n $AGENTS workdir/relay.happ --ui-port $UI_PORT ",
 		"package": "npm run build:happ && npm run package -w ui && hc web-app pack workdir --recursive",
 		"start:happ": "echo \"starting with admin $VITE_ADMIN_PORT\" && RUST_LOG=warn echo \"pass\" | hc s -f=$VITE_ADMIN_PORT --piped generate workdir/relay.happ --run=$VITE_APP_PORT -a relay network -b \"http://127.0.0.1:$BOOTSTRAP_PORT\"  webrtc \"ws://127.0.0.1:$SIGNAL_PORT\"",
 		"build:happ": "npm run build:zomes && hc app pack workdir --recursive",
@@ -22,6 +22,7 @@
 	},
 	"devDependencies": {
 		"@holochain-playground/cli": "^0.2.0",
+    "@holochain/hc-spin": "^0.400.0-dev.0",
 		"@rollup/plugin-typescript": "^8.0.0",
 		"@tauri-apps/cli": "^1.5.10",
 		"@tsconfig/svelte": "^5.0.4",

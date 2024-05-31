@@ -1,7 +1,7 @@
 <script lang="ts">
 	import '../app.postcss';
 
-	import { type AppAgentClient, AppAgentWebsocket, AdminWebsocket } from '@holochain/client';
+	import { type AppClient, AppWebsocket, AdminWebsocket, type AppWebsocketConnectionOptions } from '@holochain/client';
 	import { ProfilesClient, ProfilesStore } from '@holochain-open-dev/profiles';
 
 	import { goto } from '$app/navigation';
@@ -18,7 +18,7 @@
 	const adminPort = import.meta.env.VITE_ADMIN_PORT
 	const url = `ws://localhost:${appPort}`;
 
-	let client: AppAgentWebsocket
+	let client: AppWebsocket
 	let relayClient: RelayClient
 	let relayStore: RelayStore
 	let connected = false
@@ -27,8 +27,10 @@
 
 	onMount(() => {
 		async function initHolochain() {
+			let tokenResp
 			if (adminPort) {
 				const adminWebsocket = await AdminWebsocket.connect({ url: new URL(`ws://localhost:${adminPort}`) })
+				tokenResp = await adminWebsocket.issueAppAuthenticationToken({installed_app_id:appId})
 				const x = await adminWebsocket.listApps({})
 				console.log("apps", x)
 				const cellIds = await adminWebsocket.listCellIds()
@@ -36,7 +38,9 @@
 				await adminWebsocket.authorizeSigningCredentials(cellIds[0])
 			}
 			console.log("appPort and Id is", appPort, appId)
-			client = await AppAgentWebsocket.connect(appId, { url: new URL(url) })
+			const params: AppWebsocketConnectionOptions = {url: new URL(url)}
+			if (tokenResp) params.token = tokenResp.token
+			client = await AppWebsocket.connect(params)
 			let profilesClient = new ProfilesClient(client, appId);
 			profilesStore = new ProfilesStore(profilesClient);
 			relayClient = new RelayClient(client, "relay", profilesStore);

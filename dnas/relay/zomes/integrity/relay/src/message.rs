@@ -15,8 +15,6 @@ pub fn validate_create_message(
 pub fn validate_update_message(
     _action: Update,
     _message: Message,
-    _original_action: EntryCreationAction,
-    _original_message: Message,
 ) -> ExternResult<ValidateCallbackResult> {
     Ok(ValidateCallbackResult::Valid)
 }
