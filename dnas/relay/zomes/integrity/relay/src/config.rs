@@ -13,8 +13,6 @@ pub fn validate_create_config(
 pub fn validate_update_config(
     _action: Update,
     _config: Config,
-    _original_action: EntryCreationAction,
-    _original_config: Config,
 ) -> ExternResult<ValidateCallbackResult> {
     Ok(ValidateCallbackResult::Valid)
 }

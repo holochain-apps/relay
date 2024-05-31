@@ -141,32 +141,22 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
         FlatOp::RegisterUpdate(update_entry) => {
             match update_entry {
                 OpUpdate::Entry {
-                    original_action,
-                    original_app_entry,
                     app_entry,
                     action,
                 } => {
-                    match (app_entry, original_app_entry) {
-                        (
-                            EntryTypes::Message(message),
-                            EntryTypes::Message(original_message),
-                        ) => {
+                    match app_entry {
+        
+                        EntryTypes::Message(message)=> {
                             validate_update_message(
                                 action,
                                 message,
-                                original_action,
-                                original_message,
                             )
-                        }
-                        (
-                            EntryTypes::Config(config),
-                            EntryTypes::Config(original_config),
-                        ) => {
+                        },
+                        EntryTypes::Config(config)
+                         => {
                             validate_update_config(
                                 action,
                                 config,
-                                original_action,
-                                original_config,
                             )
                         }
                         _ => {
@@ -184,15 +174,16 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
         }
         FlatOp::RegisterDelete(delete_entry) => {
             match delete_entry {
-                OpDelete::Entry { original_action, original_app_entry, action } => {
-                    match original_app_entry {
-                        EntryTypes::Config(config) => {
-                            validate_delete_config(action, original_action, config)
-                        }
-                        EntryTypes::Message(message) => {
-                            validate_delete_message(action, original_action, message)
-                        }
-                    }
+                OpDelete { action: _ } => {
+                    Ok(ValidateCallbackResult::Valid)
+                    // match original_app_entry {
+                    //     EntryTypes::Config(config) => {
+                    //         validate_delete_config(action, original_action, config)
+                    //     }
+                    //     EntryTypes::Message(message) => {
+                    //         validate_delete_message(action, original_action, message)
+                    //     }
+                    // }
                 }
                 _ => Ok(ValidateCallbackResult::Valid),
             }
@@ -332,8 +323,6 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                                 validate_update_config(
                                     action,
                                     config,
-                                    original_action,
-                                    original_config,
                                 )
                             } else {
                                 Ok(result)
@@ -363,8 +352,6 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                                 validate_update_message(
                                     action,
                                     message,
-                                    original_action,
-                                    original_message,
                                 )
                             } else {
                                 Ok(result)
