@@ -2964,7 +2964,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_file_storage_coordinator"
 version = "0.2.0"
-source = "git+https://github.com/holochain-open-dev/file-storage?branch=nixify#d643e0a9f6c5353506bd29b9152be2c7e8a4cdf5"
+source = "git+https://github.com/holochain-open-dev/file-storage?branch=nixify#7761b9e0057d14048a93a859bd6dc6170db24607"
 dependencies = [
  "hc_zome_file_storage_integrity",
  "hdk",
@@ -2974,7 +2974,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_file_storage_integrity"
 version = "0.2.0"
-source = "git+https://github.com/holochain-open-dev/file-storage?branch=nixify#d643e0a9f6c5353506bd29b9152be2c7e8a4cdf5"
+source = "git+https://github.com/holochain-open-dev/file-storage?branch=nixify#7761b9e0057d14048a93a859bd6dc6170db24607"
 dependencies = [
  "hdi",
  "serde",
@@ -8515,7 +8515,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-holochain"
 version = "0.0.0"
-source = "git+https://github.com/darksoil-studio/p2p-shipyard?branch=main#cf1f128e20ca7effc4f9e2d9551d546571c9250b"
+source = "git+https://github.com/darksoil-studio/p2p-shipyard?branch=main#5e3cea5a302b2b13711accfa2ae6005ed5aabfbc"
 dependencies = [
  "async-std",
  "bzip2",
@@ -9199,14 +9199,14 @@ dependencies = [
 
 [[package]]
 name = "tray-icon"
-version = "0.14.1"
+version = "0.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c53e41ee5fa70d22d0c11ab780beef179944e7d3199b948f5f6fbe7f7debe3b5"
+checksum = "0b27516dfcfa22a9faaf192283a122bfbede38c1e59ef194e3c4db6549b419c0"
 dependencies = [
  "cocoa",
  "core-graphics",
  "crossbeam-channel",
- "dirs-next",
+ "dirs",
  "libappindicator",
  "muda",
  "objc",
