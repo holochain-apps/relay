@@ -85,9 +85,11 @@
     <SvgIcon icon='person' size='16' /> <strong class='ml-2'>Create personal Invitation</strong>
   </Button>
 
-  <Button moreClasses='w-72 justify-center' onClick={(e) => { createConversation(e).then((c) => c && goto(`/conversations/${c.data.id}/invite-key`))}} disabled={!valid}>
+  <Button moreClasses='w-72 justify-center' onClick={(e) => { createConversation(e).then((c) => c && goto(`/conversations/${c.data.id}/open-invite`))}} disabled={!valid}>
     <SvgIcon icon='people' size='24' /> <strong class='ml-2'>Create open invitation</strong>
   </Button>
 
-  <Button moreClasses='bg-surface-400 text-secondary-50 w-72 justify-center' onClick={(e) => { createConversation(e).then((c) => goto(`/conversations/${c.data.id}`))}} disabled={!valid}>Done</Button>
+  <Button moreClasses='w-72 justify-center' onClick={(e) => { createConversation(e).then((c) => c && goto(`/conversations/${c.data.id}`))}} disabled={!valid}>
+    <strong>Create</strong>
+  </Button>
 </footer>

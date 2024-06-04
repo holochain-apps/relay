@@ -64,7 +64,7 @@
   <footer>
     <Button onClick={createInviteCode} moreClasses='w-72' disabled={publicKey.length === 0}>
       <SvgIcon icon='person' size='16' />
-      <strong class='ml-2'>Generate personal invite key</strong>
+      <strong class='ml-2'>Generate personal invite code</strong>
     </Button>
   </footer>
 {/if}
