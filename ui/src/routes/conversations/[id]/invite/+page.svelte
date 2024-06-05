@@ -18,7 +18,8 @@
 
   $: conversation = relayStore.getConversation(conversationId);
 
-  let publicKey = ''
+  $: publicKey = ''
+  $: validKey = publicKey.length > 0 && decodeHashFromBase64(publicKey).length === 39
 
   const createInviteCode = async () => {
     if (!conversation) return
@@ -43,7 +44,9 @@
 </script>
 
 <Header>
-  <button class='text-4xl mr-5 absolute' on:click={() => history.back()}><SvgIcon icon='back' color='white' size='10' /></button>
+  <button class='text-4xl mr-5 absolute' on:click={() => history.back()}>
+    <SvgIcon icon='back' color='white' size='10' />
+  </button>
   <h1 class="flex-1 text-center">Create personal invite</h1>
 </Header>
 
@@ -59,10 +62,11 @@
       name='publicKey'
       bind:value={publicKey}
     />
+    <span class='text-error'>{publicKey.length > 0 && !validKey ? 'Invalid public key' : ''}</span>
   </div>
 
   <footer>
-    <Button onClick={createInviteCode} moreClasses='w-72' disabled={publicKey.length === 0}>
+    <Button onClick={createInviteCode} disabled={!validKey}>
       <SvgIcon icon='person' size='16' />
       <strong class='ml-2'>Generate personal invite code</strong>
     </Button>
