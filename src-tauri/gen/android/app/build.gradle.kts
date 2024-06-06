@@ -1,4 +1,5 @@
 import java.util.Properties
+import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
@@ -12,8 +13,25 @@ val tauriProperties = Properties().apply {
         propFile.inputStream().use { load(it) }
     }
 }
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties()
+keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 
 android {
+    signingConfigs {
+        create("debug") {
+            keyAlias = keystoreProperties["keyAlias"] as String
+            keyPassword = keystoreProperties["keyPassword"] as String
+            storeFile = file(keystoreProperties["storeFile"] as String)
+            storePassword = keystoreProperties["storePassword"] as String
+        }
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as String
+            keyPassword = keystoreProperties["keyPassword"] as String
+            storeFile = file(keystoreProperties["storeFile"] as String)
+            storePassword = keystoreProperties["storePassword"] as String
+        }
+    }
     compileSdk = 34
     namespace = "org.holochain.relay"
     defaultConfig {
@@ -30,8 +48,7 @@ android {
             isDebuggable = true
             isJniDebuggable = true
             isMinifyEnabled = false
-            packaging {
-                jniLibs.keepDebugSymbols.add("*/arm64-v8a/*.so")
+            packaging {                jniLibs.keepDebugSymbols.add("*/arm64-v8a/*.so")
                 jniLibs.keepDebugSymbols.add("*/armeabi-v7a/*.so")
                 jniLibs.keepDebugSymbols.add("*/x86/*.so")
                 jniLibs.keepDebugSymbols.add("*/x86_64/*.so")
@@ -44,6 +61,7 @@ android {
                     .plus(getDefaultProguardFile("proguard-android-optimize.txt"))
                     .toList().toTypedArray()
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     kotlinOptions {
