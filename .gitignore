@@ -1,5 +1,6 @@
 .DS_Store
 node_modules
+/ui/build
 /build
 .svelte-kit
 /package

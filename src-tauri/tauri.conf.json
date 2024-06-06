@@ -5,7 +5,7 @@
   "build": {
     "beforeBuildCommand": "npm run build -w ui && npm run build:happ",
     "devUrl": "http://localhost:1420",
-    "frontendDist": "../ui/dist"
+    "frontendDist": "../ui/build"
   },
   "app": {
     "withGlobalTauri": false,
