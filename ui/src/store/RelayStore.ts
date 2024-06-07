@@ -41,9 +41,10 @@ export class RelayStore {
           // @ts-ignore
           const from: AgentPubKey = payload.from
           const message: Message = {
-            id: encodeHashToBase64(payload.action.hashed.hash),
-            content: payload.content,
+            hash: encodeHashToBase64(payload.action.hashed.hash),
             authorKey: encodeHashToBase64(from),
+            content: payload.content,
+            status: 'confirmed',
             timestamp: new Date(payload.action.hashed.content.timestamp / 1000)
           }
 

@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { ProfilesStore, type Profile } from '@holochain-open-dev/profiles';
+	import { debounce } from 'lodash-es';
+  import { ProfilesStore, type Profile } from '@holochain-open-dev/profiles';
   import type { AgentPubKeyB64 } from '@holochain/client';
-  import { getContext, onDestroy, onMount } from 'svelte';
+  import { getContext, onDestroy, onMount, tick } from 'svelte';
   import { get, type Readable, type Unsubscriber, derived } from "svelte/store";
   import Time from "svelte-time";
   import { page } from '$app/stores';
@@ -26,42 +27,77 @@
   let myPubKey = relayStore.client.myPubKeyB64()
 
   $: conversation = relayStore.getConversation(conversationId);
-  let messages: Message[] = [];
+  let messages: { [key: string]: Message } = {};
   let agentProfiles: { [key: AgentPubKeyB64]: Profile } = {};
   let numMembers = 0;
   let unsubscribe : Unsubscriber;
+
+  let agentTimeout : NodeJS.Timeout
+  let messageTimeout : NodeJS.Timeout
+
+  let newMessageText = '';
+  let conversationContainer: HTMLElement;
+  let scrollAtBottom = true;
+  const SCROLL_THRESHOLD = 100; // How close to the bottom must the user be to consider it "at the bottom"
+
+  const checkForAgents = () => {
+    conversation && conversation.getAgents().then((agentProfiles) => {
+      if (Object.values(agentProfiles).length < 2) {
+        agentTimeout = setTimeout(() => {
+          checkForAgents()
+        }, 2000)
+      }
+    })
+  }
+
+  const checkForMessages = () => {
+    conversation && conversation.getMessages().then((messages) => {
+      if (Object.values(messages).length === 0) {
+        messageTimeout = setTimeout(() => {
+          checkForMessages()
+        }, 2000)
+      }
+    })
+  }
 
   onMount(() => {
     if (!conversation) {
       goto('/conversations');
     } else {
       unsubscribe = conversation.subscribe((c: Conversation) => {
-        console.log("subscribe got messages", c.messages, " num members", Object.values(c.agentProfiles).length)
         agentProfiles = c.agentProfiles
         messages = c.messages;
         numMembers = Object.values(agentProfiles).length;
       });
-      conversation.initialize();
+      // TODO: do this check in one call of checkForStuff
+      checkForAgents()
+      checkForMessages()
+      conversationContainer.addEventListener('scroll', handleScroll);
     }
   });
-
-  $: console.log("conversation messages", conversation?.data.messages, messages)
-  $: console.log("agent prpfiles", conversation?.data.agentProfiles, agentProfiles, numMembers)
 
   // Cleanup the subscription
   onDestroy(() => {
     unsubscribe && unsubscribe();
+    clearTimeout(agentTimeout);
+    clearTimeout(messageTimeout);
+    conversationContainer.removeEventListener('scroll', handleScroll);
   });
 
   // Derived store to process messages and add headers
   $: processedMessages = conversation && derived(conversation, ($value) => {
-    const messages = ($value as Conversation).messages;
-    console.log("processing", messages, ($value as Conversation).agentProfiles)
+    const messages = Object.values(($value as Conversation).messages).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
     const result: Message[] = [];
 
     let lastDate: Date | null = null;
 
     messages.forEach(message => {
+      // Don't display message if we don't have a profile from the author yet.
+      // TODO: could wait until all profiles have been synced first?
+      if (!agentProfiles[message.authorKey]) {
+        return;
+      }
+
       message.author = ($value as Conversation).agentProfiles[message.authorKey].nickname;
       message.avatar = ($value as Conversation).agentProfiles[message.authorKey].fields.avatar;
 
@@ -81,22 +117,30 @@
     return result;
   })
 
-  let newMessageText = '';
+  // Reactive update to scroll to the bottom every time the messages update,
+  // but only if the user is near the bottom already
+  $: if ($processedMessages && $processedMessages.length > 0) {
+    if (scrollAtBottom) {
+      setTimeout(scrollToBottom, 100);
+    }
+  };
+
+  const handleScroll = debounce(() => {
+    scrollAtBottom = conversationContainer.scrollHeight - conversationContainer.scrollTop <= conversationContainer.clientHeight + SCROLL_THRESHOLD;
+  }, 100)
+
+  function scrollToBottom() {
+    if (conversationContainer) {
+      conversationContainer.scrollTop = conversationContainer.scrollHeight;
+      scrollAtBottom = true
+    }
+  }
 
   async function sendMessage(e: SubmitEvent) {
     if (conversation && newMessageText.trim()) {
       await conversation.sendMessage(myPubKey, newMessageText);
       newMessageText = ''; // Clear input after sending
-      // TODO: wait a minute for latest to load
-      const el = document.querySelector('#message-box > ul > li:last-child');
-      console.log("el", el)
-      if (el) {
-        el.scrollIntoView({
-          behavior: 'smooth',
-          block: 'end',
-          inline: "nearest"
-        });
-      };
+      setTimeout(scrollToBottom, 100)
     }
     e.preventDefault();
   }
@@ -112,12 +156,13 @@
 
 {#if conversation && typeof $processedMessages !== 'undefined'}
   <div class="container mx-auto flex justify-center items-center flex-col flex-1 overflow-hidden w-full">
-    <div class='overflow-y-auto flex flex-col grow items-center w-full'>
+    <div class='overflow-y-auto flex flex-col grow items-center w-full' bind:this={conversationContainer} id='message-container'>
       <h1 class='text-4xl flex-shrink-0 mt-10'>{@html conversation.data.name}</h1>
+      <!-- if joining a conversation created by someone else, say still syncing here until thre are at least 2 members -->
       <p class='text-surface-300'>{@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}</p>
       <div id='message-box' class="flex-1 p-4 flex flex-col-reverse w-full">
         <ul>
-          {#each $processedMessages as message (message.id)}
+          {#each $processedMessages as message (message.hash)}
             {#if message.header}
               <li class='mt-auto mb-5'>
                 <div class="text-center text-sm text-secondary-500">{message.header}</div>
