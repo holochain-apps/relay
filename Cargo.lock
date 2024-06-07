@@ -8488,7 +8488,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-holochain"
 version = "0.0.0"
-source = "git+https://github.com/darksoil-studio/p2p-shipyard?branch=develop#77d45f512b957c0ab471434b298009dc5422c63b"
+source = "git+https://github.com/darksoil-studio/p2p-shipyard?branch=default-gossip-arc-clamping#b395b6db12aa3bd1aa1d704a096022e3ff3a1eda"
 dependencies = [
  "async-std",
  "bzip2",
