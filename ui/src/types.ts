@@ -52,22 +52,6 @@ export type EntryTypes =
   content: string;
 }
 
-export interface Message {
-  id?: string;
-  content: string;
-  author?: string;
-  authorKey: string;
-  avatar?: string;
-  timestamp: Date;
-  header?: string;
-}
-
-export interface MessageRecord {
-  original_action: ActionHash;
-  signed_action: SignedActionHashed;
-  message?: Message;
-}
-
 export interface Conversation {
   id: string; // the clone id
   cellDnaHash: DnaHash;
@@ -75,7 +59,7 @@ export interface Conversation {
   name: string;
   networkSeed: string;
   progenitor: AgentPubKey;
-  messages: Message[];
+  messages: { [key: string]: Message };
   agentProfiles: { [key: AgentPubKeyB64]: Profile };
 }
 
@@ -90,4 +74,21 @@ export interface Invitation {
   progenitor: AgentPubKey;
   proof?: MembraneProof;
   networkSeed: string;
+}
+
+export interface Message {
+  hash: string;
+  author?: string; // TODO: do we use this?
+  authorKey: string;
+  avatar?: string; // TODO: do we use this?
+  content: string;
+  header?: string; // an optional header to display above this message in the conversation
+  status?: 'pending' | 'confirmed' | 'delivered' | 'read'; // status of the message
+  timestamp: Date;
+}
+
+export interface MessageRecord {
+  original_action: ActionHash;
+  signed_action: SignedActionHashed;
+  message?: Message;
 }

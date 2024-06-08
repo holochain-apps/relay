@@ -62,7 +62,7 @@
       name='publicKey'
       bind:value={publicKey}
     />
-    <span class='text-error'>{publicKey.length > 0 && !validKey ? 'Invalid public key' : ''}</span>
+    <span class='text-error-400 pl-0.5'>{publicKey.length > 0 && !validKey ? 'Invalid public key' : ''}</span>
   </div>
 
   <footer>
