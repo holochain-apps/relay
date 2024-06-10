@@ -24,7 +24,7 @@
     {#each $relayStore as $conversation ($conversation.data.id)}
       <li class='text-xl flex flex-row mb-5'>
         <a href="/conversations/{$conversation.data.id}" class='grow'>
-          <span>{@html $conversation.data.name}</span>
+          <span>{@html $conversation.data.config.title}</span>
         </a>
         <span class='text-xs text-surface-200 flex flex-row items-center'>
           <SvgIcon icon='person' size='8' color='#ccc'/> <span class='ml-2'>{Object.values($conversation.data.agentProfiles).length}</span>
