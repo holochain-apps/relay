@@ -8,7 +8,7 @@
 
 	const relayClientContext: { getClient: () => RelayClient } = getContext('relayClient')
 	let relayClient = relayClientContext.getClient()
-	const agentPublicKey64 = relayClient.myPubKeyB64()
+	const agentPublicKey64 = relayClient.myPubKeyB64
 </script>
 
 <Header>

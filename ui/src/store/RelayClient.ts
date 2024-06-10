@@ -36,17 +36,15 @@ export class RelayClient {
   // conversations is a map of string to ClonedCell
   conversations: {[key: string]: ClonedCell} = {}
   zomeName = ZOME_NAME
+  myPubKeyB64: AgentPubKeyB64
 
   constructor(public client: AppClient, public roleName: RoleName, public profilesStore: ProfilesStore) {
     //super(client, roleName, zomeName);
+    this.myPubKeyB64 = encodeHashToBase64(this.client.myPubKey)
   }
 
-  myPubKey() : AgentPubKey {
+  get myPubKey() : AgentPubKey {
     return this.client.myPubKey
-  }
-
-  myPubKeyB64() : AgentPubKeyB64 {
-    return encodeHashToBase64(this.client.myPubKey)
   }
 
   async initConversations() {

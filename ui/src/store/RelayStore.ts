@@ -48,7 +48,7 @@ export class RelayStore {
             timestamp: new Date(payload.action.hashed.content.timestamp / 1000)
           }
 
-          if (conversation && message.authorKey !== this.client.myPubKeyB64()) {
+          if (conversation && message.authorKey !== this.client.myPubKeyB64) {
             conversation.addMessage(message)
           }
           // let messageList = this.expectations.get(message.from)
@@ -90,7 +90,7 @@ export class RelayStore {
   async createConversation(name: string) {
     if (!this.client) return;
     const conversationCell = await this.client.createConversation(name)
-    return await this._addConversation(conversationCell.clone_id, conversationCell.cell_id[0], name, this.client.myPubKey(), conversationCell.dna_modifiers.network_seed)
+    return await this._addConversation(conversationCell.clone_id, conversationCell.cell_id[0], name, this.client.myPubKey, conversationCell.dna_modifiers.network_seed)
   }
 
   async joinConversation(invitation: Invitation) {

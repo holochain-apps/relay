@@ -21,7 +21,7 @@
 
 <Header>
 	<!-- <img src="/logo.png" alt="Logo" /> -->
-  <Avatar size={24} agentPubKey={relayClient.myPubKey()} placeholder={true} showNickname={false} />
+  <Avatar size={24} agentPubKey={relayClient.myPubKey} placeholder={true} showNickname={false} />
 </Header>
 
 <div class="container mx-auto flex flex-col justify-center items-start grow px-10">

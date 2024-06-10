@@ -24,7 +24,7 @@
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext('relayStore')
   let relayStore = relayStoreContext.getStore()
-  let myPubKey = relayStore.client.myPubKeyB64()
+  let myPubKey = relayStore.client.myPubKeyB64
 
   $: conversation = relayStore.getConversation(conversationId);
   let messages: { [key: string]: Message } = {};
