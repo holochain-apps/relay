@@ -4,22 +4,6 @@ pub mod config;
 use hdk::prelude::*;
 use relay_integrity::*;
 
-// #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone)]
-// pub struct Message {
-//     // pub conversation_id: String,
-//     pub content: String,
-// }
-// #[hdk_extern]
-// fn send_message(input: SendMessageInput) -> ExternResult<()> {
-//     send_remote_signal(
-//         Message {
-//             conversation_id: input.conversation_id,
-//             content: input.content,
-//         },
-//         input.agents,
-//     )
-// }
-
 #[hdk_extern]
 fn recv_remote_signal(message_record: MessageRecord) -> ExternResult<()> {
     let info: CallInfo = call_info()?;

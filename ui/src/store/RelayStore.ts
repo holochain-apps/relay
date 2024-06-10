@@ -1,10 +1,10 @@
 import { decode } from '@msgpack/msgpack';
 import { isEqual } from 'lodash-es';
 import { writable, get, type Subscriber, type Invalidator, type Unsubscriber, type Writable } from 'svelte/store';
-import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64, type Dna } from "@holochain/client";
+import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64 } from "@holochain/client";
 import { ConversationStore } from './ConversationStore';
 import { RelayClient } from '$store/RelayClient'
-import type { Conversation, ConversationCellAndConfig, Invitation, Message, Properties } from '../types';
+import type { Conversation, ConversationCellAndConfig, Invitation, Message, Privacy, Properties } from '../types';
 
 export class RelayStore {
   private conversations: Writable<ConversationStore[]>;
@@ -81,23 +81,24 @@ export class RelayStore {
     if (!this.client) return;
     const properties: Properties = decode(convoCellAndConfig.cell.dna_modifiers.properties) as Properties;
     const progenitor = decodeHashFromBase64(properties.progenitor);
-
+    const privacy = properties.privacy
     const seed = convoCellAndConfig.cell.dna_modifiers.network_seed
-    const newConversation = new ConversationStore(this.client, seed, convoCellAndConfig.cell.cell_id[0], convoCellAndConfig.config, progenitor )
+    const newConversation = new ConversationStore(this.client, seed, convoCellAndConfig.cell.cell_id[0], convoCellAndConfig.config, privacy, progenitor )
+
     this.conversations.update(conversations => [...conversations, newConversation])
     await newConversation.initialize()
     return newConversation
   }
 
-  async createConversation(name: string, image: string) {
+  async createConversation(name: string, image: string, privacy: Privacy) {
     if (!this.client) return;
-    const convoCellAndConfig = await this.client.createConversation(name, image)
+    const convoCellAndConfig = await this.client.createConversation(name, image, privacy)
     return await this._addConversation(convoCellAndConfig)
   }
 
   async joinConversation(invitation: Invitation) {
     if (!this.client) return;
-    const convoCellAndConfig = await this.client.joinConversation(invitation.conversationName, invitation.progenitor, invitation.proof, invitation.networkSeed)
+    const convoCellAndConfig = await this.client.joinConversation(invitation.conversationName, invitation.privacy, invitation.progenitor, invitation.proof, invitation.networkSeed)
     return await this._addConversation(convoCellAndConfig)
   }
 

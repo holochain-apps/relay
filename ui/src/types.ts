@@ -1,10 +1,8 @@
 import type {
   ActionHash,
   AgentPubKeyB64,
-  Record,
   DnaHash,
   SignedActionHashed,
-  EntryHash,
   AgentPubKey,
   Create,
   Update,
@@ -40,10 +38,16 @@ export type RelaySignal = {
   link_type: string;
 };
 
+export enum Privacy {
+  Private,
+  Public
+}
+
 // DNA modifier properties for a conversation
 export interface Properties {
   name: string;
-  progenitor: AgentPubKeyB64
+  privacy: Privacy;
+  progenitor: AgentPubKeyB64;
 }
 
 export type EntryTypes =
@@ -54,10 +58,11 @@ export type EntryTypes =
 }
 
 export interface Conversation {
-  id: string; // the newtwork seed
+  id: string; // the network seed
   cellDnaHash: DnaHash;
   description?: string;
   config: Config;
+  privacy: Privacy;
   progenitor: AgentPubKey;
   messages: { [key: string]: Message };
   agentProfiles: { [key: AgentPubKeyB64]: Profile };
@@ -71,9 +76,10 @@ export interface MembraneProofData {
 
 export interface Invitation {
   conversationName: string;
+  networkSeed: string;
+  privacy: Privacy;
   progenitor: AgentPubKey;
   proof?: MembraneProof;
-  networkSeed: string;
 }
 
 export interface Message {

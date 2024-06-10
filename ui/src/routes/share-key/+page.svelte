@@ -17,7 +17,7 @@
 </Header>
 
 <div class="container mx-auto flex flex-col justify-center items-center grow px-10">
-  <img src='/share-key.png' alt="Share Key" class='mb-4'/>
+  <img src='/share-public-key.png' alt="Share Key" class='mb-4'/>
   <h1 class='h1 mb-2'>Share your public key</h1>
   <p class='mb-5'>Share this key with other Relay users to generate a private invite key</p>
 </div>

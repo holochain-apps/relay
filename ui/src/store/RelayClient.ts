@@ -18,7 +18,7 @@ import { EntryRecord } from '@holochain-open-dev/utils';
 import type { ActionCommittedSignal } from '@holochain-open-dev/utils';
 import type { Profile, ProfilesStore } from '@holochain-open-dev/profiles'
 import { get } from 'svelte/store';
-import type { Config, ConversationCellAndConfig, EntryTypes, MembraneProofData, MessageRecord, Properties } from '../types';
+import type { Config, ConversationCellAndConfig, EntryTypes, MembraneProofData, MessageRecord, Privacy, Properties } from '../types';
 import { encode } from 'punycode';
 
 const ZOME_NAME = 'relay'
@@ -49,11 +49,8 @@ export class RelayClient {
 
   async initConversations() {
     const appInfo = await this.client.appInfo()
-    console.log("appInfo", appInfo)
 
     if (appInfo) {
-      // appInfo.cell_info.modifiers
-
       const cells: CellInfo[] = appInfo.cell_info[this.roleName].filter(
         (c) => CellType.Cloned in c
       );
@@ -90,19 +87,20 @@ export class RelayClient {
     return profile
   }
 
-  async createConversation(name: string, image: string) : Promise<ConversationCellAndConfig> {
-    return this._createConversation(name, image, this.client.myPubKey, undefined, undefined)
+  async createConversation(name: string, image: string, privacy: Privacy) : Promise<ConversationCellAndConfig> {
+    return this._createConversation(name, image, privacy, this.client.myPubKey, undefined, undefined)
   }
 
-  async joinConversation(name: string, progenitor: AgentPubKey, proof: MembraneProof|undefined, networkSeed: string) : Promise<ConversationCellAndConfig> {
+  async joinConversation(name: string, privacy: Privacy, progenitor: AgentPubKey, proof: MembraneProof|undefined, networkSeed: string) : Promise<ConversationCellAndConfig> {
     // we don't have the image at join time, it get's loaded later
-    return this._createConversation(name, "", progenitor, proof, networkSeed)
+    return this._createConversation(name, "", privacy, progenitor, proof, networkSeed)
   }
 
-  async _createConversation(name: string, image: string, progenitor: AgentPubKey, membrane_proof: MembraneProof|undefined, networkSeed: string|undefined) : Promise<ConversationCellAndConfig> {
+  async _createConversation(name: string, image: string, privacy: Privacy, progenitor: AgentPubKey, membrane_proof: MembraneProof|undefined, networkSeed: string|undefined) : Promise<ConversationCellAndConfig> {
     const properties: Properties = {
-      progenitor: encodeHashToBase64(progenitor),
-      name
+      name,
+      privacy,
+      progenitor: encodeHashToBase64(progenitor)
     }
 
     const conversationId = networkSeed || uuidv4()
@@ -184,7 +182,6 @@ export class RelayClient {
   }
 
   public async sendMessage(conversationId: string, content: string, agents: AgentPubKey[]) {
-    console.log("sending message", conversationId, content, this.conversations[conversationId])
     const message = await this.callZome(
       'create_message',
       {
@@ -193,7 +190,6 @@ export class RelayClient {
       },
       this.conversations[conversationId].cell.cell_id
     )
-    console.log("sent message and got back", message, decode(message.entry.Present.entry))
     return message
   }
 
@@ -215,18 +211,17 @@ export class RelayClient {
   public async inviteAgentToConversation(conversationId: string, forAgent: AgentPubKey, role: number = 0): Promise<MembraneProof | undefined> {
     try {
       const conversation = this.conversations[conversationId]
-      console.log("client.inviteAgentToConversation", conversationId, forAgent, role, conversation)
 
       const data: MembraneProofData = {
         conversation_id: conversation.cell.dna_modifiers.network_seed,
         for_agent: forAgent,
         as_role: role,
       }
+
       const r = await this.callZome("generate_membrane_proof", data, conversation.cell.cell_id);
-      console.log("client.inviteAgentToConversation returning proof", r)
       return r
     } catch(e) {
-      console.log("Error generating membrane proof", e)
+      console.error("Error generating membrane proof", e)
     }
     return undefined
   }

@@ -3,6 +3,7 @@ pub use message::*;
 pub mod config;
 pub use config::*;
 use hdi::prelude::*;
+
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "type")]
 #[hdk_entry_types]
@@ -11,6 +12,7 @@ pub enum EntryTypes {
     Config(Config),
     Message(Message),
 }
+
 #[derive(Serialize, Deserialize)]
 #[hdk_link_types]
 pub enum LinkTypes {
@@ -32,31 +34,41 @@ pub struct MembraneProofEnvelope {
     pub data: MembraneProofData,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, SerializedBytes, PartialEq)]
+pub enum Privacy {
+    Private,
+    Public,
+}
+
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone)]
 pub struct Properties {
     pub name: String,
+    pub privacy: Privacy,
     pub progenitor: AgentPubKey,
 }
 
 pub fn check_agent(agent_pub_key: AgentPubKey, membrane_proof: Option<MembraneProof>) -> ExternResult<ValidateCallbackResult> {
     let info = dna_info()?;
     // we have no properties so this is a conversation anyone can join
+    // TODO: do we actually want this to be the case?
     if info.modifiers.properties.bytes().len() == 1 {
         return Ok(ValidateCallbackResult::Valid);
     }
     let props = Properties::try_from(info.modifiers.properties).map_err(|e| wasm_error!(e))?;
+
+    // Anyone can join a public conversation
+    if props.privacy == Privacy::Public {
+        return Ok(ValidateCallbackResult::Valid);
+    }
 
     // agent is the progenitor so check out
     if agent_pub_key == props.progenitor {
         return Ok(ValidateCallbackResult::Valid);
     }
     match membrane_proof {
-        None => Ok(ValidateCallbackResult::Valid), // Ok(ValidateCallbackResult::Invalid("membrane proof must be provided".to_string())),
+        None => Ok(ValidateCallbackResult::Invalid("membrane proof must be provided".to_string())),
         Some(serialized_proof) => {
             let envelope  = MembraneProofEnvelope::try_from((*serialized_proof).clone()).map_err(|e| wasm_error!(e))?;
-            // if envelope.data.space_type != props.space_type {
-            //     return Ok(ValidateCallbackResult::Invalid("membrane proof is not for this space type".to_string()));
-            // }
             if envelope.data.conversation_id != info.modifiers.network_seed {
                 return Ok(ValidateCallbackResult::Invalid("membrane proof is not for this conversation".to_string()));
             }
@@ -145,7 +157,7 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                     action,
                 } => {
                     match app_entry {
-        
+
                         EntryTypes::Message(message)=> {
                             validate_update_message(
                                 action,

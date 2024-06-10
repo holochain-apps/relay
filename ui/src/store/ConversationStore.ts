@@ -4,13 +4,20 @@ import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase6
 import { writable, get, type Writable } from 'svelte/store';
 import { v4 as uuidv4 } from 'uuid';
 import { RelayClient } from '$store/RelayClient'
-import type { Config, Conversation, Invitation, Message, MessageRecord } from '../types';
+import { type Config, type Conversation, type Invitation, type Message, type MessageRecord, Privacy } from '../types';
 
 export class ConversationStore {
   private conversation: Writable<Conversation>;
 
-  constructor(public client: RelayClient, id: string, cellDnaHash: DnaHash, config:Config, public progenitor: AgentPubKey) {
-    this.conversation = writable({ id, cellDnaHash, config, progenitor, agentProfiles: {}, messages: {} });
+  constructor(
+    public client: RelayClient,
+    public id: string,
+    public cellDnaHash: DnaHash,
+    public config: Config,
+    public privacy: Privacy,
+    public progenitor: AgentPubKey,
+  ) {
+    this.conversation = writable({ id, cellDnaHash, config, privacy, progenitor, agentProfiles: {}, messages: {} });
   }
 
   async initialize() {
@@ -49,7 +56,7 @@ export class ConversationStore {
             }
           }
         } catch(e) {
-          console.log("Unable to parse message, ignoring", messageRecord, e)
+          console.error("Unable to parse message, ignoring", messageRecord, e)
         }
       }
       this.conversation.update(c => {
@@ -59,7 +66,7 @@ export class ConversationStore {
       return newMessages
     } catch (e) {
       //@ts-ignore
-      console.log("Error getting messages", e)
+      console.error("Error getting messages", e)
     }
     return []
   }
@@ -86,12 +93,17 @@ export class ConversationStore {
   }
 
   get publicInviteCode() {
-    const invitation: Invitation = {
-      conversationName: this.data.config.title,
-      progenitor: this.data.progenitor,
-      networkSeed: this.data.id
+    if (this.data.privacy === Privacy.Public) {
+      const invitation: Invitation = {
+        conversationName: this.data.config.title,
+        networkSeed: this.data.id,
+        privacy: this.data.privacy,
+        progenitor: this.data.progenitor
+      }
+      const msgpck = encode(invitation);
+      return Base64.fromUint8Array(msgpck);
+    } else {
+      return ''
     }
-    const msgpck = encode(invitation);
-    return Base64.fromUint8Array(msgpck);
   }
 }
