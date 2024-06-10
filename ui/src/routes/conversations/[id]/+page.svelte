@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { debounce, isEqual } from 'lodash-es';
   import { ProfilesStore, type Profile } from '@holochain-open-dev/profiles';
-  import type { AgentPubKeyB64 } from '@holochain/client';
+  import { type AgentPubKeyB64, decodeHashFromBase64 } from '@holochain/client';
   import { getContext, onDestroy, onMount } from 'svelte';
   import { get, type Unsubscriber, derived } from "svelte/store";
   import Time from "svelte-time";
@@ -191,7 +191,7 @@
               {/if}
               <li class='mt-auto mb-5'>
                 <div class='flex items-center'>
-                  <Avatar image={message.avatar} size='24' placeholder={true} showNickname={false} moreClasses='-ml-30'/>
+                  <Avatar agentPubKey={decodeHashFromBase64(message.authorKey)} size='24' showNickname={false} moreClasses='-ml-30'/>
                   <span class="font-bold ml-3 grow">{@html message.author}</span>
                   <span class="text-surface-200 text-xs"><Time timestamp={message.timestamp} format="h:mm" /></span>
                 </div>

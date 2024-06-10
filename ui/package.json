@@ -18,6 +18,7 @@
 	"@holochain/client": "=0.17.0-rc.0",
 	"@holochain-open-dev/profiles": "^0.400.0-dev.1",
 	"@holochain-open-dev/utils": "^0.300.0-rc.0",
+	"@holochain-open-dev/elements": "^0.300.0-rc.0",
 	"@skeletonlabs/skeleton": "^2.8.0",
     "@skeletonlabs/tw-plugin": "^0.3.1",
     "@sveltejs/adapter-static": "^3.0.0",
