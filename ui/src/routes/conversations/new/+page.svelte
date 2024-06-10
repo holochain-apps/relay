@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-  import { writable } from 'svelte/store';
+  import { writable, get } from 'svelte/store';
   import { goto } from '$app/navigation';
   import Button from "$lib/Button.svelte";
   import Header from '$lib/Header.svelte';
@@ -25,7 +25,8 @@
         const img = new Image();
         img.crossOrigin = "anonymous";
         img.onload = () => {
-          imageUrl.set(resizeAndExportAvatar(img));
+          const imageData = resizeAndExportAvatar(img)
+          imageUrl.set(imageData);
         };
         img.src = e.target?.result as string;
       };
@@ -41,7 +42,7 @@
 
   async function createConversation(e: Event) {
     e.preventDefault();
-    const conversation = await relayStore.createConversation(title);
+    const conversation = await relayStore.createConversation(title, get(imageUrl));
     return conversation
   }
 

@@ -29,10 +29,10 @@
     const proof = await relayStore.inviteAgentToConversation(conversationId, agent)
     if (proof !== undefined) {
       const invitation: Invitation = {
-        conversationName: conversation.data.name,
+        conversationName: conversation.data.config.title,
         progenitor: conversation.data.progenitor,
         proof,
-        networkSeed: conversation.data.networkSeed
+        networkSeed: conversation.data.id
       }
       const msgpck = encode(invitation);
       inviteCode = Base64.fromUint8Array(msgpck);
@@ -53,7 +53,7 @@
 
 <div class="container mx-auto flex justify-center items-center">
 	<div class="space-y-5">
-		<h1 class="h1">{conversation.data.name}</h1>
+		<h1 class="h1">{conversation.data.config.title}</h1>
     <p>Invite members to this conversation</p>
     <div class='max-w-sm'>
       <p class='overflow-hidden text-ellipsis'>Public Invite Code: {conversation.publicInviteCode}</p>

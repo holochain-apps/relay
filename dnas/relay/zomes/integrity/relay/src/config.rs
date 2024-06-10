@@ -3,6 +3,7 @@ use hdi::prelude::*;
 #[derive(Clone, PartialEq)]
 pub struct Config {
     pub title: String,
+    pub image: String,
 }
 pub fn validate_create_config(
     _action: EntryCreationAction,
@@ -29,24 +30,20 @@ pub fn validate_create_link_config_updates(
     target_address: AnyLinkableHash,
     _tag: LinkTag,
 ) -> ExternResult<ValidateCallbackResult> {
-    let action_hash = base_address
-        .into_action_hash()
+    let path_entry_hash = Path::from("config").path_entry_hash()?;
+
+    let base_hash = base_address
+        .into_entry_hash()
         .ok_or(
             wasm_error!(
-                WasmErrorInner::Guest("No action hash associated with link".to_string())
+                WasmErrorInner::Guest("No entry hash associated with link".to_string())
             ),
         )?;
-    let record = must_get_valid_record(action_hash)?;
-    let _config: crate::Config = record
-        .entry()
-        .to_app_option()
-        .map_err(|e| wasm_error!(e))?
-        .ok_or(
-            wasm_error!(
-                WasmErrorInner::Guest("Linked action must reference an entry"
-                .to_string())
-            ),
-        )?;
+    if base_hash != path_entry_hash {
+        return Err(wasm_error!(
+            WasmErrorInner::Guest("Configs must be linked to path".to_string())
+        ))
+    }
     let action_hash = target_address
         .into_action_hash()
         .ok_or(

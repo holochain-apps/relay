@@ -149,7 +149,7 @@
 <Header>
   <a class='absolute' href="/conversations"><SvgIcon icon='back' color='white' size='10' /></a>
   {#if conversation}
-    <h1 class="flex-1 grow text-center">{@html conversation.data.name}</h1>
+    <h1 class="flex-1 grow text-center">{@html conversation.data.config.title}</h1>
     <a class='absolute right-5' href="/conversations/{conversation.data.id}/invite"><SvgIcon icon='addPerson' color='white' /></a>
   {/if}
 </Header>
@@ -157,7 +157,10 @@
 {#if conversation && typeof $processedMessages !== 'undefined'}
   <div class="container mx-auto flex justify-center items-center flex-col flex-1 overflow-hidden w-full">
     <div class='overflow-y-auto flex flex-col grow items-center w-full' bind:this={conversationContainer} id='message-container'>
-      <h1 class='text-4xl flex-shrink-0 mt-10'>{@html conversation.data.name}</h1>
+      {#if conversation.data.config.image}
+      <img src={conversation.data.config.image} />
+      {/if}
+      <h1 class='text-4xl flex-shrink-0 mt-10'>{@html conversation.data.config.title}</h1>
       <!-- if joining a conversation created by someone else, say still syncing here until thre are at least 2 members -->
       <p class='text-surface-300'>{@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}</p>
       <div id='message-box' class="flex-1 p-4 flex flex-col-reverse w-full">

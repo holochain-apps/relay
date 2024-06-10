@@ -21,7 +21,7 @@ pub enum LinkTypes {
 
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone)]
 pub struct MembraneProofData {
-    pub conversation_name: String,
+    pub conversation_id: String,
     pub for_agent: AgentPubKey,
     pub as_role: u32,
 }
@@ -57,7 +57,7 @@ pub fn check_agent(agent_pub_key: AgentPubKey, membrane_proof: Option<MembranePr
             // if envelope.data.space_type != props.space_type {
             //     return Ok(ValidateCallbackResult::Invalid("membrane proof is not for this space type".to_string()));
             // }
-            if envelope.data.conversation_name != props.name {
+            if envelope.data.conversation_id != info.modifiers.network_seed {
                 return Ok(ValidateCallbackResult::Invalid("membrane proof is not for this conversation".to_string()));
             }
             if envelope.data.for_agent != agent_pub_key {

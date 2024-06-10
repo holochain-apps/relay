@@ -27,14 +27,14 @@
     const proof = await relayStore.inviteAgentToConversation(conversationId, agent)
     if (proof !== undefined) {
       const invitation: Invitation = {
-        conversationName: conversation.data.name,
+        conversationName: conversation.data.config.title,
         progenitor: conversation.data.progenitor,
         proof,
-        networkSeed: conversation.data.networkSeed
+        networkSeed: conversation.data.id
       }
       const msgpck = encode(invitation);
       const inviteCode = Base64.fromUint8Array(msgpck);
-      console.log("conversation invite",conversation.data.name, conversation.data.progenitor, conversation.data.networkSeed, inviteCode)
+      console.log("conversation invite",conversation.data.config.title, conversation.data.progenitor, conversation.data.id, inviteCode)
       goto(`/conversations/${conversationId}/invite/show?agentKey=${publicKey}&inviteKey=${encodeURIComponent(inviteCode)}`)
     }
     else {
@@ -51,7 +51,7 @@
 </Header>
 
 {#if conversation}
-  <h1 class='text-4xl flex-shrink-0 mt-10'>{@html conversation.data.name}</h1>
+  <h1 class='text-4xl flex-shrink-0 mt-10'>{@html conversation.data.config.title}</h1>
 
   <div class="container mx-auto flex flex-col justify-center items-start grow px-10">
     <h1 class='h1 mb-2'>Recipient's public key</h1>
