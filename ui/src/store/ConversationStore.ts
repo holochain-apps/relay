@@ -57,7 +57,7 @@ export class ConversationStore {
             }
           }
         } catch(e) {
-          console.log("Unable to parse message, ignoring", messageRecord, e)
+          console.error("Unable to parse message, ignoring", messageRecord, e)
         }
       }
       this.conversation.update(c => {
@@ -67,7 +67,7 @@ export class ConversationStore {
       return newMessages
     } catch (e) {
       //@ts-ignore
-      console.log("Error getting messages", e)
+      console.error("Error getting messages", e)
     }
     return []
   }

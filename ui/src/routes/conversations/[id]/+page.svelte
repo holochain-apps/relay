@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { debounce } from 'lodash-es';
+	import { debounce, isEqual } from 'lodash-es';
   import { ProfilesStore, type Profile } from '@holochain-open-dev/profiles';
   import type { AgentPubKeyB64 } from '@holochain/client';
-  import { getContext, onDestroy, onMount, tick } from 'svelte';
-  import { get, type Readable, type Unsubscriber, derived } from "svelte/store";
+  import { getContext, onDestroy, onMount } from 'svelte';
+  import { get, type Unsubscriber, derived } from "svelte/store";
   import Time from "svelte-time";
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
@@ -12,7 +12,6 @@
   import Header from '$lib/Header.svelte';
   import SvgIcon from '$lib/SvgIcon.svelte';
   import { RelayStore } from '$store/RelayStore';
-  import { ConversationStore } from '$store/ConversationStore';
   import { copyToClipboard } from '$lib/utils';
   import { Privacy, type Conversation, type Message } from '../../../types';
 
@@ -26,7 +25,8 @@
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext('relayStore')
   let relayStore = relayStoreContext.getStore()
-  let myPubKey = relayStore.client.myPubKeyB64()
+  let myPubKey = relayStore.client.myPubKey()
+  let myPubKeyB64 = relayStore.client.myPubKeyB64()
 
   $: conversation = relayStore.getConversation(conversationId);
   let messages: { [key: string]: Message } = {};
@@ -37,6 +37,7 @@
   let agentTimeout : NodeJS.Timeout
   let messageTimeout : NodeJS.Timeout
 
+  let newMessageInput : HTMLInputElement;
   let newMessageText = '';
   let conversationContainer: HTMLElement;
   let scrollAtBottom = true;
@@ -75,6 +76,7 @@
       checkForAgents()
       checkForMessages()
       conversationContainer.addEventListener('scroll', handleScroll);
+      newMessageInput.focus();
     }
   });
 
@@ -140,9 +142,10 @@
 
   async function sendMessage(e: SubmitEvent) {
     if (conversation && newMessageText.trim()) {
-      await conversation.sendMessage(myPubKey, newMessageText);
+      await conversation.sendMessage(myPubKeyB64, newMessageText);
       newMessageText = ''; // Clear input after sending
       setTimeout(scrollToBottom, 100)
+      newMessageInput.focus();
     }
     e.preventDefault();
   }
@@ -162,7 +165,7 @@
       <h1 class='text-4xl flex-shrink-0 mt-10'>{@html conversation.data.name}</h1>
       <!-- if joining a conversation created by someone else, say still syncing here until thre are at least 2 members -->
       <p class='text-surface-300'>{@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}</p>
-      {#if $processedMessages.length === 0}
+      {#if $processedMessages.length === 0 && isEqual(conversation.data.progenitor, myPubKey)}
         <div class='flex flex-col items-center justify-center h-full w-full'>
           <p class='mb-8 text-secondary-400'>Invite people to start the conversation</p>
           {#if conversation.data.privacy === Privacy.Private}
@@ -203,7 +206,7 @@
       <!-- have this input when submitted add a conversation to the page data -->
       <form class="flex" method='POST' on:submit={sendMessage} >
         <!-- svelte-ignore a11y-autofocus -->
-        <input type="text" bind:value={newMessageText} autofocus class="w-full bg-surface-400 placeholder:text-gray-400 focus:border-gray-500 focus:ring-0 border-0" placeholder="Type a message...">
+        <input type="text" bind:this={newMessageInput} bind:value={newMessageText} autofocus class="w-full bg-surface-400 placeholder:text-gray-400 focus:border-gray-500 focus:ring-0 border-0" placeholder="Type a message...">
         <button>Send</button>
       </form>
     </div>

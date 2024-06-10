@@ -51,17 +51,13 @@ export class RelayClient {
 
   async initConversations() {
     const appInfo = await this.client.appInfo()
-    console.log("appInfo", appInfo)
 
     if (appInfo) {
-      // appInfo.cell_info.modifiers
-
       const cells: CellInfo[] = appInfo.cell_info[this.roleName].filter(
         (c) => CellType.Cloned in c
       );
       // @ts-ignore
       const conversations = cells.reduce((result, c:CellInfo) => { result[c[CellType.Cloned].clone_id] = c[CellType.Cloned]; return result }, {})
-      console.log("Init conversations", conversations)
       this.conversations = conversations
     }
   }
@@ -148,7 +144,6 @@ export class RelayClient {
   }
 
   public async sendMessage(conversationId: string, content: string, agents: AgentPubKey[]) {
-    console.log("sending message", conversationId, content, this.conversations[conversationId])
     const message = await this.callZome(
       'create_message',
       {
@@ -157,7 +152,6 @@ export class RelayClient {
       },
       this.conversations[conversationId].cell_id
     )
-    console.log("sent message and got back", message, decode(message.entry.Present.entry))
     return message
   }
 
@@ -179,7 +173,6 @@ export class RelayClient {
   public async inviteAgentToConversation(conversationId: string, forAgent: AgentPubKey, role: number = 0): Promise<MembraneProof | undefined> {
     try {
       const conversation = this.conversations[conversationId]
-      console.log("client.inviteAgentToConversation", conversationId, forAgent, role, conversation)
 
       const data: MembraneProofData = {
         conversation_name: conversation.name,
@@ -187,10 +180,9 @@ export class RelayClient {
         as_role: role,
       }
       const r = await this.callZome("generate_membrane_proof", data, conversation.cell_id);
-      console.log("client.inviteAgentToConversation returning proof", r)
       return r
     } catch(e) {
-      console.log("Error generating membrane proof", e)
+      console.error("Error generating membrane proof", e)
     }
     return undefined
   }
