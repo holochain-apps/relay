@@ -3,6 +3,7 @@
   import { ProfilesStore } from "@holochain-open-dev/profiles";
   import { getContext } from "svelte";
   import SvgIcon from "./SvgIcon.svelte";
+  import "@holochain-open-dev/elements/dist/elements/holo-identicon.js";
 
   const profilesContext: { getStore: () => ProfilesStore } = getContext("profiles");
   const store = profilesContext.getStore();
@@ -43,7 +44,13 @@
             color="white"
           />
         {:else}
-          <img src={$profile.value.entry.fields.avatar} alt="avatar" width={size} height={size} />
+          {#if $profile.value.entry.fields.avatar}
+            <img src={$profile.value.entry.fields.avatar} alt="avatar" width={size} height={size} />
+          {:else}
+            <holo-identicon
+              hash={agentPubKey}
+            ></holo-identicon>
+          {/if}
         {/if}
       </div>
     {/if}
