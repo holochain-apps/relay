@@ -4,13 +4,21 @@ import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase6
 import { writable, get, type Writable } from 'svelte/store';
 import { v4 as uuidv4 } from 'uuid';
 import { RelayClient } from '$store/RelayClient'
-import type { Conversation, Invitation, Message, MessageRecord } from '../types';
+import { type Conversation, type Invitation, type Message, type MessageRecord, Privacy } from '../types';
 
 export class ConversationStore {
   private conversation: Writable<Conversation>;
 
-  constructor(public client: RelayClient, id: string, cellDnaHash: DnaHash, name: string, public progenitor: AgentPubKey, networkSeed: string) {
-    this.conversation = writable({ id, cellDnaHash, name, networkSeed, progenitor, agentProfiles: {}, messages: {} });
+  constructor(
+    public client: RelayClient,
+    public id: string,
+    public cellDnaHash: DnaHash,
+    public name: string,
+    public privacy: Privacy,
+    public progenitor: AgentPubKey,
+    public networkSeed: string
+  ) {
+    this.conversation = writable({ id, cellDnaHash, name, networkSeed, privacy, progenitor, agentProfiles: {}, messages: {} });
   }
 
   async initialize() {
@@ -86,12 +94,17 @@ export class ConversationStore {
   }
 
   get publicInviteCode() {
-    const invitation: Invitation = {
-      conversationName: this.data.name,
-      progenitor: this.data.progenitor,
-      networkSeed: this.data.networkSeed
+    if (this.data.privacy === Privacy.Public) {
+      const invitation: Invitation = {
+        conversationName: this.data.name,
+        networkSeed: this.data.networkSeed,
+        privacy: this.data.privacy,
+        progenitor: this.data.progenitor
+      }
+      const msgpck = encode(invitation);
+      return Base64.fromUint8Array(msgpck);
+    } else {
+      return ''
     }
-    const msgpck = encode(invitation);
-    return Base64.fromUint8Array(msgpck);
   }
 }

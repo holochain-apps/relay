@@ -7,6 +7,7 @@
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { resizeAndExportAvatar } from '$lib/utils';
   import { RelayStore } from '$store/RelayStore';
+  import { Privacy } from '../../../types';
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext('relayStore')
 	let relayStore = relayStoreContext.getStore()
@@ -14,6 +15,7 @@
   const MIN_TITLE_LENGTH = 3;
   let title = ''
   let imageUrl = writable('')
+  let pendingCreate = false
 
   function handleFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -39,10 +41,13 @@
     }
   }
 
-  async function createConversation(e: Event) {
+  async function createConversation(e: Event, privacy: Privacy) {
+    pendingCreate = true;
     e.preventDefault();
-    const conversation = await relayStore.createConversation(title);
-    return conversation
+    const conversation = await relayStore.createConversation(title, privacy);
+    if (conversation) {
+      goto(`/conversations/${conversation.data.id}`)
+    }
   }
 
   $: valid = title.trim().length >= MIN_TITLE_LENGTH
@@ -81,15 +86,11 @@
 
 <!-- <div class='items-right w-full flex justify-end'> -->
 <footer>
-  <Button moreClasses='w-72 justify-center' onClick={(e) => { createConversation(e).then((c) => c && goto(`/conversations/${c.data.id}/invite`))}} disabled={!valid}>
-    <SvgIcon icon='person' size='16' /> <strong class='ml-2'>Create personal Invitation</strong>
+  <Button moreClasses='w-72 justify-center' onClick={(e) => { createConversation(e, Privacy.Private)}} disabled={!valid || pendingCreate}>
+    <SvgIcon icon='person' size='16' /> <strong class='ml-2'>Create private conversation</strong>
   </Button>
 
-  <Button moreClasses='w-72 justify-center' onClick={(e) => { createConversation(e).then((c) => c && goto(`/conversations/${c.data.id}/open-invite`))}} disabled={!valid}>
-    <SvgIcon icon='people' size='24' /> <strong class='ml-2'>Create open invitation</strong>
-  </Button>
-
-  <Button moreClasses='w-72 justify-center' onClick={(e) => { createConversation(e).then((c) => c && goto(`/conversations/${c.data.id}`))}} disabled={!valid}>
-    <strong>Create</strong>
+  <Button moreClasses='w-72 justify-center' onClick={(e) => { createConversation(e, Privacy.Public)}} disabled={!valid || pendingCreate}>
+    <SvgIcon icon='people' size='24' /> <strong class='ml-2'>Create open conversation</strong>
   </Button>
 </footer>

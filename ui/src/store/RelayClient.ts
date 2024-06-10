@@ -18,7 +18,7 @@ import { EntryRecord } from '@holochain-open-dev/utils';
 import type { ActionCommittedSignal } from '@holochain-open-dev/utils';
 import type { Profile, ProfilesStore } from '@holochain-open-dev/profiles'
 import { get } from 'svelte/store';
-import type { EntryTypes, MembraneProofData, MessageRecord, Properties } from '../types';
+import type { EntryTypes, MembraneProofData, MessageRecord, Properties, Privacy } from '../types';
 import { encode } from 'punycode';
 
 const ZOME_NAME = 'relay'
@@ -78,18 +78,19 @@ export class RelayClient {
     return profile
   }
 
-  async createConversation(name: string) : Promise<ClonedCell> {
-    return this._createConversation(name, this.client.myPubKey, undefined, undefined)
+  async createConversation(name: string, privacy: Privacy) : Promise<ClonedCell> {
+    return this._createConversation(name, privacy, this.client.myPubKey, undefined, undefined)
   }
 
-  async joinConversation(name: string, progenitor: AgentPubKey, proof: MembraneProof|undefined, networkSeed: string) : Promise<ClonedCell> {
-    return this._createConversation(name, progenitor, proof, networkSeed)
+  async joinConversation(name: string, privacy: Privacy, progenitor: AgentPubKey, proof: MembraneProof|undefined, networkSeed: string) : Promise<ClonedCell> {
+    return this._createConversation(name, privacy, progenitor, networkSeed, proof)
   }
 
-  async _createConversation(name: string, progenitor: AgentPubKey, membrane_proof: MembraneProof|undefined, networkSeed: string|undefined) : Promise<ClonedCell> {
+  async _createConversation(name: string, privacy: Privacy, progenitor: AgentPubKey, networkSeed: string|undefined, membrane_proof: MembraneProof|undefined) : Promise<ClonedCell> {
     const properties: Properties = {
-      progenitor: encodeHashToBase64(progenitor),
-      name
+      name,
+      privacy,
+      progenitor: encodeHashToBase64(progenitor)
     }
 
     const cloneReq : AppCreateCloneCellRequest = {
