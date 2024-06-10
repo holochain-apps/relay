@@ -55,7 +55,7 @@
 </script>
 
 <Header>
-  <button class='text-4xl mr-5 absolute' on:click={() => history.back()}><SvgIcon icon='back' color='white' size='10' /></button>
+  <button class='text-4xl mr-5 absolute' on:click={() => history.back()}><SvgIcon icon='caretLeft' color='white' size='10' /></button>
   <h1 class="flex-1 text-center">New Conversation</h1>
 </Header>
 
@@ -76,6 +76,7 @@
 <div class='flex flex-col justify-start grow'>
   <h1 class='h1'>Title</h1>
   <input
+    autofocus
     class='mt-2 bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
     type='text'
     placeholder='Name this conversation'

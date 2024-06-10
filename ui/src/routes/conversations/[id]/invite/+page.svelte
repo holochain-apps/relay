@@ -46,7 +46,7 @@
 
 <Header>
   <button class='text-4xl mr-5 absolute' on:click={() => history.back()}>
-    <SvgIcon icon='back' color='white' size='10' />
+    <SvgIcon icon='caretLeft' color='white' size='10' />
   </button>
   <h1 class="flex-1 text-center">{#if conversation}{@html conversation.data.config.title}{/if}</h1>
 </Header>

@@ -34,6 +34,7 @@
   <div class='flex flex-col justify-center grow'>
     <h1 class='h1'>What is your name?</h1>
     <input
+      autofocus
       class='mt-2 bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
       type='text'
       placeholder='Enter your display name'

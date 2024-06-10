@@ -20,12 +20,12 @@
 
 {#if inviteKey}
 <Header>
-  <button class='text-4xl mr-5 absolute' on:click={() => history.back()}><SvgIcon icon='back' color='white' size='10' /></button>
-  <h1 class="flex-1 text-center">{#if conversation}{@html conversation.data.name}{/if}</h1>
+  <button class='text-4xl mr-5 absolute' on:click={() => history.back()}><SvgIcon icon='caretLeft' color='white' size='10' /></button>
+  <h1 class="flex-1 text-center">{#if conversation}{@html conversation.data.config.title}{/if}</h1>
 </Header>
 
 {#if conversation}
-  <h1 class='text-4xl flex-shrink-0 mt-10'>{@html conversation.data.name}</h1>
+  <h1 class='text-4xl flex-shrink-0 mt-10'>{@html conversation.data.config.title}</h1>
 
   <div class="container mx-auto flex flex-col justify-center items-center grow px-10">
     <img src='/share-private-invite.png' alt="Share Key" class='mb-4'/>

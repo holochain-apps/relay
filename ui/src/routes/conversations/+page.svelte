@@ -23,7 +23,8 @@
   <ul class="flex-1 mt-10">
     {#each $relayStore as $conversation ($conversation.data.id)}
       <li class='text-xl flex flex-row mb-5'>
-        <a href="/conversations/{$conversation.data.id}" class='grow'>
+        <a href="/conversations/{$conversation.data.id}" class='grow flex flex-row'>
+          <img src={$conversation.data.config.image} alt='Conversation' class='w-8 h-8 rounded-full mr-4 object-cover' />
           <span>{@html $conversation.data.config.title}</span>
         </a>
         <span class='text-xs text-surface-200 flex flex-row items-center'>
