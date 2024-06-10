@@ -13,11 +13,6 @@ const config = {
 		// If your environment is not supported or you settled on a specific environment, switch out the adapter.
 		// See https://kit.svelte.dev/docs/adapters for more information about adapters.
 		adapter: adapter(),
-		prerender: {
-			// use relative URLs similar to an anchor tag <a href="/test/1"></a>
-			// do not include group layout folders in the path such as /(group)/test/1
-		entries: ['/','/register','/register/avatar','/share-key','/welcome', '/conversations','/conversations/join','/conversations/new','/conversations/1', '/conversations/1/invite', '/conversations/1/invite/show', '/conversations/1/open-invite']
-		},
 
 		alias: {
 			$store: './src/store',

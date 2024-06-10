@@ -76,6 +76,6 @@
 
 <div class='items-right w-full flex justify-end'>
   <Button onClick={createAccount}>
-    <SvgIcon icon='hand' size='20' /> <strong class='ml-2'>Welcome to Relay</strong>
+    <SvgIcon icon='hand' size='20' /> <strong class='ml-2'>Jump in</strong>
   </Button>
 </div>

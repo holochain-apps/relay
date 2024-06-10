@@ -18,7 +18,7 @@ import { EntryRecord } from '@holochain-open-dev/utils';
 import type { ActionCommittedSignal } from '@holochain-open-dev/utils';
 import type { Profile, ProfilesStore } from '@holochain-open-dev/profiles'
 import { get } from 'svelte/store';
-import type { EntryTypes, MembraneProofData, MessageRecord, Properties } from '../types';
+import type { EntryTypes, MembraneProofData, MessageRecord, Properties, Privacy } from '../types';
 import { encode } from 'punycode';
 
 const ZOME_NAME = 'relay'
@@ -51,17 +51,13 @@ export class RelayClient {
 
   async initConversations() {
     const appInfo = await this.client.appInfo()
-    console.log("appInfo", appInfo)
 
     if (appInfo) {
-      // appInfo.cell_info.modifiers
-
       const cells: CellInfo[] = appInfo.cell_info[this.roleName].filter(
         (c) => CellType.Cloned in c
       );
       // @ts-ignore
       const conversations = cells.reduce((result, c:CellInfo) => { result[c[CellType.Cloned].clone_id] = c[CellType.Cloned]; return result }, {})
-      console.log("Init conversations", conversations)
       this.conversations = conversations
     }
   }
@@ -78,18 +74,19 @@ export class RelayClient {
     return profile
   }
 
-  async createConversation(name: string) : Promise<ClonedCell> {
-    return this._createConversation(name, this.client.myPubKey, undefined, undefined)
+  async createConversation(name: string, privacy: Privacy) : Promise<ClonedCell> {
+    return this._createConversation(name, privacy, this.client.myPubKey, undefined, undefined)
   }
 
-  async joinConversation(name: string, progenitor: AgentPubKey, proof: MembraneProof|undefined, networkSeed: string) : Promise<ClonedCell> {
-    return this._createConversation(name, progenitor, proof, networkSeed)
+  async joinConversation(name: string, privacy: Privacy, progenitor: AgentPubKey, proof: MembraneProof|undefined, networkSeed: string) : Promise<ClonedCell> {
+    return this._createConversation(name, privacy, progenitor, networkSeed, proof)
   }
 
-  async _createConversation(name: string, progenitor: AgentPubKey, membrane_proof: MembraneProof|undefined, networkSeed: string|undefined) : Promise<ClonedCell> {
+  async _createConversation(name: string, privacy: Privacy, progenitor: AgentPubKey, networkSeed: string|undefined, membrane_proof: MembraneProof|undefined) : Promise<ClonedCell> {
     const properties: Properties = {
-      progenitor: encodeHashToBase64(progenitor),
-      name
+      name,
+      privacy,
+      progenitor: encodeHashToBase64(progenitor)
     }
 
     const cloneReq : AppCreateCloneCellRequest = {
@@ -147,7 +144,6 @@ export class RelayClient {
   }
 
   public async sendMessage(conversationId: string, content: string, agents: AgentPubKey[]) {
-    console.log("sending message", conversationId, content, this.conversations[conversationId])
     const message = await this.callZome(
       'create_message',
       {
@@ -156,7 +152,6 @@ export class RelayClient {
       },
       this.conversations[conversationId].cell_id
     )
-    console.log("sent message and got back", message, decode(message.entry.Present.entry))
     return message
   }
 
@@ -178,7 +173,6 @@ export class RelayClient {
   public async inviteAgentToConversation(conversationId: string, forAgent: AgentPubKey, role: number = 0): Promise<MembraneProof | undefined> {
     try {
       const conversation = this.conversations[conversationId]
-      console.log("client.inviteAgentToConversation", conversationId, forAgent, role, conversation)
 
       const data: MembraneProofData = {
         conversation_name: conversation.name,
@@ -186,10 +180,9 @@ export class RelayClient {
         as_role: role,
       }
       const r = await this.callZome("generate_membrane_proof", data, conversation.cell_id);
-      console.log("client.inviteAgentToConversation returning proof", r)
       return r
     } catch(e) {
-      console.log("Error generating membrane proof", e)
+      console.error("Error generating membrane proof", e)
     }
     return undefined
   }

@@ -1,10 +1,10 @@
 import { decode } from '@msgpack/msgpack';
 import { isEqual } from 'lodash-es';
 import { writable, get, type Subscriber, type Invalidator, type Unsubscriber, type Writable } from 'svelte/store';
-import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64, type Dna } from "@holochain/client";
+import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64 } from "@holochain/client";
 import { ConversationStore } from './ConversationStore';
 import { RelayClient } from '$store/RelayClient'
-import type { Conversation, Invitation, Message, Properties } from '../types';
+import type { Invitation, Message, Privacy, Properties } from '../types';
 
 export class RelayStore {
   private conversations: Writable<ConversationStore[]>;
@@ -24,8 +24,9 @@ export class RelayStore {
 
     for (const conversation of Object.values(this.client.conversations)) {
       const properties: Properties = decode(conversation.dna_modifiers.properties) as Properties;
+      const privacy = properties.privacy;
       const progenitor = decodeHashFromBase64(properties.progenitor);
-      await this._addConversation(conversation.clone_id, conversation.cell_id[0], conversation.name, progenitor, conversation.dna_modifiers.network_seed);
+      await this._addConversation(conversation.clone_id, conversation.cell_id[0], conversation.name, privacy, progenitor, conversation.dna_modifiers.network_seed);
     }
 
     this.client.client.on('signal', async (signal)=>{
@@ -79,24 +80,24 @@ export class RelayStore {
     })
   }
 
-  async _addConversation(id: string, cellDnaHash: DnaHash, name: string, progenitor: AgentPubKey, networkSeed: string) {
+  async _addConversation(id: string, cellDnaHash: DnaHash, name: string, privacy: Privacy, progenitor: AgentPubKey, networkSeed: string) {
     if (!this.client) return;
-    const newConversation = new ConversationStore(this.client, id, cellDnaHash, name, progenitor, networkSeed)
+    const newConversation = new ConversationStore(this.client, id, cellDnaHash, name, privacy, progenitor, networkSeed)
     this.conversations.update(conversations => [...conversations, newConversation])
     await newConversation.initialize()
     return newConversation
   }
 
-  async createConversation(name: string) {
+  async createConversation(name: string, privacy: Privacy) {
     if (!this.client) return;
-    const conversationCell = await this.client.createConversation(name)
-    return await this._addConversation(conversationCell.clone_id, conversationCell.cell_id[0], name, this.client.myPubKey(), conversationCell.dna_modifiers.network_seed)
+    const conversationCell = await this.client.createConversation(name, privacy)
+    return await this._addConversation(conversationCell.clone_id, conversationCell.cell_id[0], name, privacy, this.client.myPubKey(), conversationCell.dna_modifiers.network_seed)
   }
 
   async joinConversation(invitation: Invitation) {
     if (!this.client) return;
-    const conversationCell = await this.client.joinConversation(invitation.conversationName, invitation.progenitor, invitation.proof, invitation.networkSeed)
-    return await this._addConversation(conversationCell.clone_id, conversationCell.cell_id[0], invitation.conversationName, invitation.progenitor, invitation.networkSeed)
+    const conversationCell = await this.client.joinConversation(invitation.conversationName, invitation.privacy, invitation.progenitor, invitation.proof, invitation.networkSeed)
+    return await this._addConversation(conversationCell.clone_id, conversationCell.cell_id[0], invitation.conversationName, invitation.privacy, invitation.progenitor, invitation.networkSeed)
   }
 
   async inviteAgentToConversation(conversationId: string, agent: AgentPubKey, role: number = 0) {
