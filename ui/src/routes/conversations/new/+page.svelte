@@ -89,10 +89,10 @@
 <!-- <div class='items-right w-full flex justify-end'> -->
 <footer>
   <Button moreClasses='w-72 justify-center' onClick={(e) => { createConversation(e, Privacy.Private)}} disabled={!valid || pendingCreate}>
-    <SvgIcon icon='person' size='16' /> <strong class='ml-2'>Create private conversation</strong>
+    <SvgIcon icon={pendingCreate ? 'spinner' : 'person'} size={pendingCreate ? '24' : '16'} color='red' /> <strong class='ml-2'>Create private conversation</strong>
   </Button>
 
   <Button moreClasses='w-72 justify-center' onClick={(e) => { createConversation(e, Privacy.Public)}} disabled={!valid || pendingCreate}>
-    <SvgIcon icon='people' size='24' /> <strong class='ml-2'>Create open conversation</strong>
+    <SvgIcon icon={pendingCreate ? 'spinner' : 'people'} size='24' /> <strong class='ml-2'>Create open conversation</strong>
   </Button>
 </footer>
