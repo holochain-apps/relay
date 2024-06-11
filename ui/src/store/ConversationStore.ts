@@ -33,6 +33,27 @@ export class ConversationStore {
     return this.conversation.subscribe(run);
   }
 
+  async getAgents() {
+    const agentProfiles = await this.client.getAllAgents(this.data.id)
+    this.conversation.update(c => {
+      c.agentProfiles = {...agentProfiles}
+      return c
+    })
+    return agentProfiles
+  }
+
+  async getConfig() {
+    const config = await this.client._getConfig(this.data.id)
+    if (config) {
+      this.conversation.update(c => {
+        c.config = {...config.entry}
+        return c
+      })
+      return config.entry
+    }
+    return null
+  }
+
   async getMessages() {
     try {
       //const messages: Array<MessageRecord> = await this.client.getMessagesByWeek()
@@ -69,15 +90,6 @@ export class ConversationStore {
       console.error("Error getting messages", e)
     }
     return []
-  }
-
-  async getAgents() {
-    const agentProfiles = await this.client.getAllAgents(this.data.id)
-    this.conversation.update(c => {
-      c.agentProfiles = {...agentProfiles}
-      return c
-    })
-    return agentProfiles
   }
 
   sendMessage(authorKey: string, content: string): void {

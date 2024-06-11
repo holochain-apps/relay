@@ -31,48 +31,48 @@ export class RelayStore {
 
       // @ts-ignore
       if (signal.payload.type == "Message") {
-          // @ts-ignore
-          const conversation = this.getConversationByCellDnaHash(signal.cell_id[0])
+        // @ts-ignore
+        const conversation = this.getConversationByCellDnaHash(signal.cell_id[0])
 
-          // @ts-ignore
-          const payload: Payload = signal.payload
-          // @ts-ignore
-          const from: AgentPubKey = payload.from
-          const message: Message = {
-            hash: encodeHashToBase64(payload.action.hashed.hash),
-            authorKey: encodeHashToBase64(from),
-            content: payload.content,
-            status: 'confirmed',
-            timestamp: new Date(payload.action.hashed.content.timestamp / 1000)
-          }
+        // @ts-ignore
+        const payload: Payload = signal.payload
+        // @ts-ignore
+        const from: AgentPubKey = payload.from
+        const message: Message = {
+          hash: encodeHashToBase64(payload.action.hashed.hash),
+          authorKey: encodeHashToBase64(from),
+          content: payload.content,
+          status: 'confirmed',
+          timestamp: new Date(payload.action.hashed.content.timestamp / 1000)
+        }
 
-          if (conversation && message.authorKey !== this.client.myPubKeyB64) {
-            conversation.addMessage(message)
-          }
-          // let messageList = this.expectations.get(message.from)
-          // if (messageList) {
-          //     if (payload.type == "Ack") {
-          //         const idx = messageList.findIndex((created) => created == payload.created)
-          //         if (idx >= 0) {
-          //             messageList.splice(idx,1)
-          //             this.expectations.set(message.from, messageList)
-          //         }
-          //     }
-          //     // we just received a message from someone who we are expecting
-          //     // to have acked something but they haven't so we retry to send the message
-          //     if (messageList.length > 0) {
-          //         const streams = Object.values(get(this.streams))
-          //         for (const msgId of messageList) {
-          //             for (const stream of streams) {
-          //                 const msg = stream.findMessage(msgId)
-          //                 if (msg) {
-          //                     console.log("Resending", msg)
-          //                     await this.client.sendMessage(stream.id, msg.payload, [message.from])
-          //                 }
-          //             }
-          //         }
-          //     }
-          //}
+        if (conversation && message.authorKey !== this.client.myPubKeyB64) {
+          conversation.addMessage(message)
+        }
+        // let messageList = this.expectations.get(message.from)
+        // if (messageList) {
+        //     if (payload.type == "Ack") {
+        //         const idx = messageList.findIndex((created) => created == payload.created)
+        //         if (idx >= 0) {
+        //             messageList.splice(idx,1)
+        //             this.expectations.set(message.from, messageList)
+        //         }
+        //     }
+        //     // we just received a message from someone who we are expecting
+        //     // to have acked something but they haven't so we retry to send the message
+        //     if (messageList.length > 0) {
+        //         const streams = Object.values(get(this.streams))
+        //         for (const msgId of messageList) {
+        //             for (const stream of streams) {
+        //                 const msg = stream.findMessage(msgId)
+        //                 if (msg) {
+        //                     console.log("Resending", msg)
+        //                     await this.client.sendMessage(stream.id, msg.payload, [message.from])
+        //                 }
+        //             }
+        //         }
+        //     }
+        //}
       }
     })
   }

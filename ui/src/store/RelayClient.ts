@@ -62,10 +62,9 @@ export class RelayClient {
         try {
           const configEntry = await this._getConfig(cell.cell_id)
 
-          const config = configEntry? configEntry.entry : {title: cell.name, image: ""}
+          const config = configEntry? configEntry.entry : { title: cell.name, image: "" }
 
-          const convoCellAndConfig: ConversationCellAndConfig = {cell, config}
-          console.log("FISH", convoCellAndConfig)
+          const convoCellAndConfig: ConversationCellAndConfig = { cell, config }
 
           this.conversations[cell.dna_modifiers.network_seed] = convoCellAndConfig
         } catch(e) {
@@ -118,10 +117,11 @@ export class RelayClient {
     console.log("creating clone cell", cloneReq)
     const cell = await this.client.createCloneCell(cloneReq)
     console.log("created clone cell", cell)
-    let config:Config = {title: name, image}
+    let config: Config = { title: name, image }
     if (!networkSeed) {
       await this._setConfig(config, cell.cell_id)
     }
+
     await this.setMyProfileForConversation(cell.cell_id)
 
     const convoCellAndConfig: ConversationCellAndConfig = {cell, config}
@@ -163,8 +163,7 @@ export class RelayClient {
     )
   }
 
-  async _setConfig(config:Config, cellId:CellId) : Promise<null> {
-    console.log("creating config:", name)
+  async _setConfig(config: Config, cellId: CellId) : Promise<null> {
     return this.callZome(
       'set_config',
       config,
@@ -172,7 +171,9 @@ export class RelayClient {
     )
   }
 
-  async _getConfig(cellId:CellId) : Promise<EntryRecord<Config>|undefined> {
+  async _getConfig(id: CellId | string) : Promise<EntryRecord<Config>|undefined> {
+    const cellId = typeof id === 'string' ? this.conversations[id].cell.cell_id : id;
+
     const config = await this.callZome(
       'get_config',
       null,

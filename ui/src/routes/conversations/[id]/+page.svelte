@@ -15,12 +15,6 @@
   import { copyToClipboard } from '$lib/utils';
   import { Privacy, type Conversation, type Message } from '../../../types';
 
-  const profilesContext: { getStore: () => ProfilesStore } = getContext('profiles')
-	const profilesStore = profilesContext.getStore()
-	$: myProfileNow = profilesStore ? get(profilesStore.myProfile) : null
-	$: myProfileValue = myProfileNow && myProfileNow.status === 'complete' && myProfileNow.value as any
-  $: userName = myProfileValue ? myProfileValue.entry.nickname  : ""
-
   $: conversationId = $page.params.id;
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext('relayStore')
@@ -29,11 +23,12 @@
   let myPubKeyB64 = relayStore.client.myPubKeyB64
 
   $: conversation = relayStore.getConversation(conversationId);
-  let messages: { [key: string]: Message } = {};
+  //let messages: { [key: string]: Message } = {};
   let agentProfiles: { [key: AgentPubKeyB64]: Profile } = {};
   let numMembers = 0;
   let unsubscribe : Unsubscriber;
 
+  let configTimeout : NodeJS.Timeout
   let agentTimeout : NodeJS.Timeout
   let messageTimeout : NodeJS.Timeout
 
@@ -48,6 +43,16 @@
       if (Object.values(agentProfiles).length < 2) {
         agentTimeout = setTimeout(() => {
           checkForAgents()
+        }, 2000)
+      }
+    })
+  }
+
+  const checkForConfig = () => {
+    conversation && conversation.getConfig().then((config) => {
+      if (!config?.title) {
+        configTimeout = setTimeout(() => {
+          checkForConfig()
         }, 2000)
       }
     })
@@ -69,11 +74,12 @@
     } else {
       unsubscribe = conversation.subscribe((c: Conversation) => {
         agentProfiles = c.agentProfiles
-        messages = c.messages;
+        // messages = c.messages;
         numMembers = Object.values(agentProfiles).length;
       });
       // TODO: do this check in one call of checkForStuff
       checkForAgents()
+      checkForConfig()
       checkForMessages()
       conversationContainer.addEventListener('scroll', handleScroll);
       newMessageInput.focus();
@@ -84,6 +90,7 @@
   onDestroy(() => {
     unsubscribe && unsubscribe();
     clearTimeout(agentTimeout);
+    clearTimeout(configTimeout);
     clearTimeout(messageTimeout);
     conversationContainer.removeEventListener('scroll', handleScroll);
   });
