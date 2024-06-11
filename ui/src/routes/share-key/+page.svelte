@@ -8,11 +8,11 @@
 
 	const relayClientContext: { getClient: () => RelayClient } = getContext('relayClient')
 	let relayClient = relayClientContext.getClient()
-	const agentPublicKey64 = relayClient.myPubKeyB64()
+	const agentPublicKey64 = relayClient.myPubKeyB64
 </script>
 
 <Header>
-  <button class='text-4xl mr-5 absolute' on:click={() => history.back()}><SvgIcon icon='back' color='white' size='10' /></button>
+  <button class='text-4xl mr-5 absolute' on:click={() => history.back()}><SvgIcon icon='caretLeft' color='white' size='10' /></button>
   <h1 class="flex-1 text-center">Share your key</h1>
 </Header>
 

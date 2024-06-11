@@ -28,11 +28,11 @@
     const proof = await relayStore.inviteAgentToConversation(conversationId, agent)
     if (proof !== undefined) {
       const invitation: Invitation = {
-        conversationName: conversation.data.name,
+        conversationName: conversation.data.config.title,
         progenitor: conversation.data.progenitor,
         privacy: conversation.data.privacy,
         proof,
-        networkSeed: conversation.data.networkSeed
+        networkSeed: conversation.data.id
       }
       const msgpck = encode(invitation);
       const inviteCode = Base64.fromUint8Array(msgpck);
@@ -46,9 +46,9 @@
 
 <Header>
   <button class='text-4xl mr-5 absolute' on:click={() => history.back()}>
-    <SvgIcon icon='back' color='white' size='10' />
+    <SvgIcon icon='caretLeft' color='white' size='10' />
   </button>
-  <h1 class="flex-1 text-center">{#if conversation}{@html conversation.data.name}{/if}</h1>
+  <h1 class="flex-1 text-center">{#if conversation}{@html conversation.data.config.title}{/if}</h1>
 </Header>
 
 {#if conversation}

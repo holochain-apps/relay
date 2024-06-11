@@ -13,15 +13,15 @@
 	let relayClient = relayClientContext.getClient()
 
   let nickname = ''
+  $: avatarDataUrl = writable('')
 
   $: {
     // Subscribe to the store and update local state
     UserStore.subscribe($profile => {
       nickname = $profile.nickname;
+      $avatarDataUrl = $profile.avatar;
     });
   }
-
-  let avatarDataUrl = writable(''); // Store to hold the data URL of the file
 
   function handleFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -33,7 +33,9 @@
         const img = new Image();
         img.crossOrigin = "anonymous";
         img.onload = () => {
-          avatarDataUrl.set(resizeAndExportAvatar(img));
+          UserStore.update(current => {
+            return { ...current, avatar: resizeAndExportAvatar(img)};
+          });
         };
         img.src = e.target?.result as string;
       };

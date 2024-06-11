@@ -4,7 +4,7 @@ import { writable, get, type Subscriber, type Invalidator, type Unsubscriber, ty
 import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64 } from "@holochain/client";
 import { ConversationStore } from './ConversationStore';
 import { RelayClient } from '$store/RelayClient'
-import type { Invitation, Message, Privacy, Properties } from '../types';
+import type { Conversation, ConversationCellAndConfig, Invitation, Message, Privacy, Properties } from '../types';
 
 export class RelayStore {
   private conversations: Writable<ConversationStore[]>;
@@ -23,10 +23,7 @@ export class RelayStore {
     await this.client.initConversations();
 
     for (const conversation of Object.values(this.client.conversations)) {
-      const properties: Properties = decode(conversation.dna_modifiers.properties) as Properties;
-      const privacy = properties.privacy;
-      const progenitor = decodeHashFromBase64(properties.progenitor);
-      await this._addConversation(conversation.clone_id, conversation.cell_id[0], conversation.name, privacy, progenitor, conversation.dna_modifiers.network_seed);
+      await this._addConversation(conversation);
     }
 
     this.client.client.on('signal', async (signal)=>{
@@ -34,70 +31,75 @@ export class RelayStore {
 
       // @ts-ignore
       if (signal.payload.type == "Message") {
-          // @ts-ignore
-          const conversation = this.getConversationByCellDnaHash(signal.cell_id[0])
+        // @ts-ignore
+        const conversation = this.getConversationByCellDnaHash(signal.cell_id[0])
 
-          // @ts-ignore
-          const payload: Payload = signal.payload
-          // @ts-ignore
-          const from: AgentPubKey = payload.from
-          const message: Message = {
-            hash: encodeHashToBase64(payload.action.hashed.hash),
-            authorKey: encodeHashToBase64(from),
-            content: payload.content,
-            status: 'confirmed',
-            timestamp: new Date(payload.action.hashed.content.timestamp / 1000)
-          }
+        // @ts-ignore
+        const payload: Payload = signal.payload
+        // @ts-ignore
+        const from: AgentPubKey = payload.from
+        const message: Message = {
+          hash: encodeHashToBase64(payload.action.hashed.hash),
+          authorKey: encodeHashToBase64(from),
+          content: payload.content,
+          status: 'confirmed',
+          timestamp: new Date(payload.action.hashed.content.timestamp / 1000)
+        }
 
-          if (conversation && message.authorKey !== this.client.myPubKeyB64()) {
-            conversation.addMessage(message)
-          }
-          // let messageList = this.expectations.get(message.from)
-          // if (messageList) {
-          //     if (payload.type == "Ack") {
-          //         const idx = messageList.findIndex((created) => created == payload.created)
-          //         if (idx >= 0) {
-          //             messageList.splice(idx,1)
-          //             this.expectations.set(message.from, messageList)
-          //         }
-          //     }
-          //     // we just received a message from someone who we are expecting
-          //     // to have acked something but they haven't so we retry to send the message
-          //     if (messageList.length > 0) {
-          //         const streams = Object.values(get(this.streams))
-          //         for (const msgId of messageList) {
-          //             for (const stream of streams) {
-          //                 const msg = stream.findMessage(msgId)
-          //                 if (msg) {
-          //                     console.log("Resending", msg)
-          //                     await this.client.sendMessage(stream.id, msg.payload, [message.from])
-          //                 }
-          //             }
-          //         }
-          //     }
-          //}
+        if (conversation && message.authorKey !== this.client.myPubKeyB64) {
+          conversation.addMessage(message)
+        }
+        // let messageList = this.expectations.get(message.from)
+        // if (messageList) {
+        //     if (payload.type == "Ack") {
+        //         const idx = messageList.findIndex((created) => created == payload.created)
+        //         if (idx >= 0) {
+        //             messageList.splice(idx,1)
+        //             this.expectations.set(message.from, messageList)
+        //         }
+        //     }
+        //     // we just received a message from someone who we are expecting
+        //     // to have acked something but they haven't so we retry to send the message
+        //     if (messageList.length > 0) {
+        //         const streams = Object.values(get(this.streams))
+        //         for (const msgId of messageList) {
+        //             for (const stream of streams) {
+        //                 const msg = stream.findMessage(msgId)
+        //                 if (msg) {
+        //                     console.log("Resending", msg)
+        //                     await this.client.sendMessage(stream.id, msg.payload, [message.from])
+        //                 }
+        //             }
+        //         }
+        //     }
+        //}
       }
     })
   }
 
-  async _addConversation(id: string, cellDnaHash: DnaHash, name: string, privacy: Privacy, progenitor: AgentPubKey, networkSeed: string) {
+  async _addConversation(convoCellAndConfig: ConversationCellAndConfig) {
     if (!this.client) return;
-    const newConversation = new ConversationStore(this.client, id, cellDnaHash, name, privacy, progenitor, networkSeed)
+    const properties: Properties = decode(convoCellAndConfig.cell.dna_modifiers.properties) as Properties;
+    const progenitor = decodeHashFromBase64(properties.progenitor);
+    const privacy = properties.privacy
+    const seed = convoCellAndConfig.cell.dna_modifiers.network_seed
+    const newConversation = new ConversationStore(this.client, seed, convoCellAndConfig.cell.cell_id[0], convoCellAndConfig.config, privacy, progenitor )
+
     this.conversations.update(conversations => [...conversations, newConversation])
     await newConversation.initialize()
     return newConversation
   }
 
-  async createConversation(name: string, privacy: Privacy) {
+  async createConversation(name: string, image: string, privacy: Privacy) {
     if (!this.client) return;
-    const conversationCell = await this.client.createConversation(name, privacy)
-    return await this._addConversation(conversationCell.clone_id, conversationCell.cell_id[0], name, privacy, this.client.myPubKey(), conversationCell.dna_modifiers.network_seed)
+    const convoCellAndConfig = await this.client.createConversation(name, image, privacy)
+    return await this._addConversation(convoCellAndConfig)
   }
 
   async joinConversation(invitation: Invitation) {
     if (!this.client) return;
-    const conversationCell = await this.client.joinConversation(invitation.conversationName, invitation.privacy, invitation.progenitor, invitation.proof, invitation.networkSeed)
-    return await this._addConversation(conversationCell.clone_id, conversationCell.cell_id[0], invitation.conversationName, invitation.privacy, invitation.progenitor, invitation.networkSeed)
+    const convoCellAndConfig = await this.client.joinConversation(invitation.conversationName, invitation.privacy, invitation.progenitor, invitation.proof, invitation.networkSeed)
+    return await this._addConversation(convoCellAndConfig)
   }
 
   async inviteAgentToConversation(conversationId: string, agent: AgentPubKey, role: number = 0) {

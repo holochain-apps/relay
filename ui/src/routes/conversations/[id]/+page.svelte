@@ -15,25 +15,20 @@
   import { copyToClipboard } from '$lib/utils';
   import { Privacy, type Conversation, type Message } from '../../../types';
 
-  const profilesContext: { getStore: () => ProfilesStore } = getContext('profiles')
-	const profilesStore = profilesContext.getStore()
-	$: myProfileNow = profilesStore ? get(profilesStore.myProfile) : null
-	$: myProfileValue = myProfileNow && myProfileNow.status === 'complete' && myProfileNow.value as any
-  $: userName = myProfileValue ? myProfileValue.entry.nickname  : ""
-
   $: conversationId = $page.params.id;
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext('relayStore')
   let relayStore = relayStoreContext.getStore()
-  let myPubKey = relayStore.client.myPubKey()
-  let myPubKeyB64 = relayStore.client.myPubKeyB64()
+  let myPubKey = relayStore.client.myPubKey
+  let myPubKeyB64 = relayStore.client.myPubKeyB64
 
   $: conversation = relayStore.getConversation(conversationId);
-  let messages: { [key: string]: Message } = {};
+  //let messages: { [key: string]: Message } = {};
   let agentProfiles: { [key: AgentPubKeyB64]: Profile } = {};
   let numMembers = 0;
   let unsubscribe : Unsubscriber;
 
+  let configTimeout : NodeJS.Timeout
   let agentTimeout : NodeJS.Timeout
   let messageTimeout : NodeJS.Timeout
 
@@ -48,6 +43,16 @@
       if (Object.values(agentProfiles).length < 2) {
         agentTimeout = setTimeout(() => {
           checkForAgents()
+        }, 2000)
+      }
+    })
+  }
+
+  const checkForConfig = () => {
+    conversation && conversation.getConfig().then((config) => {
+      if (!config?.title) {
+        configTimeout = setTimeout(() => {
+          checkForConfig()
         }, 2000)
       }
     })
@@ -69,11 +74,12 @@
     } else {
       unsubscribe = conversation.subscribe((c: Conversation) => {
         agentProfiles = c.agentProfiles
-        messages = c.messages;
+        // messages = c.messages;
         numMembers = Object.values(agentProfiles).length;
       });
       // TODO: do this check in one call of checkForStuff
       checkForAgents()
+      checkForConfig()
       checkForMessages()
       conversationContainer.addEventListener('scroll', handleScroll);
       newMessageInput.focus();
@@ -84,6 +90,7 @@
   onDestroy(() => {
     unsubscribe && unsubscribe();
     clearTimeout(agentTimeout);
+    clearTimeout(configTimeout);
     clearTimeout(messageTimeout);
     conversationContainer.removeEventListener('scroll', handleScroll);
   });
@@ -152,17 +159,20 @@
 </script>
 
 <Header>
-  <a class='absolute' href="/conversations"><SvgIcon icon='back' color='white' size='10' /></a>
+  <a class='absolute' href="/conversations"><SvgIcon icon='caretLeft' color='white' size='10' /></a>
   {#if conversation}
-    <h1 class="flex-1 grow text-center">{@html conversation.data.name}</h1>
+    <h1 class="flex-1 grow text-center">{@html conversation.data.config.title}</h1>
     <a class='absolute right-5' href="/conversations/{conversation.data.id}/invite"><SvgIcon icon='addPerson' color='white' /></a>
   {/if}
 </Header>
 
 {#if conversation && typeof $processedMessages !== 'undefined'}
   <div class="container mx-auto flex justify-center items-center flex-col flex-1 overflow-hidden w-full">
-    <div class='overflow-y-auto flex flex-col grow items-center w-full' bind:this={conversationContainer} id='message-container'>
-      <h1 class='text-4xl flex-shrink-0 mt-10'>{@html conversation.data.name}</h1>
+    <div class='overflow-y-auto flex flex-col grow items-center w-full pt-10' bind:this={conversationContainer} id='message-container'>
+      {#if conversation.data.config.image}
+        <img src={conversation.data.config.image} alt='Conversation' class='w-32 h-32 mb-5 rounded-full object-cover' />
+      {/if}
+      <h1 class='text-4xl flex-shrink-0'>{@html conversation.data.config.title}</h1>
       <!-- if joining a conversation created by someone else, say still syncing here until thre are at least 2 members -->
       <p class='text-surface-300'>{@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}</p>
       {#if $processedMessages.length === 0 && isEqual(conversation.data.progenitor, myPubKey)}
@@ -202,13 +212,13 @@
         </div>
       {/if}
     </div>
-    <div class="w-full p-2 bg-surface-400 flex-shrink-0">
-      <!-- have this input when submitted add a conversation to the page data -->
-      <form class="flex" method='POST' on:submit={sendMessage} >
-        <!-- svelte-ignore a11y-autofocus -->
-        <input type="text" bind:this={newMessageInput} bind:value={newMessageText} autofocus class="w-full bg-surface-400 placeholder:text-gray-400 focus:border-gray-500 focus:ring-0 border-0" placeholder="Type a message...">
-        <button>Send</button>
-      </form>
-    </div>
+  </div>
+  <div class="w-full p-2 bg-surface-400 flex-shrink-0">
+    <!-- have this input when submitted add a conversation to the page data -->
+    <form class="flex" method='POST' on:submit={sendMessage} >
+      <!-- svelte-ignore a11y-autofocus -->
+      <input type="text" bind:this={newMessageInput} bind:value={newMessageText} autofocus class="w-full bg-surface-400 placeholder:text-gray-400 focus:border-gray-500 focus:ring-0 border-0" placeholder="Type a message...">
+      <button class='pr-2'><SvgIcon icon='caretRight' color='white' size='10' /></button>
+    </form>
   </div>
 {/if}

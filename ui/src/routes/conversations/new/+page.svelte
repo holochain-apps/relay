@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-  import { writable } from 'svelte/store';
+  import { writable, get } from 'svelte/store';
   import { goto } from '$app/navigation';
   import Button from "$lib/Button.svelte";
   import Header from '$lib/Header.svelte';
@@ -27,7 +27,8 @@
         const img = new Image();
         img.crossOrigin = "anonymous";
         img.onload = () => {
-          imageUrl.set(resizeAndExportAvatar(img));
+          const imageData = resizeAndExportAvatar(img)
+          imageUrl.set(imageData);
         };
         img.src = e.target?.result as string;
       };
@@ -44,7 +45,7 @@
   async function createConversation(e: Event, privacy: Privacy) {
     pendingCreate = true;
     e.preventDefault();
-    const conversation = await relayStore.createConversation(title, privacy);
+    const conversation = await relayStore.createConversation(title, get(imageUrl), privacy);
     if (conversation) {
       goto(`/conversations/${conversation.data.id}`)
     }
@@ -54,7 +55,7 @@
 </script>
 
 <Header>
-  <button class='text-4xl mr-5 absolute' on:click={() => history.back()}><SvgIcon icon='back' color='white' size='10' /></button>
+  <button class='text-4xl mr-5 absolute' on:click={() => history.back()}><SvgIcon icon='caretLeft' color='white' size='10' /></button>
   <h1 class="flex-1 text-center">New Conversation</h1>
 </Header>
 
@@ -75,6 +76,7 @@
 <div class='flex flex-col justify-start grow'>
   <h1 class='h1'>Title</h1>
   <input
+    autofocus
     class='mt-2 bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
     type='text'
     placeholder='Name this conversation'
@@ -87,10 +89,10 @@
 <!-- <div class='items-right w-full flex justify-end'> -->
 <footer>
   <Button moreClasses='w-72 justify-center' onClick={(e) => { createConversation(e, Privacy.Private)}} disabled={!valid || pendingCreate}>
-    <SvgIcon icon='person' size='16' /> <strong class='ml-2'>Create private conversation</strong>
+    <SvgIcon icon={pendingCreate ? 'spinner' : 'person'} size={pendingCreate ? '24' : '16'} color='red' /> <strong class='ml-2'>Create private conversation</strong>
   </Button>
 
   <Button moreClasses='w-72 justify-center' onClick={(e) => { createConversation(e, Privacy.Public)}} disabled={!valid || pendingCreate}>
-    <SvgIcon icon='people' size='24' /> <strong class='ml-2'>Create open conversation</strong>
+    <SvgIcon icon={pendingCreate ? 'spinner' : 'people'} size='24' /> <strong class='ml-2'>Create open conversation</strong>
   </Button>
 </footer>

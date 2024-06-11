@@ -10,7 +10,7 @@
 </script>
 
 <Header>
-  <Avatar size={24} agentPubKey={relayStore.client.myPubKey()} placeholder={true} showNickname={false} moreClasses='absolute' />
+  <Avatar size={24} agentPubKey={relayStore.client.myPubKey} placeholder={true} showNickname={false} moreClasses='absolute' />
 	<h1 class='text-center grow'>Inbox</h1>
   <div class='absolute right-5 flex items-center'>
     <a href='/conversations/join'><SvgIcon icon='ticket' size='24' color='white'/></a>
@@ -23,8 +23,9 @@
   <ul class="flex-1 mt-10">
     {#each $relayStore as $conversation ($conversation.data.id)}
       <li class='text-xl flex flex-row mb-5'>
-        <a href="/conversations/{$conversation.data.id}" class='grow'>
-          <span>{@html $conversation.data.name}</span>
+        <a href="/conversations/{$conversation.data.id}" class='grow flex flex-row'>
+          <img src={$conversation.data.config.image} alt='Conversation' class='w-8 h-8 rounded-full mr-4 object-cover' />
+          <span>{@html $conversation.data.config.title}</span>
         </a>
         <span class='text-xs text-surface-200 flex flex-row items-center'>
           <SvgIcon icon='person' size='8' color='#ccc'/> <span class='ml-2'>{Object.values($conversation.data.agentProfiles).length}</span>

@@ -18,7 +18,7 @@ import { EntryRecord } from '@holochain-open-dev/utils';
 import type { ActionCommittedSignal } from '@holochain-open-dev/utils';
 import type { Profile, ProfilesStore } from '@holochain-open-dev/profiles'
 import { get } from 'svelte/store';
-import type { EntryTypes, MembraneProofData, MessageRecord, Properties, Privacy } from '../types';
+import type { Config, ConversationCellAndConfig, EntryTypes, MembraneProofData, MessageRecord, Privacy, Properties } from '../types';
 import { encode } from 'punycode';
 
 const ZOME_NAME = 'relay'
@@ -34,19 +34,17 @@ export type RelaySignal = ActionCommittedSignal<EntryTypes, any>;
 //export class RelayClient extends ZomeClient<RelaySignal> {
 export class RelayClient {
   // conversations is a map of string to ClonedCell
-  conversations: {[key: string]: ClonedCell} = {}
+  conversations: {[key: string]: ConversationCellAndConfig} = {}
   zomeName = ZOME_NAME
+  myPubKeyB64: AgentPubKeyB64
 
   constructor(public client: AppClient, public roleName: RoleName, public profilesStore: ProfilesStore) {
     //super(client, roleName, zomeName);
+    this.myPubKeyB64 = encodeHashToBase64(this.client.myPubKey)
   }
 
-  myPubKey() : AgentPubKey {
+  get myPubKey() : AgentPubKey {
     return this.client.myPubKey
-  }
-
-  myPubKeyB64() : AgentPubKeyB64 {
-    return encodeHashToBase64(this.client.myPubKey)
   }
 
   async initConversations() {
@@ -56,9 +54,23 @@ export class RelayClient {
       const cells: CellInfo[] = appInfo.cell_info[this.roleName].filter(
         (c) => CellType.Cloned in c
       );
-      // @ts-ignore
-      const conversations = cells.reduce((result, c:CellInfo) => { result[c[CellType.Cloned].clone_id] = c[CellType.Cloned]; return result }, {})
-      this.conversations = conversations
+
+      for (const c of cells) {
+        // @ts-ignore
+        const cell = c[CellType.Cloned]
+
+        try {
+          const configEntry = await this._getConfig(cell.cell_id)
+
+          const config = configEntry? configEntry.entry : { title: cell.name, image: "" }
+
+          const convoCellAndConfig: ConversationCellAndConfig = { cell, config }
+
+          this.conversations[cell.dna_modifiers.network_seed] = convoCellAndConfig
+        } catch(e) {
+          console.log("Unable to get config for cell:", cell, e)
+        }
+      }
     }
   }
 
@@ -74,27 +86,30 @@ export class RelayClient {
     return profile
   }
 
-  async createConversation(name: string, privacy: Privacy) : Promise<ClonedCell> {
-    return this._createConversation(name, privacy, this.client.myPubKey, undefined, undefined)
+  async createConversation(name: string, image: string, privacy: Privacy) : Promise<ConversationCellAndConfig> {
+    return this._createConversation(name, image, privacy, this.client.myPubKey, undefined, undefined)
   }
 
-  async joinConversation(name: string, privacy: Privacy, progenitor: AgentPubKey, proof: MembraneProof|undefined, networkSeed: string) : Promise<ClonedCell> {
-    return this._createConversation(name, privacy, progenitor, networkSeed, proof)
+  async joinConversation(name: string, privacy: Privacy, progenitor: AgentPubKey, proof: MembraneProof|undefined, networkSeed: string) : Promise<ConversationCellAndConfig> {
+    // we don't have the image at join time, it get's loaded later
+    return this._createConversation(name, "", privacy, progenitor, proof, networkSeed)
   }
 
-  async _createConversation(name: string, privacy: Privacy, progenitor: AgentPubKey, networkSeed: string|undefined, membrane_proof: MembraneProof|undefined) : Promise<ClonedCell> {
+  async _createConversation(name: string, image: string, privacy: Privacy, progenitor: AgentPubKey, membrane_proof: MembraneProof|undefined, networkSeed: string|undefined) : Promise<ConversationCellAndConfig> {
     const properties: Properties = {
       name,
       privacy,
       progenitor: encodeHashToBase64(progenitor)
     }
 
+    const conversationId = networkSeed || uuidv4()
+
     const cloneReq : AppCreateCloneCellRequest = {
       role_name: this.roleName,
       name,
       membrane_proof,
       modifiers: {
-        network_seed: networkSeed || uuidv4(),
+        network_seed: conversationId,
         properties
       },
     }
@@ -102,24 +117,29 @@ export class RelayClient {
     console.log("creating clone cell", cloneReq)
     const cell = await this.client.createCloneCell(cloneReq)
     console.log("created clone cell", cell)
+    let config: Config = { title: name, image }
+    if (!networkSeed) {
+      await this._setConfig(config, cell.cell_id)
+    }
+
     await this.setMyProfileForConversation(cell.cell_id)
 
-    // TODO: why get all conversations when creating/joining a new one? why not only the new one?
-    await this.initConversations()
-    return cell
+    const convoCellAndConfig: ConversationCellAndConfig = {cell, config}
+    this.conversations[conversationId] = convoCellAndConfig
+    return convoCellAndConfig
   }
 
   public async getAllMessages(conversationId: string) : Promise<Array<MessageRecord>> {
-    const messages = await this.callZome("get_all_message_entries", null, this.conversations[conversationId].cell_id);
+    const messages = await this.callZome("get_all_message_entries", null, this.conversations[conversationId].cell.cell_id);
     return messages
   }
 
   public async getMessagesByWeek(conversationId: string, week?: string) : Promise<Array<MessageRecord>> {
-    return this.callZome("get_messages_hashes_for_week", { week }, this.conversations[conversationId].cell_id);
+    return this.callZome("get_messages_hashes_for_week", { week }, this.conversations[conversationId].cell.cell_id);
   }
 
   public async getAllAgents(conversationId: string) : Promise<{ [key: AgentPubKeyB64]: Profile }> {
-    const cellId = this.conversations[conversationId].cell_id;
+    const cellId = this.conversations[conversationId].cell.cell_id;
 
     const req: AppCallZomeRequest = {
       cell_id: cellId,
@@ -143,6 +163,25 @@ export class RelayClient {
     )
   }
 
+  async _setConfig(config: Config, cellId: CellId) : Promise<null> {
+    return this.callZome(
+      'set_config',
+      config,
+      cellId
+    )
+  }
+
+  async _getConfig(id: CellId | string) : Promise<EntryRecord<Config>|undefined> {
+    const cellId = typeof id === 'string' ? this.conversations[id].cell.cell_id : id;
+
+    const config = await this.callZome(
+      'get_config',
+      null,
+      cellId
+    )
+    return config ? new EntryRecord(config) : undefined
+  }
+
   public async sendMessage(conversationId: string, content: string, agents: AgentPubKey[]) {
     const message = await this.callZome(
       'create_message',
@@ -150,7 +189,7 @@ export class RelayClient {
         message: { content },
         agents
       },
-      this.conversations[conversationId].cell_id
+      this.conversations[conversationId].cell.cell_id
     )
     return message
   }
@@ -175,11 +214,12 @@ export class RelayClient {
       const conversation = this.conversations[conversationId]
 
       const data: MembraneProofData = {
-        conversation_name: conversation.name,
+        conversation_id: conversation.cell.dna_modifiers.network_seed,
         for_agent: forAgent,
         as_role: role,
       }
-      const r = await this.callZome("generate_membrane_proof", data, conversation.cell_id);
+
+      const r = await this.callZome("generate_membrane_proof", data, conversation.cell.cell_id);
       return r
     } catch(e) {
       console.error("Error generating membrane proof", e)

@@ -9,7 +9,8 @@ import type {
   Delete,
   CreateLink,
   DeleteLink,
-  MembraneProof
+  MembraneProof,
+  ClonedCell
 } from '@holochain/client';
 
 import type { Profile } from '@holochain-open-dev/profiles'
@@ -57,11 +58,10 @@ export type EntryTypes =
 }
 
 export interface Conversation {
-  id: string; // the clone id
+  id: string; // the network seed
   cellDnaHash: DnaHash;
   description?: string;
-  name: string;
-  networkSeed: string;
+  config: Config;
   privacy: Privacy;
   progenitor: AgentPubKey;
   messages: { [key: string]: Message };
@@ -69,7 +69,7 @@ export interface Conversation {
 }
 
 export interface MembraneProofData {
-  conversation_name: string;
+  conversation_id: string;
   for_agent: AgentPubKey;
   as_role: number;
 }
@@ -97,4 +97,14 @@ export interface MessageRecord {
   original_action: ActionHash;
   signed_action: SignedActionHashed;
   message?: Message;
+}
+
+export interface Config {
+  title: string,
+  image: string,
+}
+
+export interface ConversationCellAndConfig {
+  cell: ClonedCell,
+  config: Config,
 }

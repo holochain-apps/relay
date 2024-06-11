@@ -4,7 +4,7 @@ import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase6
 import { writable, get, type Writable } from 'svelte/store';
 import { v4 as uuidv4 } from 'uuid';
 import { RelayClient } from '$store/RelayClient'
-import { type Conversation, type Invitation, type Message, type MessageRecord, Privacy } from '../types';
+import { type Config, type Conversation, type Invitation, type Message, type MessageRecord, Privacy } from '../types';
 
 export class ConversationStore {
   private conversation: Writable<Conversation>;
@@ -13,12 +13,11 @@ export class ConversationStore {
     public client: RelayClient,
     public id: string,
     public cellDnaHash: DnaHash,
-    public name: string,
+    public config: Config,
     public privacy: Privacy,
     public progenitor: AgentPubKey,
-    public networkSeed: string
   ) {
-    this.conversation = writable({ id, cellDnaHash, name, networkSeed, privacy, progenitor, agentProfiles: {}, messages: {} });
+    this.conversation = writable({ id, cellDnaHash, config, privacy, progenitor, agentProfiles: {}, messages: {} });
   }
 
   async initialize() {
@@ -32,6 +31,27 @@ export class ConversationStore {
 
   subscribe(run: any) {
     return this.conversation.subscribe(run);
+  }
+
+  async getAgents() {
+    const agentProfiles = await this.client.getAllAgents(this.data.id)
+    this.conversation.update(c => {
+      c.agentProfiles = {...agentProfiles}
+      return c
+    })
+    return agentProfiles
+  }
+
+  async getConfig() {
+    const config = await this.client._getConfig(this.data.id)
+    if (config) {
+      this.conversation.update(c => {
+        c.config = {...config.entry}
+        return c
+      })
+      return config.entry
+    }
+    return null
   }
 
   async getMessages() {
@@ -72,15 +92,6 @@ export class ConversationStore {
     return []
   }
 
-  async getAgents() {
-    const agentProfiles = await this.client.getAllAgents(this.data.id)
-    this.conversation.update(c => {
-      c.agentProfiles = {...agentProfiles}
-      return c
-    })
-    return agentProfiles
-  }
-
   sendMessage(authorKey: string, content: string): void {
     // Use temporary uuid as the hash until we get the real one back from the network
     this.addMessage({ authorKey, content, hash: uuidv4(), status: 'pending', timestamp: new Date() })
@@ -96,8 +107,8 @@ export class ConversationStore {
   get publicInviteCode() {
     if (this.data.privacy === Privacy.Public) {
       const invitation: Invitation = {
-        conversationName: this.data.name,
-        networkSeed: this.data.networkSeed,
+        conversationName: this.data.config.title,
+        networkSeed: this.data.id,
         privacy: this.data.privacy,
         progenitor: this.data.progenitor
       }
