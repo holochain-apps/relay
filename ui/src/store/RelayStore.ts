@@ -5,6 +5,7 @@ import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase6
 import { ConversationStore } from './ConversationStore';
 import { RelayClient } from '$store/RelayClient'
 import type { Conversation, ConversationCellAndConfig, Invitation, Message, Privacy, Properties } from '../types';
+import { notifyOS } from '$lib/utils';
 
 export class RelayStore {
   private conversations: Writable<ConversationStore[]>;
@@ -47,6 +48,7 @@ export class RelayStore {
         }
 
         if (conversation && message.authorKey !== this.client.myPubKeyB64) {
+          await notifyOS(`new message in ${conversation.config.title}`, message.content)      
           conversation.addMessage(message)
         }
         // let messageList = this.expectations.get(message.from)

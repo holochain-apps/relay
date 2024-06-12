@@ -11,6 +11,8 @@
     "resources:default",
     "menu:default",
     "tray:default",
-    "window:allow-set-title"
+    "window:allow-set-title",
+    "clipboard-manager:allow-write-text",
+    "notification:default"
   ]
 }

@@ -48,6 +48,9 @@
   },
   "type": "module",
   "dependencies": {
-    "@tauri-apps/api": "^1.5.3"
+    "@tauri-apps/api": "^1.5.3",
+    "@tauri-apps/plugin-clipboard-manager": "https://github.com/tauri-apps/tauri-plugin-clipboard-manager#v2",
+    "@tauri-apps/plugin-notification": "https://github.com/tauri-apps/tauri-plugin-notification#v2"
+    
   }
 }

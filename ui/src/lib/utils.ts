@@ -1,10 +1,20 @@
-import { writeText } from '@tauri-apps/api/clipboard';
+import { writeText} from "@tauri-apps/plugin-clipboard-manager";
+import {isPermissionGranted, requestPermission, sendNotification } from "@tauri-apps/plugin-notification";
 
 export function copyToClipboard(text: string) {
-  console.log("copying to clipboard", text, window.__TAURI__);
-  // @ts-ignore
-  if (window.__TAURI__) return writeText(text);
-  return navigator.clipboard.writeText(text);
+  console.log("copying to clipboard", text);
+  return writeText(text)
+}
+
+export async function notifyOS(title: string, body: string) {
+  let permissionGranted = await isPermissionGranted();
+  if (!permissionGranted) {
+    const permission = await requestPermission();
+    permissionGranted = permission === 'granted';
+  }
+  if (permissionGranted) {
+    sendNotification({ title, body });
+  }
 }
 
 // Crop avatar image and return a base64 bytes string of its content

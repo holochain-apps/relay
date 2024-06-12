@@ -31,3 +31,6 @@ url2 = "0.0.6"
 app_dirs2 = "2.5.5"
 tempdir = "0.3.7"
 anyhow = "1"
+
+tauri-plugin-clipboard-manager = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
+tauri-plugin-notification = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
