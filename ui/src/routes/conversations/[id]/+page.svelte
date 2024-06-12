@@ -68,6 +68,14 @@
     })
   }
 
+
+  function handleResize() {
+    if (scrollAtBottom) {
+      scrollToBottom();
+    }
+  }
+  const debouncedHandleResize = debounce(handleResize, 100);
+
   onMount(() => {
     if (!conversation) {
       goto('/conversations');
@@ -82,6 +90,7 @@
       checkForConfig()
       checkForMessages()
       conversationContainer.addEventListener('scroll', handleScroll);
+      window.addEventListener('resize', debouncedHandleResize);
       newMessageInput.focus();
     }
   });
@@ -93,6 +102,7 @@
     clearTimeout(configTimeout);
     clearTimeout(messageTimeout);
     conversationContainer.removeEventListener('scroll', handleScroll);
+    window.removeEventListener('resize', debouncedHandleResize);
   });
 
   // Derived store to process messages and add headers
