@@ -68,7 +68,6 @@
     })
   }
 
-
   function handleResize() {
     if (scrollAtBottom) {
       scrollToBottom();
