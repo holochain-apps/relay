@@ -2,6 +2,7 @@ import { internalIpV4Sync } from "internal-ip";
 import { purgeCss } from 'vite-plugin-tailwind-purgecss';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
+import { version } from './package.json';  // Import version from package.json
 
 export default defineConfig({
   server: {
@@ -20,6 +21,7 @@ export default defineConfig({
   },
   define: {
     "process.env.IS_PREACT": JSON.stringify("false"),
-    "process.env.NODE_ENV": JSON.stringify("development")
+    "process.env.NODE_ENV": JSON.stringify("development"),
+    '__APP_VERSION__': JSON.stringify(version)  // Define a global constant
   }
 });

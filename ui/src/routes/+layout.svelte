@@ -90,13 +90,15 @@
 	setContext('relayStore', {
     getStore: () => relayStore
   });
+
 </script>
 
 <div class="wrapper flex flex-col mx-auto px-5 py-4 h-screen items-center">
 	{#if !connected || ($prof && $prof.status === 'pending')}
 		<div class='flex flex-col items-center justify-center grow'>
 			<img src="/logo.png" alt="Logo" />
-			<h1 class="h1 mb-10">Relay</h1>
+			<h1 class="h1">Relay</h1>
+			<span class='text-xs mb-10'>v{__APP_VERSION__}</span>
 			<p>Peer-to-peer. Encrypted. Secure.</p>
 		</div>
 		<div class="flex flex-col items-center justify-center">

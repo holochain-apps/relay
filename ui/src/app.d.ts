@@ -8,9 +8,7 @@ declare namespace App {
 	// interface Platform {}
 }
 
-export interface User {
-  name: string;
-}
+declare const __APP_VERSION__: string;
 
 // For tauri
 declare global {
