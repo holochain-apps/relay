@@ -45,7 +45,7 @@
     <input
       class='mt-2 bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0 w-full text-ellipsis overflow-hidden'
       type='text'
-      placeholder='e.g. 4xx89huihify87y...'
+      placeholder='e.g. hLBjb252ZXJzYXRpb25OYW1lq0...'
       name='inviteCode'
       bind:value={inviteCode}
     />
@@ -53,7 +53,7 @@
 
   <footer>
     <Button>
-      <SvgIcon icon='speechBubble' size='20' /> <strong class='ml-2'>Join Conversation</strong>
+      <SvgIcon icon='newConversation' size='20' /> <strong class='ml-2'>Join Conversation</strong>
     </Button>
   </footer>
 </form>
