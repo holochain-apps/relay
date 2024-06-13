@@ -5,8 +5,8 @@ export const vollaTheme: CustomThemeConfig = {
     name: 'volla-theme',
     properties: {
 			// =~= Theme Properties =~=
-			"--theme-font-family-base": `system-ui`,
-			"--theme-font-family-heading": `system-ui`,
+			"--theme-font-family-base": `NotoSans`,
+			"--theme-font-family-heading": `NotoSans`,
 			"--theme-font-color-base": "0 0 0",
 			"--theme-font-color-dark": "255 255 255",
 			"--theme-rounded-base": "9999px",

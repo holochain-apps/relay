@@ -11,6 +11,9 @@ export default {
 		join(require.resolve('@skeletonlabs/skeleton'), '../**/*.{html,js,svelte,ts}')
 	],
 	theme: {
+		fontFamily: {
+			'sans':['NotoSans']
+		},
 		extend: {}
 	},
 	plugins: [

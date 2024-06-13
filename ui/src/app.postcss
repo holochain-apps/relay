@@ -3,6 +3,14 @@
 @tailwind utilities;
 @tailwind variants;
 
+@layer base {
+  @font-face {
+    font-family: NotoSans;
+    font-weight: 400;
+    src: url(/static/NotoSans-VariableFont_wdthwght.ttf) format("ttf");
+  }
+}
+
 * {
   --scrollbar-color-thumb: #DDD;
   --scrollbar-color-track: #444;
@@ -45,4 +53,12 @@ input {
 
 input:focus {
   border-color: rgba(var(--color-secondary-500));
+}
+
+h1, .h1, h2, .h2, h3, .h3 {
+  font-weight: 600;
+}
+
+.right-pad {
+  padding-right: 15px;
 }

@@ -19,7 +19,7 @@
   </div>
 </Header>
 
-<div class="container h-full mx-auto flex flex-col">
+<div class="container h-full mx-auto flex flex-col conversations-list">
   <ul class="flex-1 mt-10">
     {#each $relayStore as $conversation ($conversation.data.id)}
       <li class='text-xl flex flex-row mb-5'>
@@ -34,3 +34,8 @@
     {/each}
   </ul>
 </div>
+<style>
+  .conversations-list {
+    padding: 0 15px 0 15px;
+  }
+</style>

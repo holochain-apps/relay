@@ -44,7 +44,7 @@
     />
   </div>
 
-  <div class='items-right w-full flex justify-end'>
+  <div class='items-right w-full flex justify-end right-pad'>
     <Button on:click={saveName} disabled={nickname.trim().length < MIN_NAME_LENGTH}>
       Next:&nbsp;<strong>Avatar</strong> <SvgIcon icon='arrowRight' size='42' />
     </Button>
