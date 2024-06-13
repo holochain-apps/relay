@@ -183,7 +183,9 @@
       {/if}
       <h1 class='text-4xl flex-shrink-0'>{@html conversation.data.config.title}</h1>
       <!-- if joining a conversation created by someone else, say still syncing here until thre are at least 2 members -->
-      <a href={`/conversations/${conversationId}/members`} class='text-surface-300'>{@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}</a>
+      <a href={`/conversations/${conversationId}/members`} class='text-surface-300'>
+        {#if conversation.data.privacy === Privacy.Public}Open{:else}Private{/if} - {@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}
+      </a>
       {#if $processedMessages.length === 0 && isEqual(conversation.data.progenitor, myPubKey)}
         <div class='flex flex-col items-center justify-center h-full w-full'>
           <p class='mb-8 text-secondary-400'>Invite people to start the conversation</p>

@@ -18,7 +18,7 @@
 <Header>
   <a class='absolute' href={`/conversations/${conversationId}`}><SvgIcon icon='caretLeft' color='white' size='10' /></a>
   {#if conversation}
-    <h1 class="flex-1 grow text-center">{@html conversation.data.config.title} -- Details</h1>
+    <h1 class="flex-1 grow text-center">Members</h1>
     <a class='absolute right-5' href="/conversations/{conversation.data.id}/invite"><SvgIcon icon='addPerson' color='white' /></a>
   {/if}
 </Header>
