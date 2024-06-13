@@ -26,18 +26,23 @@
 
 {#if conversation}
   {@const numMembers = Object.values(conversation.data.agentProfiles).length}
-  {#if conversation.data.config.image}
-    <img src={conversation.data.config.image} alt='Conversation' class='w-32 h-32 mb-5 rounded-full object-cover' />
-  {/if}
-  <h1 class='text-4xl flex-shrink-0'>{@html conversation.data.config.title}</h1>
-  <p class='text-surface-300'>{@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}</p>
-  
-  <div style="margin-top:20px;">
-    {#each Object.entries(conversation.data.agentProfiles) as [agentPubKey, profile]}
-      <div style="display:flex; align-items:center;width: 100%px;">
-        <Avatar agentPubKey={decodeHashFromBase64(agentPubKey)} size='60' showNickname={false} moreClasses='-ml-30'/>
-        <span style="margin-left:15px; font-size:20px">{profile.nickname}</span>
-      </div>
-    {/each}
+
+  <div class="container mx-auto flex items-center flex-col flex-1 overflow-hidden w-full pt-10">
+    {#if conversation.data.config.image}
+      <img src={conversation.data.config.image} alt='Conversation' class='w-32 h-32 min-h-32 mb-5 rounded-full object-cover' />
+    {/if}
+    <h1 class='text-4xl flex-shrink-0'>{@html conversation.data.config.title}</h1>
+    <p class='text-surface-300'>{@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}</p>
+
+    <div class="container mx-auto flex flex-col">
+      <ul class="flex-1 mt-10">
+        {#each Object.entries(conversation.data.agentProfiles) as [agentPubKey, profile]}
+          <li class='text-xl flex flex-row mb-5 items-center'>
+            <Avatar agentPubKey={decodeHashFromBase64(agentPubKey)} size='48' showNickname={false} moreClasses='-ml-30'/>
+            <span style="margin-left:15px; font-size:20px">{profile.nickname}</span>
+          </li>
+        {/each}
+      </ul>
+    </div>
   </div>
 {/if}

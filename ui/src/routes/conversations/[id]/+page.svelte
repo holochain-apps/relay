@@ -170,7 +170,7 @@
 <Header>
   <a class='absolute' href="/conversations"><SvgIcon icon='caretLeft' color='white' size='10' /></a>
   {#if conversation}
-    <h1 on:click={()=>goto(`/conversations/${conversationId}/members`)} class="flex-1 grow text-center">{@html conversation.data.config.title}</h1>
+    <h1 class="flex-1 grow text-center"><a href={`/conversations/${conversationId}/members`}>{@html conversation.data.config.title}</a></h1>
     <a class='absolute right-5' href="/conversations/{conversation.data.id}/invite"><SvgIcon icon='addPerson' color='white' /></a>
   {/if}
 </Header>
@@ -179,12 +179,11 @@
   <div class="container mx-auto flex justify-center items-center flex-col flex-1 overflow-hidden w-full">
     <div class='overflow-y-auto flex flex-col grow items-center w-full pt-10' bind:this={conversationContainer} id='message-container'>
       {#if conversation.data.config.image}
-        <img src={conversation.data.config.image} alt='Conversation' class='w-32 h-32 mb-5 rounded-full object-cover' />
+        <img src={conversation.data.config.image} alt='Conversation' class='w-32 h-32 min-h-32 mb-5 rounded-full object-cover' />
       {/if}
       <h1 class='text-4xl flex-shrink-0'>{@html conversation.data.config.title}</h1>
       <!-- if joining a conversation created by someone else, say still syncing here until thre are at least 2 members -->
-      <p  on:click={()=>goto(`/conversations/${conversationId}/members`)} 
-        class='text-surface-300'>{@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}</p>
+      <a href={`/conversations/${conversationId}/members`} class='text-surface-300'>{@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}</a>
       {#if $processedMessages.length === 0 && isEqual(conversation.data.progenitor, myPubKey)}
         <div class='flex flex-col items-center justify-center h-full w-full'>
           <p class='mb-8 text-secondary-400'>Invite people to start the conversation</p>
