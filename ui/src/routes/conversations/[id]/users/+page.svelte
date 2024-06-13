@@ -1,52 +1,30 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-  import Button from "$lib/Button.svelte";
   import Header from '$lib/Header.svelte';
   import SvgIcon from "$lib/SvgIcon.svelte";
-  import { UserStore } from '$store/UserStore';
+  import { page } from '$app/stores';
+  import type { RelayStore } from '$store/RelayStore';
+  import { getContext } from 'svelte';
+  import { decodeHashFromBase64 } from '@holochain/client';
+  import Avatar from '$lib/Avatar.svelte';
 
-  const MIN_NAME_LENGTH = 3;
-  let nickname = ''
+  $: conversationId = $page.params.id;
+  const relayStoreContext: { getStore: () => RelayStore } = getContext('relayStore')
+  let relayStore = relayStoreContext.getStore()
+  $: conversation = relayStore.getConversation(conversationId);
 
-  $: {
-    // Subscribe to the store and update local state
-    UserStore.subscribe($profile => {
-      nickname = $profile.nickname;
-    });
-  }
-
-  function saveName() {
-    nickname = nickname.trim();
-    UserStore.update(current => {
-        return { ...current, nickname };
-    });
-    if (nickname.length > MIN_NAME_LENGTH) {
-      goto('/register/avatar');
-    }
-  }
 </script>
 
 <Header>
-  <img src="/logo.png" alt="Logo" width='16' />
+  <a class='absolute' href={`/conversations/${conversationId}`}><SvgIcon icon='caretLeft' color='white' size='10' /></a>
+  {#if conversation}
+    <h1 class="flex-1 grow text-center">{@html conversation.data.config.title}: Members</h1>
+    <a class='absolute right-5' href="/conversations/{conversation.data.id}/invite"><SvgIcon icon='addPerson' color='white' /></a>
+  {/if}
 </Header>
 
-<form on:submit|preventDefault={saveName} class='contents'>
-  <div class='flex flex-col justify-center grow'>
-    <h1 class='h1'>Name?xx</h1>
-    <input
-      autofocus
-      class='mt-2 bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
-      type='text'
-      placeholder='Enter your display name'
-      name='nickname'
-      bind:value={nickname}
-      minlength={MIN_NAME_LENGTH}
-    />
-  </div>
-
-  <div class='items-right w-full flex justify-end'>
-    <Button on:click={saveName} disabled={nickname.trim().length < MIN_NAME_LENGTH}>
-      Next:&nbsp;<strong>Avatar</strong> <SvgIcon icon='arrowRight' size='42' />
-    </Button>
-  </div>
-</form>
+{#if conversation}
+  {#each Object.entries(conversation.data.agentProfiles) as [agentPubKey, profile]}
+    <Avatar agentPubKey={decodeHashFromBase64(agentPubKey)} size='24' showNickname={true} moreClasses='-ml-30'/>
+  {/each}
+{/if}
