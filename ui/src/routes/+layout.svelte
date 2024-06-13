@@ -104,7 +104,7 @@
 		<div class="flex flex-col items-center justify-center">
 			<p class="text-2xl mb-8">Connecting to Holochain...</p>
 		</div>
-		<div class="flex flex-col items-center justify-center">
+		<div class="flex flex-col items-center justify-center pb-10">
 			<p class='text-surface-300 text-xs'>SECURED BY</p>
 			<img src='/holochain.png' alt="holochain" />
 		</div>

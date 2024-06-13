@@ -214,7 +214,7 @@
                   <span class="font-bold ml-3 grow">{@html message.author}</span>
                   <span class="text-surface-200 text-xs"><Time timestamp={message.timestamp} format="h:mm" /></span>
                 </div>
-                <span class="p-2 max-w-xs self-end mb-2 ml-7">{@html message.content}</span>
+                <span class="p-2 max-w-xs self-end mb-2 ml-7 font-light">{@html message.content}</span>
               </li>
             {/each}
           </ul>
