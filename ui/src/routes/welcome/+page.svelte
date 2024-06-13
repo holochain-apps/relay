@@ -43,7 +43,7 @@
   </Button>
 
   <Button onClick={() => goto('/conversations/new')} moreClasses='w-64 justify-center'>
-    <SvgIcon icon='write' size='24' />
+    <SvgIcon icon='newConversation' size='24' color='red'/>
     <strong class='ml-2'>New Conversation</strong>
   </Button>
 </footer>

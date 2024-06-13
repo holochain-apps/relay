@@ -15,7 +15,7 @@
   <div class='absolute right-5 flex items-center'>
     <a href='/conversations/join'><SvgIcon icon='ticket' size='24' color='white'/></a>
     <a href='/share-key' class='ml-5'><SvgIcon icon='key' size='24' color='white'/></a>
-    <a href='/conversations/new' class='ml-5'><SvgIcon icon='write' size='24' color='white'/></a>
+    <a href='/conversations/new' class='ml-5'><SvgIcon icon='newConversation' size='22' color='white'/></a>
   </div>
 </Header>
 
