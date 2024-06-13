@@ -34,7 +34,7 @@
     <h1 class='text-4xl flex-shrink-0'>{@html conversation.data.config.title}</h1>
     <p class='text-surface-300'>{@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}</p>
 
-    <div class="container mx-auto flex flex-col">
+    <div class="container mx-auto flex flex-col px-4">
       <ul class="flex-1 mt-10">
         {#each Object.entries(conversation.data.agentProfiles) as [agentPubKey, profile]}
           <li class='text-xl flex flex-row mb-5 items-center'>
