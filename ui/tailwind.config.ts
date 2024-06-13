@@ -12,7 +12,7 @@ export default {
 	],
 	theme: {
 		fontFamily: {
-			'sans':['NotoSans']
+			'sans':['NotoSans', 'ui-sans-serif', 'system-ui']
 		},
 		extend: {}
 	},
