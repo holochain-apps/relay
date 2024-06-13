@@ -11,7 +11,6 @@
 
 <Header>
   <Avatar size={24} agentPubKey={relayStore.client.myPubKey} placeholder={true} showNickname={false} moreClasses='absolute' />
-	<h1 class='text-center grow'>Inbox</h1>
   <div class='absolute right-5 flex items-center'>
     <a href='/conversations/join'><SvgIcon icon='ticket' size='24' color='white'/></a>
     <a href='/share-key' class='ml-5'><SvgIcon icon='key' size='24' color='white'/></a>
