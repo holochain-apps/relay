@@ -76,7 +76,7 @@
   </label>
 </div>
 
-<div class='items-right w-full flex justify-end'>
+<div class='items-right w-full flex justify-end pr-4'>
   <Button onClick={createAccount}>
     <SvgIcon icon='hand' size='20' /> <strong class='ml-2'>Jump in</strong>
   </Button>

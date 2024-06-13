@@ -20,7 +20,6 @@
 </script>
 
 <Header>
-	<!-- <img src="/logo.png" alt="Logo" /> -->
   <Avatar size={24} agentPubKey={relayClient.myPubKey} placeholder={true} showNickname={false} />
 </Header>
 
@@ -31,7 +30,7 @@
   <p>Private, encrypted and secured by keys only you control.</p>
 </div>
 
-<footer>
+<footer class='pb-10'>
   <Button onClick={() => goto('/conversations/join')} moreClasses='w-64 justify-center'>
     <SvgIcon icon='ticket' size='24' />
     <strong class='ml-2'>Enter Invite Code</strong>
@@ -43,7 +42,7 @@
   </Button>
 
   <Button onClick={() => goto('/conversations/new')} moreClasses='w-64 justify-center'>
-    <SvgIcon icon='write' size='24' />
+    <SvgIcon icon='newConversation' size='24' color='red'/>
     <strong class='ml-2'>New Conversation</strong>
   </Button>
 </footer>

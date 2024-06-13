@@ -11,15 +11,14 @@
 
 <Header>
   <Avatar size={24} agentPubKey={relayStore.client.myPubKey} placeholder={true} showNickname={false} moreClasses='absolute' />
-	<h1 class='text-center grow'>Inbox</h1>
   <div class='absolute right-5 flex items-center'>
     <a href='/conversations/join'><SvgIcon icon='ticket' size='24' color='white'/></a>
     <a href='/share-key' class='ml-5'><SvgIcon icon='key' size='24' color='white'/></a>
-    <a href='/conversations/new' class='ml-5'><SvgIcon icon='write' size='24' color='white'/></a>
+    <a href='/conversations/new' class='ml-5'><SvgIcon icon='newConversation' size='22' color='white'/></a>
   </div>
 </Header>
 
-<div class="container h-full mx-auto flex flex-col">
+<div class="container h-full mx-auto flex flex-col conversations-list">
   <ul class="flex-1 mt-10">
     {#each $relayStore as $conversation ($conversation.data.id)}
       <li class='text-xl flex flex-row mb-5'>
@@ -34,3 +33,8 @@
     {/each}
   </ul>
 </div>
+<style>
+  .conversations-list {
+    padding: 0 15px 0 15px;
+  }
+</style>
