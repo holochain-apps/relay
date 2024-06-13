@@ -9,6 +9,7 @@
 	import Header from '$lib/Header.svelte';
 	import SvgIcon from '$lib/SvgIcon.svelte';
 	import { RelayStore } from '$store/RelayStore';
+  import { invoke } from '@tauri-apps/api/core';
 
 	const profilesContext: { getStore: () => ProfilesStore } = getContext('profiles')
 	let profilesStore = profilesContext.getStore()
@@ -33,7 +34,9 @@
 {#if !loggedIn}
 	<div class='flex flex-col items-center justify-center grow'>
 		<img src="/logo.png" alt="Logo" />
-		<h1 class="h1">Relay</h1>
+		<h1 on:click={ ()=>{
+			console.log("HERE")
+			 invoke('close_splashscreen')}} class="h1">Relay</h1>
 		<span class='text-xs mb-10'>v{__APP_VERSION__}</span>
 		<p>Peer-to-peer. Encrypted. Secure.</p>
 	</div>

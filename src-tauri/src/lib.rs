@@ -15,6 +15,17 @@ pub fn happ_bundle() -> AppBundle {
     AppBundle::decode(bytes).expect("Failed to decode relay happ")
 }
 
+use tauri::{Manager, Window};
+// Create the command:
+// This command must be async so that it doesn't run on the main thread.
+#[tauri::command]
+async fn close_splashscreen(window: Window) {
+  // Close splashscreen
+  window.get_webview_window("splashscreen").expect("no window labeled 'splashscreen' found").close().unwrap();
+  // Show main window
+  window.get_webview_window("main").expect("no window labeled 'main' found").show().unwrap();
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -32,18 +43,37 @@ pub fn run() {
             },
         ))
         .setup(|app| {
+            let splashscreen_window = app.get_webview_window("splashscreen").unwrap();
+            splashscreen_window.show().unwrap();
             let handle = app.handle().clone();
-            tauri::async_runtime::block_on(async move {
-                setup(handle).await
-            })?;
+
+            tauri::async_runtime::spawn(async move {
+                println!("Initializing...");
+                tauri::async_runtime::block_on(async move {
+                    setup(handle).await
+                });
+                println!("Done initializing.");
+
+                // After it's done, close the splashscreen and display the main window
+                splashscreen_window.close().unwrap();
+              });
+
+      //let main_window = app.get_webview_window("main").unwrap();
+
+            println!("HERE->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+            println!("THERE->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 
             // After set up we can be sure our app is installed and up to date, so we can just open it
             app.holochain()?
                 .main_window_builder(String::from("main"), false, Some(String::from("relay")), None)?
                 .build()?;
+            println!("FISH->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 
+       //   splashscreen_window.close().unwrap();
+          //  main_window.show().unwrap();
             Ok(())
         })
+        .invoke_handler(tauri::generate_handler![close_splashscreen])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
