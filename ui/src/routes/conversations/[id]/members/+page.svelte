@@ -18,13 +18,26 @@
 <Header>
   <a class='absolute' href={`/conversations/${conversationId}`}><SvgIcon icon='caretLeft' color='white' size='10' /></a>
   {#if conversation}
-    <h1 class="flex-1 grow text-center">{@html conversation.data.config.title}: Members</h1>
+    <h1 class="flex-1 grow text-center">{@html conversation.data.config.title} -- Details</h1>
     <a class='absolute right-5' href="/conversations/{conversation.data.id}/invite"><SvgIcon icon='addPerson' color='white' /></a>
   {/if}
 </Header>
 
+
 {#if conversation}
-  {#each Object.entries(conversation.data.agentProfiles) as [agentPubKey, profile]}
-    <Avatar agentPubKey={decodeHashFromBase64(agentPubKey)} size='24' showNickname={true} moreClasses='-ml-30'/>
-  {/each}
+  {@const numMembers = Object.values(conversation.data.agentProfiles).length}
+  {#if conversation.data.config.image}
+    <img src={conversation.data.config.image} alt='Conversation' class='w-32 h-32 mb-5 rounded-full object-cover' />
+  {/if}
+  <h1 class='text-4xl flex-shrink-0'>{@html conversation.data.config.title}</h1>
+  <p class='text-surface-300'>{@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}</p>
+  
+  <div style="margin-top:20px;">
+    {#each Object.entries(conversation.data.agentProfiles) as [agentPubKey, profile]}
+      <div style="display:flex; align-items:center;width: 100%px;">
+        <Avatar agentPubKey={decodeHashFromBase64(agentPubKey)} size='60' showNickname={false} moreClasses='-ml-30'/>
+        <span style="margin-left:15px; font-size:20px">{profile.nickname}</span>
+      </div>
+    {/each}
+  </div>
 {/if}

@@ -170,7 +170,7 @@
 <Header>
   <a class='absolute' href="/conversations"><SvgIcon icon='caretLeft' color='white' size='10' /></a>
   {#if conversation}
-    <h1 on:click={()=>goto(`/conversations/${conversationId}/users`)} class="flex-1 grow text-center">{@html conversation.data.config.title}</h1>
+    <h1 on:click={()=>goto(`/conversations/${conversationId}/members`)} class="flex-1 grow text-center">{@html conversation.data.config.title}</h1>
     <a class='absolute right-5' href="/conversations/{conversation.data.id}/invite"><SvgIcon icon='addPerson' color='white' /></a>
   {/if}
 </Header>
@@ -183,7 +183,7 @@
       {/if}
       <h1 class='text-4xl flex-shrink-0'>{@html conversation.data.config.title}</h1>
       <!-- if joining a conversation created by someone else, say still syncing here until thre are at least 2 members -->
-      <p  on:click={()=>goto(`/conversations/${conversationId}/users`)} 
+      <p  on:click={()=>goto(`/conversations/${conversationId}/members`)} 
         class='text-surface-300'>{@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}</p>
       {#if $processedMessages.length === 0 && isEqual(conversation.data.progenitor, myPubKey)}
         <div class='flex flex-col items-center justify-center h-full w-full'>
