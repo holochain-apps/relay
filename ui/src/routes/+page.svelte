@@ -27,7 +27,6 @@
 </script>
 
 <Header>
-	<img src="/logo.png" alt="Logo" />
 </Header>
 
 {#if !loggedIn}
@@ -52,7 +51,7 @@
 			<SvgIcon icon='lock' size='24' /> <span class='ml-2'>Create an Account</span>
 		</a>
 	{/if}
-	<div class="flex flex-col items-center justify-center">
+	<div class="flex flex-col items-center justify-center pb-10">
 		<p class='text-surface-300 text-xs'>SECURED BY</p>
 		<img src='/holochain.png' alt="holochain" />
 	</div>

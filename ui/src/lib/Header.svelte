@@ -1,5 +1,5 @@
 <div class='flex flex-row flex-shrink-0 items-start w-full header'>
-  <slot><img src="/logo.png" alt="Logo" /></slot>
+  <slot></slot>
 </div>
 <style>
   .header {
