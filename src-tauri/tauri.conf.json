@@ -14,8 +14,8 @@
     },
     "windows": [
       {
-        "width": 400,
-        "height": 200,
+        "width": 360,
+        "height": 800,
         "decorations": false,
         "url": "splashscreen.html",
         "label": "splashscreen"
