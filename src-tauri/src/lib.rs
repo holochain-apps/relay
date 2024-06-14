@@ -42,7 +42,7 @@ pub fn run() {
                 .level(log::LevelFilter::Warn)
                 .build(),
         )
-        .plugin(tauri_plugin_holochain::init(
+        .plugin(tauri_plugin_holochain::async_init(
             vec_to_locked(vec![]).expect("Can't build passphrase"),
             HolochainPluginConfig {
                 signal_url: signal_url(),
@@ -55,16 +55,22 @@ pub fn run() {
             splashscreen_window.show().unwrap();
             let handle = app.handle().clone();
 
-            tauri::async_runtime::spawn(async move {
-                println!("Initializing...");
-                if let Err(err) = setup(handle.clone()).await {
-                    println!("Error setting up the app: {err:?}");
-                }
-                println!("Done initializing.");
+            app.handle()
+                .listen("holochain-setup-completed", move |_event| {
+                    let handle = handle.clone();
+                    tauri::async_runtime::spawn(async move {
+                        println!("Initializing...");
+                        if let Err(err) = setup(handle.clone()).await {
+                            println!("Error setting up the app: {err:?}");
+                        }
+                        println!("Done initializing.");
 
-                // After it's done, close the splashscreen and display the main window
-                splashscreen_window.close().unwrap();
-            });
+                        // After it's done, close the splashscreen and display the main window
+                        let splashscreen_window =
+                            handle.get_webview_window("splashscreen").unwrap();
+                        splashscreen_window.close().unwrap();
+                    });
+                });
 
             //let main_window = app.get_webview_window("main").unwrap();
 
