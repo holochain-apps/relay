@@ -62,9 +62,8 @@ jobs:
       - name: build the app
         uses: tauri-apps/tauri-action@v0
         env:
-          GITHUB_TOKEN: $
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          projectPath: src-tauri
           tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version
           releaseName: "Relay v__VERSION__"
           releaseBody: "See assets below to download and install this version."
