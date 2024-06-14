@@ -94,7 +94,7 @@ fn internal_ip() -> String {
 
 fn bootstrap_url() -> Url2 {
     // Resolved at compile time to be able to point to local services
-    if cfg!(debug_assertions) {
+    if tauri::is_dev() {
         let internal_ip = internal_ip();
         let port = std::option_env!("BOOTSTRAP_PORT")
             .expect("Environment variable BOOTSTRAP_PORT was not set");
@@ -106,7 +106,7 @@ fn bootstrap_url() -> Url2 {
 
 fn signal_url() -> Url2 {
     // Resolved at compile time to be able to point to local services
-    if cfg!(debug_assertions) {
+    if tauri::is_dev() {
         let internal_ip = internal_ip();
         let signal_port =
             std::option_env!("SIGNAL_PORT").expect("Environment variable INTERNAL_IP was not set");
@@ -117,7 +117,7 @@ fn signal_url() -> Url2 {
 }
 
 fn holochain_dir() -> PathBuf {
-    if cfg!(debug_assertions) {
+    if tauri::is_dev() {
         let tmp_dir = tempdir::TempDir::new("relay").expect("Could not create temporary directory");
 
         // Convert `tmp_dir` into a `Path`, destroying the `TempDir`
