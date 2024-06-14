@@ -119,7 +119,7 @@ jobs:
         with: 
           repository: "holochain-apps/volla-chat"
           token: ${{ secrets.GITHUB_TOKEN }}
-          version: Relay-v${{ needs.publish-happ.outputs.appVersion }}
+          version: v${{ needs.publish-happ.outputs.appVersion }}
           asset-file: '*.happ'
           asset-output: 'workdir/'
 
