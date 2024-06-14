@@ -111,6 +111,11 @@ jobs:
         run: |
           npm install
 
+      - name: Print version
+        run: |
+          echo "The Version was: ${{ needs.publish-happ.outputs.appVersion }}"
+        id: print-version
+
       - name: Download release of the .happ
         id: release_data
         uses: KevinRohn/github-full-release-data@v2
@@ -119,7 +124,7 @@ jobs:
         with: 
           repository: "holochain-apps/volla-chat"
           token: ${{ secrets.GITHUB_TOKEN }}
-          version: v${{ needs.publish-happ.outputs.appVersion }}
+          version: v0.0.1-dev.3
           asset-file: '*.happ'
           asset-output: 'workdir/'
 
