@@ -53,7 +53,7 @@ jobs:
           artifacts: "workdir/relay.happ"
           body: "See assets below to download and install this version."
           name: Relay v${{ steps.version.outputs.APP_VERSION }}
-          tag: Relay-v${{ steps.version.outputs.APP_VERSION }}
+          tag: v${{ steps.version.outputs.APP_VERSION }}
           prerelease: true
           draft: true
 
