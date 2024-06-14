@@ -1,9 +1,9 @@
 {
   "productName": "relay",
-  "version": "0.0.1-dev.2",
+  "version": "0.0.1-dev.3",
   "identifier": "org.holochain.relay",
   "build": {
-    "beforeBuildCommand": "npm run build -w ui && npm run build:happ",
+    "beforeBuildCommand": "npm run build -w ui",
     "devUrl": "http://localhost:1420",
     "frontendDist": "../ui/build"
   },

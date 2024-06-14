@@ -1,6 +1,6 @@
 {
   "name": "ui",
-  "version": "0.0.1-dev.2",
+  "version": "0.0.1-dev.3",
   "private": true,
   "scripts": {
     "start": "vite --clearScreen false",
@@ -12,14 +12,14 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "lint": "prettier --plugin-search-dir . --check . && eslint .",
     "format": "prettier --plugin-search-dir . --write .",
-    "package": "rm -f dist.zip && npm run build && cd dist && bestzip ../dist.zip *"
+    "package": "rm -f dist.zip && npm run build && cd build && bestzip ../dist.zip *"
   },
   "devDependencies": {
-	"@holochain/client": "=0.17.0-rc.0",
-	"@holochain-open-dev/profiles": "^0.400.0-dev.1",
-	"@holochain-open-dev/utils": "^0.300.0-rc.0",
-	"@holochain-open-dev/elements": "^0.300.0-rc.0",
-	"@skeletonlabs/skeleton": "^2.8.0",
+    "@holochain/client": "=0.17.0-rc.0",
+    "@holochain-open-dev/profiles": "^0.400.0-dev.1",
+    "@holochain-open-dev/utils": "^0.300.0-rc.0",
+    "@holochain-open-dev/elements": "^0.300.0-rc.0",
+    "@skeletonlabs/skeleton": "^2.8.0",
     "@skeletonlabs/tw-plugin": "^0.3.1",
     "@sveltejs/adapter-static": "^3.0.0",
     "@sveltejs/kit": "^2.5.10",
