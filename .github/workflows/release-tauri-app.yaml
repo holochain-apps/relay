@@ -6,6 +6,57 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+-dev.[0-9]+'
 
 jobs:
+  publish-happ:
+    permissions:
+      contents: write
+    runs-on: ubuntu-22.04
+    outputs:
+      releaseId: ${{ steps.create-release.outputs.id }}
+      appVersion: ${{ steps.version.outputs.APP_VERSION }}
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      # Checks out a copy of your repository on the ubuntu-latest machine
+      - uses: actions/checkout@v3
+
+      - name: Extend space
+        uses: ./.github/actions/extend-space
+
+      - name: Install nix
+        uses: cachix/install-nix-action@v18
+        with:
+          install_url: https://releases.nixos.org/nix/nix-2.13.3/install
+          extra_nix_config: |
+            experimental-features = flakes nix-command
+
+      - uses: cachix/cachix-action@v12
+        with:
+          name: holochain-ci
+
+      - uses: cachix/cachix-action@v12
+        with:
+          name: darksoil-studio
+
+      - name: Install and test
+        run: |
+          nix-store --gc
+          nix develop --command bash -c "npm i && npm run build:happ"
+
+      - name: Retrieve version
+        run: |
+          echo "APP_VERSION=$(cat src-tauri/tauri.conf.json | grep -oP '(?<="version": ")[^"]*')" >> $GITHUB_OUTPUT
+        id: version
+
+      - id: create-release
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifacts: "workdir/relay.happ"
+          body: "See assets below to download and install this version."
+          name: Relay v${{ steps.version.outputs.APP_VERSION }}
+          tag: Relay-v${{ steps.version.outputs.APP_VERSION }}
+          prerelease: true
+          draft: true
+
   release-tauri-app:
     strategy:
       fail-fast: false
@@ -33,6 +84,7 @@ jobs:
         with:
           override: true
           toolchain: stable
+
       - name: install Go stable
         uses: actions/setup-go@v4
         with:
@@ -59,13 +111,23 @@ jobs:
         run: |
           npm install
 
+      - name: Download release of the .happ
+        id: release_data
+        uses: KevinRohn/github-full-release-data@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with: 
+          repository: "holochain-apps/volla-chat"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: Relay-v${{ needs.publish-happ.outputs.appVersion }}
+          asset-file: '*.happ'
+          asset-output: 'workdir/'
+
       - name: build the app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version
-          releaseName: "Relay v__VERSION__"
-          releaseBody: "See assets below to download and install this version."
+          releaseId: ${{ needs.publish-happ.outputs.releaseId }}
           releaseDraft: true
           prerelease: true
