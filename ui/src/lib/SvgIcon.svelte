@@ -14,6 +14,8 @@
     }
     return `data:image/svg+xml;charset=utf-8,${i.replace("#","%23")}`
   }
+
+  style = style + ` width: ${size}px;`
 </script>
 
 <div class="icon" style={style}>

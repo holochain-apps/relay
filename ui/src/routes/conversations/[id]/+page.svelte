@@ -171,7 +171,9 @@
   <a class='absolute' href="/conversations"><SvgIcon icon='caretLeft' color='white' size='10' /></a>
   {#if conversation}
     <h1 class="flex-1 grow text-center"><a href={`/conversations/${conversationId}/members`}>{@html conversation.data.config.title}</a></h1>
-    <a class='absolute right-5' href="/conversations/{conversation.data.id}/invite"><SvgIcon icon='addPerson' color='white' /></a>
+    {#if conversation.data.privacy === Privacy.Public || isEqual(conversation.data.progenitor, myPubKey)}
+      <a class='absolute right-5' href="/conversations/{conversation.data.id}/invite"><SvgIcon icon='addPerson' color='white' /></a>
+    {/if}
   {/if}
 </Header>
 
@@ -184,7 +186,7 @@
       <h1 class='text-4xl flex-shrink-0'>{@html conversation.data.config.title}</h1>
       <!-- if joining a conversation created by someone else, say still syncing here until thre are at least 2 members -->
       <a href={`/conversations/${conversationId}/members`} class='text-surface-300'>
-        {#if conversation.data.privacy === Privacy.Public}Open{:else}Private{/if} - {@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}
+        {@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}
       </a>
       {#if $processedMessages.length === 0 && isEqual(conversation.data.progenitor, myPubKey)}
         <div class='flex flex-col items-center justify-center h-full w-full'>
@@ -205,18 +207,23 @@
         <div id='message-box' class="flex-1 p-4 flex flex-col-reverse w-full">
           <ul>
             {#each $processedMessages as message (message.hash)}
+              {@const fromMe = message.authorKey === myPubKeyB64}
               {#if message.header}
-                <li class='mt-auto mb-5'>
-                  <div class="text-center text-sm text-secondary-500">{message.header}</div>
+                <li class='mt-auto mb-3'>
+                  <div class="text-center text-xs text-secondary-500">{message.header}</div>
                 </li>
               {/if}
-              <li class='mt-auto mb-5'>
-                <div class='flex items-center'>
+              <li class='mt-auto mb-3 flex {fromMe ? 'justify-end' : 'justify-start'}'>
+                {#if !fromMe}
                   <Avatar agentPubKey={decodeHashFromBase64(message.authorKey)} size='24' showNickname={false} moreClasses='-ml-30'/>
-                  <span class="font-bold ml-3 grow">{@html message.author}</span>
-                  <span class="text-surface-200 text-xs"><Time timestamp={message.timestamp} format="h:mm" /></span>
+                {/if}
+                <div class='flex flex-col mb-2 ml-3 {fromMe && 'opacity-80'}'>
+                  <span class='flex items-baseline {fromMe && 'flex-row-reverse'}'>
+                    <span class="font-bold">{@html fromMe ? "You" : message.author}</span>
+                    <span class="text-surface-200 mx-2 text-xxs"><Time timestamp={message.timestamp} format="h:mma" /></span>
+                  </span>
+                  <div class="font-light {fromMe && 'text-end'}">{@html message.content}</div>
                 </div>
-                <span class="p-2 max-w-xs self-end mb-2 ml-7 font-light">{@html message.content}</span>
               </li>
             {/each}
           </ul>
