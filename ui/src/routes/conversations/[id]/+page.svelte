@@ -207,18 +207,23 @@
         <div id='message-box' class="flex-1 p-4 flex flex-col-reverse w-full">
           <ul>
             {#each $processedMessages as message (message.hash)}
+              {@const fromMe = message.authorKey === myPubKeyB64}
               {#if message.header}
-                <li class='mt-auto mb-5'>
-                  <div class="text-center text-sm text-secondary-500">{message.header}</div>
+                <li class='mt-auto mb-3'>
+                  <div class="text-center text-xs text-secondary-500">{message.header}</div>
                 </li>
               {/if}
-              <li class='mt-auto mb-5'>
-                <div class='flex items-center'>
+              <li class='mt-auto mb-3 flex {fromMe ? 'justify-end' : 'justify-start'}'>
+                {#if !fromMe}
                   <Avatar agentPubKey={decodeHashFromBase64(message.authorKey)} size='24' showNickname={false} moreClasses='-ml-30'/>
-                  <span class="font-bold ml-3 grow">{@html message.author}</span>
-                  <span class="text-surface-200 text-xs"><Time timestamp={message.timestamp} format="h:mm" /></span>
+                {/if}
+                <div class='flex flex-col mb-2 ml-3 {fromMe && 'opacity-80'}'>
+                  <span class='flex items-baseline {fromMe && 'flex-row-reverse'}'>
+                    <span class="font-bold">{@html fromMe ? "You" : message.author}</span>
+                    <span class="text-surface-200 mx-2 text-xxs"><Time timestamp={message.timestamp} format="h:mma" /></span>
+                  </span>
+                  <div class="font-light {fromMe && 'text-end'}">{@html message.content}</div>
                 </div>
-                <div class="px-2 self-end mb-2 ml-7 font-light">{@html message.content}</div>
               </li>
             {/each}
           </ul>
