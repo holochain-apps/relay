@@ -58,6 +58,7 @@ jobs:
           draft: true
 
   release-tauri-app:
+    needs: publish-happ
     strategy:
       fail-fast: false
       matrix:
@@ -111,6 +112,11 @@ jobs:
         run: |
           npm install
 
+      - name: Retrieve version
+        run: |
+          echo "APP_VERSION=$(cat src-tauri/tauri.conf.json | grep -oP '(?<="version": ")[^"]*')" 
+        id: version-also
+
       - name: Print version
         run: |
           echo "The Version was: ${{ needs.publish-happ.outputs.appVersion }}"
@@ -124,7 +130,7 @@ jobs:
         with: 
           repository: "holochain-apps/volla-chat"
           token: ${{ secrets.GITHUB_TOKEN }}
-          version: v0.0.1-dev.3
+          version: v${{ steps.version-also.outputs.APP_VERSION }}
           asset-file: '*.happ'
           asset-output: 'workdir/'
 
