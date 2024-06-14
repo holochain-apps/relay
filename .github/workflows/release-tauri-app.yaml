@@ -53,11 +53,12 @@ jobs:
           artifacts: "workdir/relay.happ"
           body: "See assets below to download and install this version."
           name: Relay v${{ steps.version.outputs.APP_VERSION }}
-          tag: Relay-v${{ steps.version.outputs.APP_VERSION }}
+          tag: v${{ steps.version.outputs.APP_VERSION }}
           prerelease: true
           draft: true
 
   release-tauri-app:
+    needs: publish-happ
     strategy:
       fail-fast: false
       matrix:
@@ -111,6 +112,11 @@ jobs:
         run: |
           npm install
 
+      - name: Print version
+        run: |
+          echo "The Version was: ${{ needs.publish-happ.outputs.appVersion }}"
+        id: print-version
+
       - name: Download release of the .happ
         id: release_data
         uses: KevinRohn/github-full-release-data@v2
@@ -119,7 +125,7 @@ jobs:
         with: 
           repository: "holochain-apps/volla-chat"
           token: ${{ secrets.GITHUB_TOKEN }}
-          version: Relay-v${{ needs.publish-happ.outputs.appVersion }}
+          version: v${{ needs.publish-happ.outputs.appVersion }}
           asset-file: '*.happ'
           asset-output: 'workdir/'
 

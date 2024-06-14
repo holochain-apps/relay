@@ -9,6 +9,7 @@
 	import Header from '$lib/Header.svelte';
 	import SvgIcon from '$lib/SvgIcon.svelte';
 	import { RelayStore } from '$store/RelayStore';
+  import { invoke } from '@tauri-apps/api/core';
 
 	const profilesContext: { getStore: () => ProfilesStore } = getContext('profiles')
 	let profilesStore = profilesContext.getStore()
