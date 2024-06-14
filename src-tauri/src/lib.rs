@@ -2,9 +2,9 @@ use holochain_types::prelude::AppBundle;
 use lair_keystore::dependencies::sodoken::{BufRead, BufWrite};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use tauri_plugin_holochain::{HolochainPluginConfig, HolochainExt};
-use url2::Url2;
 use tauri::AppHandle;
+use tauri_plugin_holochain::{HolochainExt, HolochainPluginConfig};
+use url2::Url2;
 
 const APP_ID: &'static str = "relay";
 const PRODUCTION_SIGNAL_URL: &'static str = "wss://signal.holo.host";
@@ -20,10 +20,18 @@ use tauri::{Manager, Window};
 // This command must be async so that it doesn't run on the main thread.
 #[tauri::command]
 async fn close_splashscreen(window: Window) {
-  // Close splashscreen
-  window.get_webview_window("splashscreen").expect("no window labeled 'splashscreen' found").close().unwrap();
-  // Show main window
-  window.get_webview_window("main").expect("no window labeled 'main' found").show().unwrap();
+    // Close splashscreen
+    window
+        .get_webview_window("splashscreen")
+        .expect("no window labeled 'splashscreen' found")
+        .close()
+        .unwrap();
+    // Show main window
+    window
+        .get_webview_window("main")
+        .expect("no window labeled 'main' found")
+        .show()
+        .unwrap();
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -49,28 +57,24 @@ pub fn run() {
 
             tauri::async_runtime::spawn(async move {
                 println!("Initializing...");
-                tauri::async_runtime::block_on(async move {
-                    setup(handle).await
-                });
+                if let Err(err) = setup(handle.clone()).await {
+                    println!("Error setting up the app: {err:?}");
+                }
                 println!("Done initializing.");
 
                 // After it's done, close the splashscreen and display the main window
                 splashscreen_window.close().unwrap();
-              });
+            });
 
-      //let main_window = app.get_webview_window("main").unwrap();
+            //let main_window = app.get_webview_window("main").unwrap();
 
             println!("HERE->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
             println!("THERE->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 
-            // After set up we can be sure our app is installed and up to date, so we can just open it
-            app.holochain()?
-                .main_window_builder(String::from("main"), false, Some(String::from("relay")), None)?
-                .build()?;
             println!("FISH->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 
-       //   splashscreen_window.close().unwrap();
-          //  main_window.show().unwrap();
+            //   splashscreen_window.close().unwrap();
+            //  main_window.show().unwrap();
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![close_splashscreen])
@@ -97,23 +101,32 @@ async fn setup(handle: AppHandle) -> anyhow::Result<()> {
     if installed_apps.len() == 0 {
         handle
             .holochain()?
-            .install_app(
-                String::from(APP_ID),
-                happ_bundle(),
-                HashMap::new(),
-                None,
-            )
+            .install_app(String::from(APP_ID), happ_bundle(), HashMap::new(), None)
             .await?;
-
-        Ok(())
     } else {
-        handle.holochain()?.update_app_if_necessary(
-            String::from(APP_ID),
-            happ_bundle()
-        ).await?;
-
-        Ok(())
+        handle
+            .holochain()?
+            .update_app_if_necessary(String::from(APP_ID), happ_bundle())
+            .await?;
     }
+    // After set up we can be sure our app is installed and up to date, so we can just open it
+    handle
+        .holochain()?
+        .main_window_builder(
+            String::from("main"),
+            false,
+            Some(String::from("relay")),
+            None,
+        )
+        .await?
+        .build()?;
+
+    // Alternatively, you could just send an event that the splashscreen window listens to,
+    // and then show a button that invokes the "close_splashcreen"
+    // If so then move the code above "main_window_builder" to the "close_splashscreen" command
+    // The event could be sent like this:
+    // handle.emit("setup-completed", ())?;
+    Ok(())
 }
 
 fn internal_ip() -> String {

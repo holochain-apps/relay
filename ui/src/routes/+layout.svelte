@@ -7,8 +7,8 @@
 	import { goto } from '$app/navigation';
   import { RelayClient } from '$store/RelayClient';
   import { RelayStore } from '$store/RelayStore';
-  import {invoke} from "@tauri-apps/api/core"
-  	import '../app.postcss';
+  import {invoke} from "@tauri-apps/api/core";
+ 	import '../app.postcss';
 
 	//	export let data: LayoutData;
 
