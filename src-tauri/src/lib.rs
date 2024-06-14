@@ -20,6 +20,8 @@ use tauri::{Manager, Window};
 // This command must be async so that it doesn't run on the main thread.
 #[tauri::command]
 async fn close_splashscreen(window: Window) {
+    #[cfg(desktop)]
+    {
     // Close splashscreen
     window
         .get_webview_window("splashscreen")
@@ -32,6 +34,7 @@ async fn close_splashscreen(window: Window) {
         .expect("no window labeled 'main' found")
         .show()
         .unwrap();
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -51,8 +54,6 @@ pub fn run() {
             },
         ))
         .setup(|app| {
-            let splashscreen_window = app.get_webview_window("splashscreen").unwrap();
-            splashscreen_window.show().unwrap();
             let handle = app.handle().clone();
 
             app.handle()
@@ -65,22 +66,15 @@ pub fn run() {
                         }
                         println!("Done initializing.");
 
-                        // After it's done, close the splashscreen and display the main window
+                        #[cfg(desktop)]
+                        {
+                                                    // After it's done, close the splashscreen and display the main window
                         let splashscreen_window =
                             handle.get_webview_window("splashscreen").unwrap();
                         splashscreen_window.close().unwrap();
+                        }
                     });
                 });
-
-            //let main_window = app.get_webview_window("main").unwrap();
-
-            println!("HERE->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-            println!("THERE->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-
-            println!("FISH->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-
-            //   splashscreen_window.close().unwrap();
-            //  main_window.show().unwrap();
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![close_splashscreen])
