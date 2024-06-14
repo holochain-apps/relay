@@ -11,7 +11,14 @@ export default {
 		join(require.resolve('@skeletonlabs/skeleton'), '../**/*.{html,js,svelte,ts}')
 	],
 	theme: {
-		extend: {}
+		extend: {
+			fontSize: {
+				xxs: '0.6rem'
+			},
+			fontFamily: {
+				'sans':['NotoSans', 'ui-sans-serif', 'system-ui']
+			}
+		}
 	},
 	plugins: [
 		forms,
