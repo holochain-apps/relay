@@ -5,6 +5,7 @@
 	import { ProfilesClient, ProfilesStore } from '@holochain-open-dev/profiles';
 	import { onMount, setContext } from 'svelte';
 	import { goto } from '$app/navigation';
+	import {invoke} from "@tauri-apps/api/core";
 	import { RelayClient } from '$store/RelayClient';
 	import { RelayStore } from '$store/RelayStore';
 
@@ -22,9 +23,16 @@
 	let connected = false
 	//let profilesStore : ProfilesStore | Writable<null> = writable(null)
 	let profilesStore : ProfilesStore|null = null
-
+	document.addEventListener('DOMContentLoaded', () => {
+	// This will wait for the window to load, but you could
+	// run this function on whatever trigger you want
+	//invoke('close_splashscreen')
+	})
 	onMount(() => {
 		async function initHolochain() {
+			// console.log("FISH", window.__TAURI__)
+			 //await invoke('close_splashscreen')
+
 			let tokenResp
 			if (adminPort) {
 				const adminWebsocket = await AdminWebsocket.connect({ url: new URL(`ws://localhost:${adminPort}`) })

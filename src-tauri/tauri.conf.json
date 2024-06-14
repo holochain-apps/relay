@@ -8,11 +8,19 @@
     "frontendDist": "../ui/build"
   },
   "app": {
-    "withGlobalTauri": false,
+    "withGlobalTauri": true,
     "security": {
       "csp": null
     },
-    "windows": []
+    "windows": [
+      {
+        "width": 360,
+        "height": 800,
+        "decorations": false,
+        "url": "splashscreen.html",
+        "label": "splashscreen"
+      }
+    ]
   },
   "bundle": {
     "active": true,
