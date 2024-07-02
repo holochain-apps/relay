@@ -29,9 +29,9 @@
   },
   "devDependencies": {
     "@holochain-playground/cli": "^0.2.0",
-    "@holochain/hc-spin": "^0.400.0-dev.0",
+    "@holochain/hc-spin": "^0.400.0-dev.2",
     "@rollup/plugin-typescript": "^8.0.0",
-    "@tauri-apps/cli": "^2.0.0-beta.20",
+    "@tauri-apps/cli": "^2.0.0-beta.21",
     "@tsconfig/svelte": "^5.0.4",
     "@types/lodash-es": "^4.17.12",
     "@types/uuid": "^9.0.8",
@@ -50,7 +50,6 @@
     "internal-ip-cli": "^2.0.0"
   },
   "dependencies": {
-    "@lightningrodlabs/we-applet": "^0.16.2",
     "@tauri-apps/api": "^1.5.3",
     "lodash-es": "^4.17.21",
     "uuid": "^9.0.1"

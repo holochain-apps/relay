@@ -14,11 +14,18 @@
     "format": "prettier --plugin-search-dir . --write .",
     "package": "rm -f dist.zip && npm run build && cd build && bestzip ../dist.zip *"
   },
+  "dependencies": {
+    "@tauri-apps/api": "2.0.0-beta.14",
+    "@lightningrodlabs/we-applet": "^0.17.0-dev.2"
+  },
   "devDependencies": {
-    "@holochain/client": "=0.17.0-rc.0",
+    "@holochain/client": "^0.18.0-dev.4",
+    "@holochain-open-dev/file-storage":  "^0.300.0-dev.0",
+    "@holochain-open-dev/elements": "^0.400.0-dev.0",
     "@holochain-open-dev/profiles": "^0.400.0-dev.1",
-    "@holochain-open-dev/utils": "^0.300.0-rc.0",
-    "@holochain-open-dev/elements": "^0.300.0-rc.0",
+    "@holochain-open-dev/stores": "^0.400.0-dev.1",
+    "@holochain-open-dev/utils": "^0.400.0-dev.0",
+    "@holochain-syn/core": "^0.400.0-dev.0",
     "@skeletonlabs/skeleton": "^2.8.0",
     "@skeletonlabs/tw-plugin": "^0.3.1",
     "@sveltejs/adapter-static": "^3.0.0",
@@ -46,8 +53,5 @@
     "vite-plugin-tailwind-purgecss": "^0.3.3",
     "internal-ip": "^7.0.0"
   },
-  "type": "module",
-  "dependencies": {
-    "@tauri-apps/api": "2.0.0-beta.13"
-  }
+  "type": "module"
 }

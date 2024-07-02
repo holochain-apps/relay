@@ -2956,7 +2956,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_profiles_coordinator"
 version = "0.2.0"
-source = "git+https://github.com/holochain-open-dev/profiles?branch=for-hdk-v0.3.1-rc#1c2f5f788fdf6ff625155e04de22714147b21cee"
+source = "git+https://github.com/holochain-open-dev/profiles?branch=for-hdk-v0.3.1#570dbc9135242a419b47b316ae22825d5a2c2ef9"
 dependencies = [
  "derive_more",
  "hc_zome_profiles_integrity",
@@ -2967,7 +2967,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_profiles_integrity"
 version = "0.2.0"
-source = "git+https://github.com/holochain-open-dev/profiles?branch=for-hdk-v0.3.1-rc#1c2f5f788fdf6ff625155e04de22714147b21cee"
+source = "git+https://github.com/holochain-open-dev/profiles?branch=for-hdk-v0.3.1#570dbc9135242a419b47b316ae22825d5a2c2ef9"
 dependencies = [
  "derive_more",
  "hdi",
