@@ -93,7 +93,7 @@ export const vollaTheme: CustomThemeConfig = {
 			"--color-surface-200": "191 191 191", // #bfbfbf
 			"--color-surface-300": "153 153 153", // #999999
 			"--color-surface-400": "77 77 77", // #4d4d4d
-			"--color-surface-500": "0 0 0", // #000000
+			"--color-surface-500": "46 46 46", // #2e2e2e
 			"--color-surface-600": "0 0 0", // #000000
 			"--color-surface-700": "0 0 0", // #000000
 			"--color-surface-800": "0 0 0", // #000000

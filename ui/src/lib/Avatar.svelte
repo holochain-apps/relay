@@ -14,7 +14,6 @@
   export let namePosition = "row";
   export let showAvatar = true;
   export let showNickname = true;
-  export let placeholder = false;
   export let moreClasses = ''
 
   $: agentPubKey;
@@ -36,21 +35,12 @@
   {:else if $profile && $profile.status == "complete" && $profile.value}
     {#if showAvatar}
       <div class="avatar-container" style="width: {size}px; height: {size}px">
-        {#if placeholder && !$profile.value.entry.fields.avatar}
-          <SvgIcon
-            icon="person"
-            size={`${size}`}
-            style="margin-left:5px; margin-right:0px"
-            color="white"
-          />
+        {#if $profile.value.entry.fields.avatar}
+          <img src={$profile.value.entry.fields.avatar} alt="avatar" width={size} height={size} />
         {:else}
-          {#if $profile.value.entry.fields.avatar}
-            <img src={$profile.value.entry.fields.avatar} alt="avatar" width={size} height={size} />
-          {:else}
-            <holo-identicon
-              hash={agentPubKey}
-            ></holo-identicon>
-          {/if}
+          <holo-identicon
+            hash={agentPubKey}
+          ></holo-identicon>
         {/if}
       </div>
     {/if}
@@ -71,7 +61,7 @@
     flex-direction: row;
     justify-content: center;
     position: relative;
-    height: 100%;
+    // height: 100%;
     align-items: center;
   }
   .avatar-row .nickname {

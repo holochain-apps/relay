@@ -5,6 +5,7 @@
   export let style: string = ""
   export let color: string = "#FF3615"
   export let size: string = "20"
+  export let moreClasses: string = ""
 
   $:iconStr = () => {
     let i = svgIcons[icon]
@@ -18,7 +19,7 @@
   style = style + ` width: ${size}px;`
 </script>
 
-<div class="icon" style={style}>
+<div class={`icon + ${moreClasses}`} style={style}>
   <img width={size} height='auto' src={iconStr()} alt={icon}/>
 </div>
 

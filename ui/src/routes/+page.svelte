@@ -1,15 +1,11 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import { get, type Writable } from "svelte/store";
 	import { goto } from '$app/navigation';
-	import { type AgentPubKey, decodeHashFromBase64, encodeHashToBase64 } from "@holochain/client";
-	import { type Profile, ProfilesStore } from '@holochain-open-dev/profiles';
+	import { ProfilesStore } from '@holochain-open-dev/profiles';
   import "@holochain-open-dev/profiles/dist/elements/create-profile.js";
-	import Avatar from '$lib/Avatar.svelte';
 	import Header from '$lib/Header.svelte';
 	import SvgIcon from '$lib/SvgIcon.svelte';
 	import { RelayStore } from '$store/RelayStore';
-  import { invoke } from '@tauri-apps/api/core';
 
 	const profilesContext: { getStore: () => ProfilesStore } = getContext('profiles')
 	let profilesStore = profilesContext.getStore()
