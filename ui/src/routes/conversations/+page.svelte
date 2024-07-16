@@ -1,5 +1,6 @@
 <script lang="ts">
   import { getContext } from 'svelte';
+  import { goto } from '$app/navigation';
   import Avatar from '$lib/Avatar.svelte';
   import Header from '$lib/Header.svelte';
   import SvgIcon from '$lib/SvgIcon.svelte';
@@ -10,12 +11,13 @@
 </script>
 
 <Header>
-  <Avatar size={24} agentPubKey={relayStore.client.myPubKey} placeholder={true} showNickname={false} moreClasses='absolute' />
-  <div class='absolute right-5 flex items-center'>
-    <a href='/conversations/join'><SvgIcon icon='ticket' size='24' color='white'/></a>
-    <a href='/share-key' class='ml-5'><SvgIcon icon='key' size='24' color='white'/></a>
-    <a href='/conversations/new' class='ml-5'><SvgIcon icon='newConversation' size='22' color='white'/></a>
-  </div>
+  <button on:click={() => goto('/account')}>
+    <Avatar size={24} agentPubKey={relayStore.client.myPubKey} showNickname={false} />
+  </button>
+
+  <button on:click={() => goto('/create')} class='absolute right-4'>
+    <SvgIcon icon='plusCircle' size='24' />
+  </button>
 </Header>
 
 <div class="container h-full mx-auto flex flex-col conversations-list">
@@ -35,7 +37,7 @@
             </span>
           </div>
         </a>
-        <span class='text-xs text-surface-200 flex flex-row items-center'>
+        <span class='text-xs text-surface-200 flex flex-row items-center top-1 relative'>
           <SvgIcon icon='person' size='8' color='#ccc'/>
           <span class='ml-2'>{Object.values($conversation.data.agentProfiles).length}</span>
         </span>

@@ -183,14 +183,15 @@
       {#if conversation.data.config.image}
         <img src={conversation.data.config.image} alt='Conversation' class='w-32 h-32 min-h-32 mb-5 rounded-full object-cover' />
       {/if}
-      <h1 class='text-4xl flex-shrink-0'>{@html conversation.data.config.title}</h1>
+      <h1 class='text-3xl flex-shrink-0'>{@html conversation.data.config.title}</h1>
       <!-- if joining a conversation created by someone else, say still syncing here until thre are at least 2 members -->
-      <a href={`/conversations/${conversationId}/members`} class='text-surface-300'>
+      <a href={`/conversations/${conversationId}/members`} class='text-surface-300 text-sm'>
         {@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}
       </a>
       {#if $processedMessages.length === 0 && isEqual(conversation.data.progenitor, myPubKey)}
         <div class='flex flex-col items-center justify-center h-full w-full'>
-          <p class='mb-8 text-secondary-400'>Invite people to start the conversation</p>
+          <img src='/clear-skies.png' alt='No contacts' class='w-32 h-32 mb-4 mt-4' />
+          <p class='text-xs text-center text-secondary-500 mx-10 mb-8'>Nobody else is here! Share your invitation code to start the conversation.</p>
           {#if conversation.data.privacy === Privacy.Private}
             <Button onClick={() => goto(`/conversations/${conversation.data.id}/invite`)} moreClasses='w-72 justify-center'>
               <SvgIcon icon='invite' size='24' color='red' />
@@ -198,8 +199,8 @@
             </Button>
           {:else}
             <Button onClick={() => copyToClipboard(conversation.publicInviteCode)} moreClasses='w-64 justify-center'>
-              <SvgIcon icon='copy' size='24' color='red' />
-              <strong class='ml-2'>Copy invite code</strong>
+              <SvgIcon icon='copy' size='18' color='red' />
+              <strong class='ml-2 text-sm'>Copy invitation code</strong>
             </Button>
           {/if}
         </div>

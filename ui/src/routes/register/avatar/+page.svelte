@@ -64,14 +64,14 @@
   <h1 class='h1 mb-10'>Select an avatar</h1>
 
   <!-- Hidden file input -->
-  <input type="file" id="avatarInput" class='hidden' on:change={handleFileChange}>
+  <input type="file" accept="image/jpeg, image/png, image/gif" capture id="avatarInput" class='hidden' on:change={handleFileChange} />
 
   <!-- Label styled as a big clickable icon -->
   <label for="avatarInput" class="file-icon-label cursor-pointer bg-surface-400 hover:bg-surface-300 w-32 h-32 rounded-full flex items-center justify-center overflow-hidden">
     {#if $avatarDataUrl}
-      <img src={$avatarDataUrl} alt='Avatar' class='rounded-full w-32 h-32 object-cover'>
+      <img src={$avatarDataUrl} alt='Avatar' class='rounded-full w-32 h-32 object-cover' />
     {:else}
-      <img src='/image-placeholder.png' alt='Avatar Uploader' class='rounded-full w-16 h-16'>
+      <img src='/image-placeholder.png' alt='Avatar Uploader' class='rounded-full w-16 h-16' />
     {/if}
   </label>
 </div>
