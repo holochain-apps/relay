@@ -60,11 +60,13 @@ export class RelayClient {
         const cell = c[CellType.Cloned]
 
         try {
-          const configEntry = await this._getConfig(cell.cell_id)
+          const configRecord = await this._getConfig(cell.cell_id)
 
-          const config = configEntry? configEntry.entry : { title: cell.name, image: "" }
+          const config = configRecord? configRecord.entry : { title: cell.name, image: "" }
 
-          const convoCellAndConfig: ConversationCellAndConfig = { cell, config }
+          const created  = configRecord? configRecord.action.timestamp : 0
+
+          const convoCellAndConfig: ConversationCellAndConfig = { cell, config, created }
 
           this.conversations[cell.dna_modifiers.network_seed] = convoCellAndConfig
         } catch(e) {
@@ -124,18 +126,14 @@ export class RelayClient {
 
     await this.setMyProfileForConversation(cell.cell_id)
 
-    const convoCellAndConfig: ConversationCellAndConfig = {cell, config}
+    const convoCellAndConfig: ConversationCellAndConfig = {cell, config, created: new Date().getTime()*1000}
     this.conversations[conversationId] = convoCellAndConfig
     return convoCellAndConfig
   }
 
-  public async getAllMessages(conversationId: string) : Promise<Array<MessageRecord>> {
-    const messages = await this.callZome("get_all_message_entries", null, this.conversations[conversationId].cell.cell_id);
+  public async getAllMessages(conversationId: string, buckets: Array<number>) : Promise<Array<MessageRecord>> {
+    const messages = await this.callZome("get_all_message_entries", buckets, this.conversations[conversationId].cell.cell_id);
     return messages
-  }
-
-  public async getMessagesByWeek(conversationId: string, week?: string) : Promise<Array<MessageRecord>> {
-    return this.callZome("get_messages_hashes_for_week", { week }, this.conversations[conversationId].cell.cell_id);
   }
 
   public async getAllAgents(conversationId: string) : Promise<{ [key: AgentPubKeyB64]: Profile }> {
@@ -182,11 +180,11 @@ export class RelayClient {
     return config ? new EntryRecord(config) : undefined
   }
 
-  public async sendMessage(conversationId: string, content: string, agents: AgentPubKey[]) {
+  public async sendMessage(conversationId: string, content: string, bucket: number, agents: AgentPubKey[]) {
     const message = await this.callZome(
       'create_message',
       {
-        message: { content },
+        message: { content, bucket },
         agents
       },
       this.conversations[conversationId].cell.cell_id

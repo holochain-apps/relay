@@ -4,6 +4,12 @@ pub mod config;
 pub use config::*;
 use hdi::prelude::*;
 
+pub const MESSAGES_PATH_PREFIX: &str = "msg";
+
+pub fn messages_path(bucket: u32) -> Path {
+    Path::from(format!("{}.{}", MESSAGES_PATH_PREFIX, bucket))
+}
+
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "type")]
 #[hdk_entry_types]

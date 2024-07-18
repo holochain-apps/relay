@@ -10,7 +10,8 @@ import type {
   CreateLink,
   DeleteLink,
   MembraneProof,
-  ClonedCell
+  ClonedCell,
+  Timestamp
 } from '@holochain/client';
 
 import type { Profile } from '@holochain-open-dev/profiles'
@@ -55,6 +56,7 @@ export type EntryTypes =
 
  export interface MessageInput {
   content: string;
+  bucket: number;
 }
 
 export interface Conversation {
@@ -91,6 +93,7 @@ export interface Message {
   header?: string; // an optional header to display above this message in the conversation
   status?: 'pending' | 'confirmed' | 'delivered' | 'read'; // status of the message
   timestamp: Date;
+  bucket: number;
 }
 
 export interface MessageRecord {
@@ -107,4 +110,5 @@ export interface Config {
 export interface ConversationCellAndConfig {
   cell: ClonedCell,
   config: Config,
+  created: Timestamp,
 }

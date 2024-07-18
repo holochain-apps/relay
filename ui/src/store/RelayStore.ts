@@ -42,6 +42,7 @@ export class RelayStore {
           hash: encodeHashToBase64(payload.action.hashed.hash),
           authorKey: encodeHashToBase64(from),
           content: payload.content,
+          bucket: payload.bucket,
           status: 'confirmed',
           timestamp: new Date(payload.action.hashed.content.timestamp / 1000)
         }
@@ -83,7 +84,7 @@ export class RelayStore {
     const progenitor = decodeHashFromBase64(properties.progenitor);
     const privacy = properties.privacy
     const seed = convoCellAndConfig.cell.dna_modifiers.network_seed
-    const newConversation = new ConversationStore(this.client, seed, convoCellAndConfig.cell.cell_id[0], convoCellAndConfig.config, privacy, progenitor )
+    const newConversation = new ConversationStore(this.client, seed, convoCellAndConfig.cell.cell_id[0], convoCellAndConfig.config, convoCellAndConfig.created, privacy, progenitor )
 
     this.conversations.update(conversations => [...conversations, newConversation])
     await newConversation.initialize()

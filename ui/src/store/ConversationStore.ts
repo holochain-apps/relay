@@ -1,10 +1,12 @@
 import { encode } from '@msgpack/msgpack';
 import { Base64 } from 'js-base64';
-import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64 } from "@holochain/client";
+import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64, type Timestamp } from "@holochain/client";
 import { writable, get, type Writable } from 'svelte/store';
 import { v4 as uuidv4 } from 'uuid';
 import { RelayClient } from '$store/RelayClient'
 import { type Config, type Conversation, type Invitation, type Message, type MessageRecord, Privacy } from '../types';
+
+export const DAYS_IN_BUCKET = 7
 
 export class ConversationStore {
   private conversation: Writable<Conversation>;
@@ -14,6 +16,7 @@ export class ConversationStore {
     public id: string,
     public cellDnaHash: DnaHash,
     public config: Config,
+    public created: Timestamp,
     public privacy: Privacy,
     public progenitor: AgentPubKey,
   ) {
@@ -56,9 +59,8 @@ export class ConversationStore {
 
   async getMessages() {
     try {
-      //const messages: Array<MessageRecord> = await this.client.getMessagesByWeek()
       const newMessages: { [key: string] : Message } = this.data.messages
-      const messageRecords: Array<MessageRecord> = await this.client.getAllMessages(this.data.id)
+      const messageRecords: Array<MessageRecord> = await this.client.getAllMessages(this.data.id, [0])
       for (const messageRecord of messageRecords) {
         try {
           const message = messageRecord.message
@@ -92,10 +94,17 @@ export class ConversationStore {
     return []
   }
 
+  bucketFromTimestamp(timestamp: Timestamp) : number {
+    const diff = timestamp - this.created
+    return Math.round(diff / (DAYS_IN_BUCKET * 24 * 60 * 60 * 1000 * 1000))
+  }
+
   sendMessage(authorKey: string, content: string): void {
     // Use temporary uuid as the hash until we get the real one back from the network
-    this.addMessage({ authorKey, content, hash: uuidv4(), status: 'pending', timestamp: new Date() })
-    this.client.sendMessage(this.data.id, content, Object.keys(this.data.agentProfiles).map(k => decodeHashFromBase64(k)));
+    const now = new Date()
+    const bucket = this.bucketFromTimestamp(now.getTime()*1000)
+    this.addMessage({ authorKey, content, hash: uuidv4(), status: 'pending', timestamp: now, bucket })
+    this.client.sendMessage(this.data.id, content, bucket, Object.keys(this.data.agentProfiles).map(k => decodeHashFromBase64(k)));
   }
 
   addMessage(message: Message): void {
