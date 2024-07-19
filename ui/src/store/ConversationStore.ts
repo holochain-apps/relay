@@ -7,12 +7,12 @@ import { RelayClient } from '$store/RelayClient'
 import { type Config, type Conversation, type Invitation, type Message, type MessageRecord, Privacy, type MessageHistory, type Messages, HistoryType } from '../types';
 
 export const MINUTES_IN_BUCKET = 1  // 60 * 24 * 7  // 1 week
-export const MIN_MESSAGES_LOAD = 20
+export const MIN_MESSAGES_LOAD = 5
 
 export class ConversationStore {
   private conversation: Writable<Conversation>;
   private buckets: Array<MessageHistory> = []
-  private bucketsLoaded: number = -1
+  public lastBucketLoaded: number = -1
 
   constructor(
     public client: RelayClient,
@@ -48,20 +48,26 @@ export class ConversationStore {
 
   async initialize() {
     await this.getAgents()
-    let bucket = this.currentBucket()
-    console.log("CURERNT BUCKET", bucket)
-    const buckets:Array<number> = [bucket]
+    await this.loadMessagesSet()
+  }
+
+  async loadMessagesSet() {
+    if (this.lastBucketLoaded == 0) return
+
+    let bucket = this.lastBucketLoaded < 0 ? this.currentBucket() : this.lastBucketLoaded-1
+    const buckets:Array<number> = []
     let count = 0
     // add buckets until we get to threshold of what to load
-    while (bucket > 0 && count < MIN_MESSAGES_LOAD) {
+    do {
+      buckets.push(bucket)
       const h = this.buckets[bucket]
       if (h)
         count += h.type == HistoryType.Count ? h.count : h.hashes.size
       bucket-=1
-      buckets.push(bucket)
-    }
-    this.bucketsLoaded = bucket
+    } while (bucket >= 0 && count < MIN_MESSAGES_LOAD)
+    this.lastBucketLoaded = bucket+1
     await this.getMessages(buckets)
+    
   }
 
   get data() {
@@ -131,15 +137,11 @@ export class ConversationStore {
   }
 
   bucketFromTimestamp(timestamp: number) : number {
-    console.log("created", this.created)
-    console.log("timestamp", timestamp)
     const diff = timestamp - this.created
-    console.log("diff", diff)
     return Math.round(diff / (MINUTES_IN_BUCKET * 60 * 1000))
   }
 
   bucketFromDate(date: Date) : number {
-    console.log("bucketFromDate", date)
     return this.bucketFromTimestamp(date.getTime())
   }
 

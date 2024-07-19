@@ -205,7 +205,14 @@
           {/if}
         </div>
       {:else}
+      {#if conversation.lastBucketLoaded > 0}
+      <Button
+      onClick={()=>conversation.loadMessagesSet()}>
+        Load More...
+      </Button>
+    {/if}
         <div id='message-box' class="flex-1 p-4 flex flex-col-reverse w-full">
+         
           <ul>
             {#each $processedMessages as message (message.hash)}
               {@const fromMe = message.authorKey === myPubKeyB64}
@@ -221,7 +228,7 @@
                 <div class='flex flex-col mb-2 ml-3 {fromMe && 'opacity-80'}'>
                   <span class='flex items-baseline {fromMe && 'flex-row-reverse'}'>
                     <span class="font-bold">{@html fromMe ? "You" : message.author}</span>
-                    <span class="text-surface-200 mx-2 text-xxs"><Time timestamp={message.timestamp} format="h:mma" />:{message.bucket}</span>
+                    <span class="text-surface-200 mx-2 text-xxs"><Time timestamp={message.timestamp} format="h:mma" />--{message.bucket}</span>
                   </span>
                   <div class="font-light {fromMe && 'text-end'}">{@html message.content}</div>
                 </div>
