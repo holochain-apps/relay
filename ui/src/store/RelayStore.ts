@@ -1,10 +1,10 @@
 import { decode } from '@msgpack/msgpack';
 import { isEqual } from 'lodash-es';
 import { writable, get, type Subscriber, type Invalidator, type Unsubscriber, type Writable } from 'svelte/store';
-import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64 } from "@holochain/client";
+import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64, type Signal, type AppSignal } from "@holochain/client";
 import { ConversationStore } from './ConversationStore';
 import { RelayClient } from '$store/RelayClient'
-import type { Conversation, ConversationCellAndConfig, Invitation, Message, Privacy, Properties } from '../types';
+import type { Conversation, ConversationCellAndConfig, Invitation, Message, Privacy, Properties, RelaySignal } from '../types';
 
 export class RelayStore {
   private conversations: Writable<ConversationStore[]>;
@@ -26,23 +26,21 @@ export class RelayStore {
       await this._addConversation(conversation);
     }
 
-    this.client.client.on('signal', async (signal)=>{
+    this.client.client.on('signal', async (signal:AppSignal)=>{
       console.log("Got Signal:", signal)
 
-      // @ts-ignore
-      if (signal.payload.type == "Message") {
-        // @ts-ignore
+      const payload: RelaySignal = signal.payload as RelaySignal
+
+      if (payload.type == "Message") {
+
         const conversation = this.getConversationByCellDnaHash(signal.cell_id[0])
 
-        // @ts-ignore
-        const payload: Payload = signal.payload
-        // @ts-ignore
         const from: AgentPubKey = payload.from
         const message: Message = {
           hash: encodeHashToBase64(payload.action.hashed.hash),
           authorKey: encodeHashToBase64(from),
-          content: payload.content,
-          bucket: payload.bucket,
+          content: payload.message.content,
+          bucket: payload.message.bucket,
           status: 'confirmed',
           timestamp: new Date(payload.action.hashed.content.timestamp / 1000)
         }

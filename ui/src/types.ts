@@ -11,12 +11,18 @@ import type {
   DeleteLink,
   MembraneProof,
   ClonedCell,
-  Timestamp
+  Timestamp,
+  ActionHashB64
 } from '@holochain/client';
 
 import type { Profile } from '@holochain-open-dev/profiles'
 
 export type RelaySignal = {
+  type: 'Message';
+  action: SignedActionHashed<Create>;
+  message: Message;
+  from: AgentPubKey;
+} |{
   type: 'EntryCreated';
   action: SignedActionHashed<Create>;
   app_entry: EntryTypes;
@@ -59,6 +65,8 @@ export type EntryTypes =
   bucket: number;
 }
 
+export type Messages = { [key: string]: Message }
+
 export interface Conversation {
   id: string; // the network seed
   cellDnaHash: DnaHash;
@@ -66,7 +74,7 @@ export interface Conversation {
   config: Config;
   privacy: Privacy;
   progenitor: AgentPubKey;
-  messages: { [key: string]: Message };
+  messages: Messages;
   agentProfiles: { [key: AgentPubKeyB64]: Profile };
 }
 
@@ -95,6 +103,19 @@ export interface Message {
   timestamp: Date;
   bucket: number;
 }
+
+export enum HistoryType {
+  Hashes,
+  Count
+}
+
+export type MessageHistory = 
+{
+  type: HistoryType.Hashes,
+  hashes: Set<ActionHashB64>
+} |
+{ type: HistoryType.Count,
+  count: number}
 
 export interface MessageRecord {
   original_action: ActionHash;

@@ -1,15 +1,18 @@
 import { encode } from '@msgpack/msgpack';
 import { Base64 } from 'js-base64';
-import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64, type Timestamp } from "@holochain/client";
+import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64, type Timestamp, type ActionHashB64 } from "@holochain/client";
 import { writable, get, type Writable } from 'svelte/store';
 import { v4 as uuidv4 } from 'uuid';
 import { RelayClient } from '$store/RelayClient'
-import { type Config, type Conversation, type Invitation, type Message, type MessageRecord, Privacy } from '../types';
+import { type Config, type Conversation, type Invitation, type Message, type MessageRecord, Privacy, type MessageHistory, type Messages, HistoryType } from '../types';
 
-export const DAYS_IN_BUCKET = 7
+export const MINUTES_IN_BUCKET = 1  // 60 * 24 * 7  // 1 week
+export const MIN_MESSAGES_LOAD = 20
 
 export class ConversationStore {
   private conversation: Writable<Conversation>;
+  private buckets: Array<MessageHistory> = []
+  private bucketsLoaded: number = -1
 
   constructor(
     public client: RelayClient,
@@ -20,12 +23,43 @@ export class ConversationStore {
     public privacy: Privacy,
     public progenitor: AgentPubKey,
   ) {
-    this.conversation = writable({ id, cellDnaHash, config, privacy, progenitor, agentProfiles: {}, messages: {} });
+    const messages: Messages = {}
+
+    const dnaB64 = encodeHashToBase64(cellDnaHash)
+    const currentBucket = this.bucketFromTimestamp(this.created)
+    for (let b = 0; b<= currentBucket;  b+=1) {
+      const historyStr = localStorage.getItem(`c.${dnaB64}.${b}`)
+      if (historyStr) {
+        try {
+          this.buckets[b] = JSON.parse(historyStr)
+        } catch(e) {
+          console.log("badly formed history for ",dnaB64,e)
+        }
+      }
+      if (this.buckets[b] === undefined) {
+        this.buckets[b] = {
+          type: HistoryType.Hashes,
+          hashes: new Set()
+        }
+      }
+    }
+    this.conversation = writable({ id, cellDnaHash, config, privacy, progenitor, agentProfiles: {}, messages });
   }
 
   async initialize() {
     await this.getAgents()
-    await this.getMessages()
+    let bucket = this.currentBucket()
+    const buckets:Array<number> = [bucket]
+    let count = 0
+    // add buckets until we get to threshold of what to load
+    while (bucket > 0 && count < MIN_MESSAGES_LOAD) {
+      const h = this.buckets[bucket]
+      count += h.type == HistoryType.Count ? h.count : h.hashes.size
+      bucket-=1
+      buckets.push(bucket)
+    }
+    this.bucketsLoaded = bucket
+    await this.getMessages(buckets)
   }
 
   get data() {
@@ -57,10 +91,10 @@ export class ConversationStore {
     return null
   }
 
-  async getMessages() {
+  async getMessages(buckets: Array<number>) {
     try {
       const newMessages: { [key: string] : Message } = this.data.messages
-      const messageRecords: Array<MessageRecord> = await this.client.getAllMessages(this.data.id, [0])
+      const messageRecords: Array<MessageRecord> = await this.client.getAllMessages(this.data.id, buckets)
       for (const messageRecord of messageRecords) {
         try {
           const message = messageRecord.message
@@ -96,13 +130,21 @@ export class ConversationStore {
 
   bucketFromTimestamp(timestamp: Timestamp) : number {
     const diff = timestamp - this.created
-    return Math.round(diff / (DAYS_IN_BUCKET * 24 * 60 * 60 * 1000 * 1000))
+    return Math.round(diff / (MINUTES_IN_BUCKET * 60 * 1000 * 1000))
+  }
+
+  bucketFromDate(date: Date) : number {
+    return this.bucketFromTimestamp(date.getTime()*1000)
+  }
+
+  currentBucket() :number {
+    return this.bucketFromDate(new Date())
   }
 
   sendMessage(authorKey: string, content: string): void {
     // Use temporary uuid as the hash until we get the real one back from the network
     const now = new Date()
-    const bucket = this.bucketFromTimestamp(now.getTime()*1000)
+    const bucket = this.bucketFromDate(now)
     this.addMessage({ authorKey, content, hash: uuidv4(), status: 'pending', timestamp: now, bucket })
     this.client.sendMessage(this.data.id, content, bucket, Object.keys(this.data.agentProfiles).map(k => decodeHashFromBase64(k)));
   }
@@ -111,6 +153,26 @@ export class ConversationStore {
     this.conversation.update(conversation => {
       return { ...conversation, messages: {...conversation.messages, [message.hash]: message } };
     });
+    const history = this.buckets[message.bucket]
+    if (history === undefined) { 
+      const hashes:Set<ActionHashB64> = new Set() 
+      hashes.add(message.hash)
+      this.buckets[message.bucket] = {
+        type: HistoryType.Hashes,
+        hashes
+      }
+    } else if (history.type === HistoryType.Hashes) {
+      history.hashes.add(message.hash)
+    }
+    else if (history.type === HistoryType.Count) {
+      history.count += 1
+    }
+    this.saveBucket(message.bucket)
+  }
+
+  saveBucket(bucket: number) {
+    const dnaB64 = encodeHashToBase64(this.cellDnaHash)
+    localStorage.setItem(`c.${dnaB64}.${bucket}`, JSON.stringify(this.buckets[bucket]))
   }
 
   get publicInviteCode() {

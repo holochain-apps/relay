@@ -59,7 +59,7 @@
   }
 
   const checkForMessages = () => {
-    conversation && conversation.getMessages().then((messages) => {
+    conversation && conversation.getMessages([conversation.currentBucket()]).then((messages) => {
       if (Object.values(messages).length === 0) {
         messageTimeout = setTimeout(() => {
           checkForMessages()
@@ -221,7 +221,7 @@
                 <div class='flex flex-col mb-2 ml-3 {fromMe && 'opacity-80'}'>
                   <span class='flex items-baseline {fromMe && 'flex-row-reverse'}'>
                     <span class="font-bold">{@html fromMe ? "You" : message.author}</span>
-                    <span class="text-surface-200 mx-2 text-xxs"><Time timestamp={message.timestamp} format="h:mma" /></span>
+                    <span class="text-surface-200 mx-2 text-xxs"><Time timestamp={message.timestamp} format="h:mma" />:{message.bucket}</span>
                   </span>
                   <div class="font-light {fromMe && 'text-end'}">{@html message.content}</div>
                 </div>
