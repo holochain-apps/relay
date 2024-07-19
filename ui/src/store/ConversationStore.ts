@@ -19,14 +19,14 @@ export class ConversationStore {
     public id: string,
     public cellDnaHash: DnaHash,
     public config: Config,
-    public created: Timestamp,
+    public created: number,
     public privacy: Privacy,
     public progenitor: AgentPubKey,
   ) {
     const messages: Messages = {}
 
     const dnaB64 = encodeHashToBase64(cellDnaHash)
-    const currentBucket = this.bucketFromTimestamp(this.created)
+    const currentBucket = this.currentBucket()
     for (let b = 0; b<= currentBucket;  b+=1) {
       const historyStr = localStorage.getItem(`c.${dnaB64}.${b}`)
       if (historyStr) {
@@ -49,12 +49,14 @@ export class ConversationStore {
   async initialize() {
     await this.getAgents()
     let bucket = this.currentBucket()
+    console.log("CURERNT BUCKET", bucket)
     const buckets:Array<number> = [bucket]
     let count = 0
     // add buckets until we get to threshold of what to load
     while (bucket > 0 && count < MIN_MESSAGES_LOAD) {
       const h = this.buckets[bucket]
-      count += h.type == HistoryType.Count ? h.count : h.hashes.size
+      if (h)
+        count += h.type == HistoryType.Count ? h.count : h.hashes.size
       bucket-=1
       buckets.push(bucket)
     }
@@ -128,13 +130,17 @@ export class ConversationStore {
     return []
   }
 
-  bucketFromTimestamp(timestamp: Timestamp) : number {
+  bucketFromTimestamp(timestamp: number) : number {
+    console.log("created", this.created)
+    console.log("timestamp", timestamp)
     const diff = timestamp - this.created
-    return Math.round(diff / (MINUTES_IN_BUCKET * 60 * 1000 * 1000))
+    console.log("diff", diff)
+    return Math.round(diff / (MINUTES_IN_BUCKET * 60 * 1000))
   }
 
   bucketFromDate(date: Date) : number {
-    return this.bucketFromTimestamp(date.getTime()*1000)
+    console.log("bucketFromDate", date)
+    return this.bucketFromTimestamp(date.getTime())
   }
 
   currentBucket() :number {
@@ -178,6 +184,7 @@ export class ConversationStore {
   get publicInviteCode() {
     if (this.data.privacy === Privacy.Public) {
       const invitation: Invitation = {
+        created: this.created,
         conversationName: this.data.config.title,
         networkSeed: this.data.id,
         privacy: this.data.privacy,

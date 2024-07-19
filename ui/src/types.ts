@@ -52,6 +52,7 @@ export enum Privacy {
 
 // DNA modifier properties for a conversation
 export interface Properties {
+  created: number,
   name: string;
   privacy: Privacy;
   progenitor: AgentPubKeyB64;
@@ -85,6 +86,7 @@ export interface MembraneProofData {
 }
 
 export interface Invitation {
+  created: number,
   conversationName: string;
   networkSeed: string;
   privacy: Privacy;
@@ -131,5 +133,4 @@ export interface Config {
 export interface ConversationCellAndConfig {
   cell: ClonedCell,
   config: Config,
-  created: Timestamp,
 }

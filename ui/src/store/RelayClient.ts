@@ -18,7 +18,7 @@ import { EntryRecord } from '@holochain-open-dev/utils';
 import type { ActionCommittedSignal } from '@holochain-open-dev/utils';
 import type { Profile, ProfilesStore } from '@holochain-open-dev/profiles'
 import { get } from 'svelte/store';
-import type { Config, ConversationCellAndConfig, EntryTypes, MembraneProofData, MessageRecord, Privacy, Properties } from '../types';
+import type { Config, ConversationCellAndConfig, EntryTypes, Invitation, MembraneProofData, MessageRecord, Privacy, Properties } from '../types';
 import { encode } from 'punycode';
 
 const ZOME_NAME = 'relay'
@@ -64,9 +64,9 @@ export class RelayClient {
 
           const config = configRecord? configRecord.entry : { title: cell.name, image: "" }
 
-          const created  = configRecord? configRecord.action.timestamp : 0
+          const properties: Properties = decode(cell.dna_modifiers.properties) as Properties;
 
-          const convoCellAndConfig: ConversationCellAndConfig = { cell, config, created }
+          const convoCellAndConfig: ConversationCellAndConfig = { cell, config }
 
           this.conversations[cell.dna_modifiers.network_seed] = convoCellAndConfig
         } catch(e) {
@@ -89,19 +89,20 @@ export class RelayClient {
   }
 
   async createConversation(name: string, image: string, privacy: Privacy) : Promise<ConversationCellAndConfig> {
-    return this._createConversation(name, image, privacy, this.client.myPubKey, undefined, undefined)
+    return this._createConversation(new Date().getTime(), name, image, privacy, this.client.myPubKey, undefined, undefined)
   }
 
-  async joinConversation(name: string, privacy: Privacy, progenitor: AgentPubKey, proof: MembraneProof|undefined, networkSeed: string) : Promise<ConversationCellAndConfig> {
+  async joinConversation(invitation: Invitation) : Promise<ConversationCellAndConfig> {
     // we don't have the image at join time, it get's loaded later
-    return this._createConversation(name, "", privacy, progenitor, proof, networkSeed)
+    return this._createConversation(invitation.created, invitation.conversationName, "", invitation.privacy, invitation.progenitor, invitation.proof, invitation.networkSeed)
   }
 
-  async _createConversation(name: string, image: string, privacy: Privacy, progenitor: AgentPubKey, membrane_proof: MembraneProof|undefined, networkSeed: string|undefined) : Promise<ConversationCellAndConfig> {
+  async _createConversation(created: number, name: string, image: string, privacy: Privacy, progenitor: AgentPubKey, membrane_proof: MembraneProof|undefined, networkSeed: string|undefined) : Promise<ConversationCellAndConfig> {
     const properties: Properties = {
+      created,
       name,
       privacy,
-      progenitor: encodeHashToBase64(progenitor)
+      progenitor: encodeHashToBase64(progenitor),
     }
 
     const conversationId = networkSeed || uuidv4()
@@ -126,7 +127,7 @@ export class RelayClient {
 
     await this.setMyProfileForConversation(cell.cell_id)
 
-    const convoCellAndConfig: ConversationCellAndConfig = {cell, config, created: new Date().getTime()*1000}
+    const convoCellAndConfig: ConversationCellAndConfig = {cell, config}
     this.conversations[conversationId] = convoCellAndConfig
     return convoCellAndConfig
   }
