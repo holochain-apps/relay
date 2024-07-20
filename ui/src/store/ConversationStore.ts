@@ -1,17 +1,17 @@
 import { encode } from '@msgpack/msgpack';
 import { Base64 } from 'js-base64';
-import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64, type Timestamp, type ActionHashB64 } from "@holochain/client";
+import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64, type ActionHashB64 } from "@holochain/client";
 import { writable, get, type Writable } from 'svelte/store';
 import { v4 as uuidv4 } from 'uuid';
 import { RelayClient } from '$store/RelayClient'
-import { type Config, type Conversation, type Invitation, type Message, type MessageRecord, Privacy, type MessageHistory, type Messages, HistoryType } from '../types';
+import { type Config, type Conversation, type Invitation, type Message, type MessageRecord, Privacy, type Bucket, type Messages, BucketType, type SerializableBucket } from '../types';
 
 export const MINUTES_IN_BUCKET = 1  // 60 * 24 * 7  // 1 week
-export const MIN_MESSAGES_LOAD = 5
+export const MIN_MESSAGES_LOAD = 30
 
 export class ConversationStore {
   private conversation: Writable<Conversation>;
-  private buckets: Array<MessageHistory> = []
+  private buckets: Array<Bucket> = []
   public lastBucketLoaded: number = -1
 
   constructor(
@@ -31,14 +31,20 @@ export class ConversationStore {
       const historyStr = localStorage.getItem(`c.${dnaB64}.${b}`)
       if (historyStr) {
         try {
-          this.buckets[b] = JSON.parse(historyStr)
+          const sb: SerializableBucket = JSON.parse(historyStr)
+          if (sb.type == BucketType.Hashes) {
+            this.buckets[b] = {type: sb.type, hashes: new Set(sb.hashes) }
+          } else {
+            this.buckets[b] = sb
+          }
+          console.log("LOADING BUCKET:",b, this.buckets[b])
         } catch(e) {
           console.log("badly formed history for ",dnaB64,e)
         }
       }
       if (this.buckets[b] === undefined) {
         this.buckets[b] = {
-          type: HistoryType.Hashes,
+          type: BucketType.Hashes,
           hashes: new Set()
         }
       }
@@ -61,8 +67,12 @@ export class ConversationStore {
     do {
       buckets.push(bucket)
       const h = this.buckets[bucket]
-      if (h)
-        count += h.type == HistoryType.Count ? h.count : h.hashes.size
+      console.log("BUCKET ", bucket, h, count)
+      if (h) {
+        const size = h.type == BucketType.Count ? h.count : h.hashes.size
+        console.log("size", size)
+        count += size
+      }
       bucket-=1
     } while (bucket >= 0 && count < MIN_MESSAGES_LOAD)
     this.lastBucketLoaded = bucket+1
@@ -161,26 +171,29 @@ export class ConversationStore {
     this.conversation.update(conversation => {
       return { ...conversation, messages: {...conversation.messages, [message.hash]: message } };
     });
-    const history = this.buckets[message.bucket]
-    if (history === undefined) { 
+    const bucket = this.buckets[message.bucket]
+    if (bucket === undefined) { 
       const hashes:Set<ActionHashB64> = new Set() 
       hashes.add(message.hash)
       this.buckets[message.bucket] = {
-        type: HistoryType.Hashes,
+        type: BucketType.Hashes,
         hashes
       }
-    } else if (history.type === HistoryType.Hashes) {
-      history.hashes.add(message.hash)
+    } else if (bucket.type === BucketType.Hashes) {
+      bucket.hashes.add(message.hash)
     }
-    else if (history.type === HistoryType.Count) {
-      history.count += 1
+    else if (bucket.type === BucketType.Count) {
+      bucket.count += 1
     }
     this.saveBucket(message.bucket)
   }
 
-  saveBucket(bucket: number) {
+  saveBucket(b: number) {
     const dnaB64 = encodeHashToBase64(this.cellDnaHash)
-    localStorage.setItem(`c.${dnaB64}.${bucket}`, JSON.stringify(this.buckets[bucket]))
+    const bucket = this.buckets[b]
+    const sb: SerializableBucket = bucket.type == BucketType.Hashes ? 
+      {type:BucketType.Hashes, hashes:Array.from(bucket.hashes.keys())} : bucket
+    localStorage.setItem(`c.${dnaB64}.${b}`, JSON.stringify(sb))
   }
 
   get publicInviteCode() {

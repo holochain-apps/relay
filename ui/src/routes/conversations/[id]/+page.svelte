@@ -36,7 +36,9 @@
   let newMessageText = '';
   let conversationContainer: HTMLElement;
   let scrollAtBottom = true;
-  const SCROLL_THRESHOLD = 100; // How close to the bottom must the user be to consider it "at the bottom"
+  let scrollAtTop = false;
+  const SCROLL_BOTTOM_THRESHOLD = 100; // How close to the bottom must the user be to consider it "at the bottom"
+  const SCROLL_TOP_THRESHOLD = 300; // How close to the bottom must the user be to consider it "at the bottom"
 
   const checkForAgents = () => {
     conversation && conversation.getAgents().then((agentProfiles) => {
@@ -146,7 +148,12 @@
   };
 
   const handleScroll = debounce(() => {
-    scrollAtBottom = conversationContainer.scrollHeight - conversationContainer.scrollTop <= conversationContainer.clientHeight + SCROLL_THRESHOLD;
+    const atTop = conversationContainer.scrollTop < SCROLL_TOP_THRESHOLD
+    if (!scrollAtTop && atTop && conversation) {
+      conversation.loadMessagesSet()
+    }
+    scrollAtTop = atTop
+    scrollAtBottom = conversationContainer.scrollHeight - conversationContainer.scrollTop <= conversationContainer.clientHeight + SCROLL_BOTTOM_THRESHOLD;
   }, 100)
 
   function scrollToBottom() {
@@ -228,7 +235,7 @@
                 <div class='flex flex-col mb-2 ml-3 {fromMe && 'opacity-80'}'>
                   <span class='flex items-baseline {fromMe && 'flex-row-reverse'}'>
                     <span class="font-bold">{@html fromMe ? "You" : message.author}</span>
-                    <span class="text-surface-200 mx-2 text-xxs"><Time timestamp={message.timestamp} format="h:mma" />--{message.bucket}</span>
+                    <span class="text-surface-200 mx-2 text-xxs"><Time timestamp={message.timestamp} format="h:mma" />--{message.bucket} {message.status}</span>
                   </span>
                   <div class="font-light {fromMe && 'text-end'}">{@html message.content}</div>
                 </div>
