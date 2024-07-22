@@ -98,8 +98,31 @@ pub fn create_message(input: SendMessageInput) -> ExternResult<Record> {
 //     Ok(results)
 // }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BucketInput {
+    pub bucket: u32,
+    pub count: usize,
+}
+
 #[hdk_extern]
-pub fn get_messages_for_buckets(buckets: Vec<u32>) -> ExternResult<Vec<Link>> {
+pub fn get_message_hashes(input: BucketInput) -> ExternResult<Vec<ActionHash>> {
+    let mut hashes: Vec<ActionHash> = Vec::new();
+    let path: Path = messages_path(input.bucket);
+    let links = get_links(
+        GetLinksInputBuilder::try_new(path.path_entry_hash()?, LinkTypes::AllMessages)?
+            .build(),
+    )?;
+    // only return the hashes if the counts don't match
+    if links.len() != input.count {
+        for l in links {
+            hashes.push(ActionHash::try_from(l.target).map_err(|e| wasm_error!(e))?);
+        }
+    }
+    Ok(hashes)
+}
+
+#[hdk_extern]
+pub fn get_message_links_for_buckets(buckets: Vec<u32>) -> ExternResult<Vec<Link>> {
     let mut links: Vec<Link> = Vec::new();
     for bucket in buckets {
         let path = messages_path(bucket);
@@ -118,8 +141,20 @@ struct GetAgenProfileInput {
 }
 
 #[hdk_extern]
-pub fn get_all_message_entries(buckets: Vec<u32>) -> ExternResult<Vec<MessageRecord>> {
-    let links = get_messages_for_buckets(buckets)?;
+pub fn get_message_entries(hashes: Vec<ActionHash>) -> ExternResult<Vec<MessageRecord>> {
+    let mut results: Vec<MessageRecord> = Vec::new();
+    for hash in hashes {
+        if let Some(r) = get_latest_message(hash)? {
+            results.push (r);
+        }
+    }
+    Ok(results)
+}
+
+// TODO deprecate
+#[hdk_extern]
+pub fn get_messages_for_buckets(buckets: Vec<u32>) -> ExternResult<Vec<MessageRecord>> {
+    let links = get_message_links_for_buckets(buckets)?;
     let mut results: Vec<MessageRecord> = Vec::new();
     for l in links {
         let hash  = ActionHash::try_from(l.target).map_err(|e|wasm_error!(e))?;

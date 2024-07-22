@@ -61,8 +61,9 @@
   }
 
   const checkForMessages = () => {
-    conversation && conversation.getMessages([conversation.currentBucket()]).then((messages) => {
-      if (Object.values(messages).length === 0) {
+    console.log("")
+    conversation && conversation.loadMessageSetFrom(conversation.currentBucket()).then(([_,hashes]) => {
+      if (hashes.length == 0) {
         messageTimeout = setTimeout(() => {
           checkForMessages()
         }, 2000)
@@ -89,7 +90,7 @@
       // TODO: do this check in one call of checkForStuff
       checkForAgents()
       checkForConfig()
-      checkForMessages()
+      //checkForMessages()
       conversationContainer.addEventListener('scroll', handleScroll);
       window.addEventListener('resize', debouncedHandleResize);
       newMessageInput.focus();
@@ -150,6 +151,8 @@
   const handleScroll = debounce(() => {
     const atTop = conversationContainer.scrollTop < SCROLL_TOP_THRESHOLD
     if (!scrollAtTop && atTop && conversation) {
+      console.log("CALLING LOAD SET FROM scroll")
+
       conversation.loadMessagesSet()
     }
     scrollAtTop = atTop
@@ -215,7 +218,7 @@
       {#if conversation.lastBucketLoaded > 0}
       <Button
       onClick={()=>conversation.loadMessagesSet()}>
-        Load More...
+        Load More... {conversation.lastBucketLoaded }
       </Button>
     {/if}
         <div id='message-box' class="flex-1 p-4 flex flex-col-reverse w-full">

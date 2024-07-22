@@ -45,7 +45,7 @@ export class RelayStore {
           timestamp: new Date(payload.action.hashed.content.timestamp / 1000)
         }
 
-        if (conversation && message.authorKey !== this.client.myPubKeyB64) {
+        if (conversation /*&& message.authorKey !== this.client.myPubKeyB64*/) {
           conversation.addMessage(message)
         }
         // let messageList = this.expectations.get(message.from)

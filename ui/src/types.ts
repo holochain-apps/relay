@@ -106,18 +106,10 @@ export interface Message {
   bucket: number;
 }
 
-export enum BucketType {
-  Hashes,
-  Count
+export type BucketInput = {
+  bucket: number,
+  count: number,
 }
-
-export type Bucket = 
-{
-  type: BucketType.Hashes,
-  hashes: Set<ActionHashB64>
-} |
-{ type: BucketType.Count,
-  count: number}
 
 export interface MessageRecord {
   original_action: ActionHash;

@@ -11,14 +11,15 @@ import {
   type ClonedCell,
   type RoleName,
   type MembraneProof,
-  type AgentPubKeyB64
+  type AgentPubKeyB64,
+  type ActionHash
 } from '@holochain/client';
 import { decode } from '@msgpack/msgpack';
 import { EntryRecord } from '@holochain-open-dev/utils';
 import type { ActionCommittedSignal } from '@holochain-open-dev/utils';
 import type { Profile, ProfilesStore } from '@holochain-open-dev/profiles'
 import { get } from 'svelte/store';
-import type { Config, ConversationCellAndConfig, EntryTypes, Invitation, MembraneProofData, MessageRecord, Privacy, Properties } from '../types';
+import type { Config, ConversationCellAndConfig, EntryTypes, Invitation, MembraneProofData, Message, MessageRecord, Privacy, Properties } from '../types';
 import { encode } from 'punycode';
 
 const ZOME_NAME = 'relay'
@@ -133,9 +134,20 @@ export class RelayClient {
   }
 
   public async getAllMessages(conversationId: string, buckets: Array<number>) : Promise<Array<MessageRecord>> {
-    const messages = await this.callZome("get_all_message_entries", buckets, this.conversations[conversationId].cell.cell_id);
+    const messages = await this.callZome("get_messages_for_buckets", buckets, this.conversations[conversationId].cell.cell_id);
     return messages
   }
+
+  public async getMessageHashes(conversationId: string, bucket: number, count: number) : Promise<Array<ActionHash>> {
+    const hashes = await this.callZome("get_message_hashes", {bucket, count}, this.conversations[conversationId].cell.cell_id);
+    return hashes
+  }
+
+  public async getMessageEntries(conversationId: string, hashes: Array<ActionHash>) : Promise<Array<MessageRecord>> {
+    const messages = await this.callZome("get_message_entries", hashes, this.conversations[conversationId].cell.cell_id);
+    return messages
+  }
+
 
   public async getAllAgents(conversationId: string) : Promise<{ [key: AgentPubKeyB64]: Profile }> {
     const cellId = this.conversations[conversationId].cell.cell_id;
@@ -181,7 +193,7 @@ export class RelayClient {
     return config ? new EntryRecord(config) : undefined
   }
 
-  public async sendMessage(conversationId: string, content: string, bucket: number, agents: AgentPubKey[]) {
+  public async sendMessage(conversationId: string, content: string, bucket: number, agents: AgentPubKey[]) : Promise<EntryRecord<Message>> {
     const message = await this.callZome(
       'create_message',
       {
@@ -190,7 +202,7 @@ export class RelayClient {
       },
       this.conversations[conversationId].cell.cell_id
     )
-    return message
+    return new EntryRecord(message)
   }
 
   public async setMyProfileForConversation(cellId: CellId) : Promise<null> {
@@ -227,7 +239,7 @@ export class RelayClient {
   }
 
   protected async callZome(fn_name: string, payload: any, cell_id: any) {
-    console.log("call zome", fn_name, payload, cell_id)
+    console.log("call zome", fn_name, "with", payload, "cell_id", cell_id)
     const req: AppCallZomeRequest = {
       //role_name: cell_id ? undefined : this.roleName,
       cell_id,
