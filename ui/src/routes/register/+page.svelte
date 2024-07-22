@@ -20,7 +20,7 @@
     UserStore.update(current => {
         return { ...current, nickname };
     });
-    if (nickname.length > MIN_NAME_LENGTH) {
+    if (nickname.length >= MIN_NAME_LENGTH) {
       goto('/register/avatar');
     }
   }
