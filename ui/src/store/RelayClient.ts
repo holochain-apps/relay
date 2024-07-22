@@ -16,31 +16,23 @@ import {
 import { decode } from '@msgpack/msgpack';
 import { EntryRecord } from '@holochain-open-dev/utils';
 import type { ActionCommittedSignal } from '@holochain-open-dev/utils';
+import { FileStorageClient } from "@holochain-open-dev/file-storage";
 import type { Profile, ProfilesStore } from '@holochain-open-dev/profiles'
 import { get } from 'svelte/store';
-import type { Config, ConversationCellAndConfig, EntryTypes, MembraneProofData, MessageRecord, Privacy, Properties } from '../types';
-import { encode } from 'punycode';
+import type { Config, ConversationCellAndConfig, EntryTypes, Image, MembraneProofData, MessageRecord, Privacy, Properties } from '../types';
 
 const ZOME_NAME = 'relay'
 
-// export type SignalMessage = {
-//   payload: Payload;
-//   from: AgentPubKey;
-//   received: number;
-// }
-
-export type RelaySignal = ActionCommittedSignal<EntryTypes, any>;
-
-//export class RelayClient extends ZomeClient<RelaySignal> {
 export class RelayClient {
   // conversations is a map of string to ClonedCell
   conversations: {[key: string]: ConversationCellAndConfig} = {}
   zomeName = ZOME_NAME
   myPubKeyB64: AgentPubKeyB64
+  fileStorageClient: FileStorageClient
 
   constructor(public client: AppClient, public roleName: RoleName, public profilesStore: ProfilesStore) {
-    //super(client, roleName, zomeName);
     this.myPubKeyB64 = encodeHashToBase64(this.client.myPubKey)
+    this.fileStorageClient = new FileStorageClient(client, 'relay')
   }
 
   get myPubKey() : AgentPubKey {
@@ -182,11 +174,26 @@ export class RelayClient {
     return config ? new EntryRecord(config) : undefined
   }
 
-  public async sendMessage(conversationId: string, content: string, agents: AgentPubKey[]) {
+  public async sendMessage(conversationId: string, content: string, images: Image[], agents: AgentPubKey[]) {
+    // TODO: upload these asynchonously and then add to the message when done
+    console.log("client send message", conversationId, content, images, agents)
+    const imageStructs = await Promise.all(images.map(async (image) => {
+      if (image.file) {
+        const hash = await this.fileStorageClient.uploadFile(image.file)
+        return {
+          last_modified: image.file.lastModified,
+          name: image.file.name,
+          size: image.file.size,
+          storage_entry_hash: hash,
+          file_type: image.file.type
+        }
+      }
+    }))
+
     const message = await this.callZome(
       'create_message',
       {
-        message: { content },
+        message: { content, images: await Promise.all(imageStructs) },
         agents
       },
       this.conversations[conversationId].cell.cell_id

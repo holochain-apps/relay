@@ -17,7 +17,11 @@ export default {
 			},
 			fontFamily: {
 				'sans':['NotoSans', 'ui-sans-serif', 'system-ui']
-			}
+			},
+			maxWidth: {
+        '1/2': '50%',
+				'2/3': '66%'
+      }
 		}
 	},
 	plugins: [

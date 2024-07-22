@@ -1,3 +1,4 @@
+pub mod contact;
 pub mod message;
 pub mod config;
 // pub mod utils;
@@ -7,9 +8,11 @@ use relay_integrity::*;
 #[hdk_extern]
 fn recv_remote_signal(message_record: MessageRecord) -> ExternResult<()> {
     let info: CallInfo = call_info()?;
+    let message = message_record.message.unwrap();
     let signal = Signal::Message {
         action: message_record.signed_action.clone(),
-        content: message_record.message.unwrap().content,
+        images: message.images,
+        content: message.content,
         from: info.provenance,
     };
     emit_signal(signal)
@@ -31,7 +34,7 @@ pub fn init(_: ()) -> ExternResult<InitCallbackResult> {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
 pub enum Signal {
-    Message { action: SignedActionHashed, content: String, from: AgentPubKey },
+    Message { action: SignedActionHashed, content: String, images: Vec<File>, from: AgentPubKey},
     LinkCreated { action: SignedActionHashed, link_type: LinkTypes },
     LinkDeleted {
         action: SignedActionHashed,
