@@ -1,10 +1,10 @@
 import { decode } from '@msgpack/msgpack';
-import { isEqual } from 'lodash-es';
+import { isEqual, camelCase, mapKeys } from 'lodash-es';
 import { writable, get, type Subscriber, type Invalidator, type Unsubscriber, type Writable } from 'svelte/store';
-import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64, type Signal, type AppSignal } from "@holochain/client";
+import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64, type Signal, type EntryHash, type AppSignal } from "@holochain/client";
 import { ConversationStore } from './ConversationStore';
 import { RelayClient } from '$store/RelayClient'
-import type { Conversation, ConversationCellAndConfig, Invitation, Message, Privacy, Properties, RelaySignal } from '../types';
+import type { Image, ConversationCellAndConfig, Invitation, Message, Privacy, Properties, RelaySignal } from '../types';
 
 export class RelayStore {
   private conversations: Writable<ConversationStore[]>;
@@ -41,12 +41,14 @@ export class RelayStore {
           authorKey: encodeHashToBase64(from),
           content: payload.message.content,
           bucket: payload.message.bucket,
+          images: payload.message.images.map((i: any) => ({ ...mapKeys(i, (v, k) => camelCase(k)), status: 'loading'  })), // convert snake_case to camelCase
           status: 'confirmed',
           timestamp: new Date(payload.action.hashed.content.timestamp / 1000)
         }
 
         if (conversation /*&& message.authorKey !== this.client.myPubKeyB64*/) {
           conversation.addMessage(message)
+          conversation.loadImagesForMessage(message) // async load images
         }
         // let messageList = this.expectations.get(message.from)
         // if (messageList) {

@@ -2,6 +2,7 @@ import type {
   ActionHash,
   AgentPubKeyB64,
   DnaHash,
+  EntryHash,
   SignedActionHashed,
   AgentPubKey,
   Create,
@@ -11,8 +12,6 @@ import type {
   DeleteLink,
   MembraneProof,
   ClonedCell,
-  Timestamp,
-  ActionHashB64
 } from '@holochain/client';
 
 import type { Profile } from '@holochain-open-dev/profiles'
@@ -71,8 +70,8 @@ export type Messages = { [key: string]: Message }
 export interface Conversation {
   id: string; // the network seed
   cellDnaHash: DnaHash;
-  description?: string;
   config: Config;
+  description?: string;
   privacy: Privacy;
   progenitor: AgentPubKey;
   messages: Messages;
@@ -94,6 +93,18 @@ export interface Invitation {
   proof?: MembraneProof;
 }
 
+// TODO: Separate interface for the holochain Image struct
+export interface Image {
+  dataURL?: string;
+  fileType: string;
+  file?: File;
+  name: string;
+  lastModified: number;
+  size: number;
+  storageEntryHash?: EntryHash;
+  status?: 'loading' | 'loaded' | 'pending' | 'error'; // Pending = not yet sent to holochain, loading = loading from holochain, loaded = loaded from holochain, error = failed to load
+}
+
 export interface Message {
   hash: string;
   author?: string; // TODO: do we use this?
@@ -101,6 +112,7 @@ export interface Message {
   avatar?: string; // TODO: do we use this?
   content: string;
   header?: string; // an optional header to display above this message in the conversation
+  images: Image[];
   status?: 'pending' | 'confirmed' | 'delivered' | 'read'; // status of the message
   timestamp: Date;
   bucket: number;

@@ -1,3 +1,4 @@
+//pub mod contact;
 pub mod message;
 pub mod config;
 // pub mod utils;
@@ -7,9 +8,10 @@ use relay_integrity::*;
 #[hdk_extern]
 fn recv_remote_signal(message_record: MessageRecord) -> ExternResult<()> {
     let info: CallInfo = call_info()?;
+    let message = message_record.message.unwrap();
     let signal = Signal::Message {
         action: message_record.signed_action.clone(),
-        message: message_record.message.unwrap(),
+        message,
         from: info.provenance,
     };
     emit_signal(signal)

@@ -14,9 +14,7 @@ pub struct SendMessageInput {
 
 #[hdk_extern]
 pub fn create_message(input: SendMessageInput) -> ExternResult<Record> {
-    debug!("create_message 1 {:?}, {:?}", input.message, input.agents);
     let message_hash = create_entry(&EntryTypes::Message(input.message.clone()))?;
-    debug!("create_message 2 {:?}", message_hash);
     let record = get(message_hash.clone(), GetOptions::default())?
         .ok_or(
             wasm_error!(
@@ -24,7 +22,6 @@ pub fn create_message(input: SendMessageInput) -> ExternResult<Record> {
                 .to_string())
             ),
         )?;
-    debug!("create_message 3 {:?}", record);
     // let now: DateTime<Utc> = Utc::now();
     // let year = now.year();
     // let month = now.month();
@@ -160,6 +157,7 @@ pub fn get_messages_for_buckets(buckets: Vec<u32>) -> ExternResult<Vec<MessageRe
         let hash  = ActionHash::try_from(l.target).map_err(|e|wasm_error!(e))?;
         if let Some(r) = get_latest_message(hash)? {
             // TODO: make a call to the profiles zome to get the agent profile
+            // TODO: why did i think this was necessary ??
             // let call_input = GetAgenProfileInput {
             //     agent_key: r.signed_action.hashed.author().clone(),
             // };

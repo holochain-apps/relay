@@ -1,10 +1,22 @@
 use hdi::prelude::*;
+
+#[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
+pub struct File {
+    pub name: String,
+    pub last_modified: Timestamp,
+    pub size: usize, // Size in bytes
+    pub file_type: String,
+    pub storage_entry_hash: EntryHash,
+}
+
 #[hdk_entry_helper]
 #[derive(Clone, PartialEq)]
 pub struct Message {
     pub content: String,
     pub bucket: u32,
+    pub images: Vec<File>,
 }
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MessageRecord {
     pub original_action: ActionHash,
