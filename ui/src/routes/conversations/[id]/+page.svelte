@@ -272,7 +272,6 @@
                   {#if message.images && message.images.length > 0}
                     <div class='flex flex-col {fromMe && 'justify-end'}'>
                       {#each message.images as image (image.name + image.lastModified)}
-                        <!-- {#if message.images && message.images[imageHash]} -->
                         {#if image && image.status === 'loaded' || image.status === 'pending'}
                           <!-- svelte-ignore a11y-missing-attribute -->
                           <div class='relative {fromMe && 'text-end'}'>
