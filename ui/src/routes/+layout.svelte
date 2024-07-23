@@ -5,7 +5,6 @@
 	import { ProfilesClient, ProfilesStore } from '@holochain-open-dev/profiles';
 	import { onMount, setContext } from 'svelte';
 	import { goto } from '$app/navigation';
-	import {invoke} from "@tauri-apps/api/core";
 	import { RelayClient } from '$store/RelayClient';
 	import { RelayStore } from '$store/RelayStore';
 

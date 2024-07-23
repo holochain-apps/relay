@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { debounce, isEqual } from 'lodash-es';
-  import { ProfilesStore, type Profile } from '@holochain-open-dev/profiles';
-  import { type AgentPubKeyB64, decodeHashFromBase64 } from '@holochain/client';
+	import { debounce, isEqual, isEmpty } from 'lodash-es';
+  import { type AgentPubKeyB64, decodeHashFromBase64, encodeHashToBase64, type EntryHashB64 } from '@holochain/client';
+  import { FileStorageClient } from "@holochain-open-dev/file-storage";
+  import { type Profile } from '@holochain-open-dev/profiles';
   import { getContext, onDestroy, onMount } from 'svelte';
-  import { get, type Unsubscriber, derived } from "svelte/store";
+  import { get, type Unsubscriber, derived, writable, type Readable, type Writable } from "svelte/store";
   import Time from "svelte-time";
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
@@ -13,7 +14,7 @@
   import SvgIcon from '$lib/SvgIcon.svelte';
   import { RelayStore } from '$store/RelayStore';
   import { copyToClipboard } from '$lib/utils';
-  import { Privacy, type Conversation, type Message } from '../../../types';
+  import { Privacy, type Conversation, type Message, type Image } from '../../../types';
 
   $: conversationId = $page.params.id;
 
@@ -34,6 +35,7 @@
 
   let newMessageInput : HTMLInputElement;
   let newMessageText = '';
+  const newMessageImages : Writable<Image[]> = writable([]);
   let conversationContainer: HTMLElement;
   let scrollAtBottom = true;
   const SCROLL_THRESHOLD = 100; // How close to the bottom must the user be to consider it "at the bottom"
@@ -132,9 +134,9 @@
       } else {
         result.push({ ...message });
       }
-    });
+    })
 
-    return result;
+    return result
   })
 
   // Reactive update to scroll to the bottom every time the messages update,
@@ -143,7 +145,7 @@
     if (scrollAtBottom) {
       setTimeout(scrollToBottom, 100);
     }
-  };
+  }
 
   const handleScroll = debounce(() => {
     scrollAtBottom = conversationContainer.scrollHeight - conversationContainer.scrollTop <= conversationContainer.clientHeight + SCROLL_THRESHOLD;
@@ -158,12 +160,56 @@
 
   async function sendMessage(e: SubmitEvent) {
     if (conversation && newMessageText.trim()) {
-      await conversation.sendMessage(myPubKeyB64, newMessageText);
+      conversation.sendMessage(myPubKeyB64, newMessageText, $newMessageImages)
       newMessageText = ''; // Clear input after sending
+      newMessageImages.set([])
       setTimeout(scrollToBottom, 100)
       newMessageInput.focus();
     }
     e.preventDefault();
+  }
+
+  async function handleImagesSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const files = Array.from(input.files);
+      const readers : Promise<Image>[] = files.map(file => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        return new Promise<Image>((resolve) => {
+          reader.onload = async () => {
+            if (typeof reader.result === 'string') {
+              resolve({
+                dataURL: reader.result,
+                lastModified: file.lastModified,
+                fileType: file.type,
+                file,
+                name: file.name,
+                size: file.size,
+                status: 'pending'
+              })
+            }
+          };
+          reader.onerror = () => {
+            console.error('Error reading file');
+            resolve({
+              dataURL: '',
+              lastModified: file.lastModified,
+              fileType: file.type,
+              file,
+              name: file.name,
+              size: file.size,
+              status: 'error'
+            })
+          }
+        })
+      })
+
+      // When all files are read, update the images store
+      Promise.all(readers).then((newImages: Image[]) => {
+        newMessageImages.update(currentImages => ([...currentImages, ...newImages]));
+      })
+    }
   }
 </script>
 
@@ -171,7 +217,7 @@
   <a class='absolute' href="/conversations"><SvgIcon icon='caretLeft' color='white' size='10' /></a>
   {#if conversation}
     <h1 class="flex-1 grow text-center"><a href={`/conversations/${conversationId}/members`}>{@html conversation.data.config.title}</a></h1>
-    {#if conversation.data.privacy === Privacy.Public || isEqual(conversation.data.progenitor, myPubKey)}
+    {#if conversation.data.privacy === Privacy.Public || encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64}
       <a class='absolute right-5' href="/conversations/{conversation.data.id}/invite"><SvgIcon icon='addPerson' color='white' /></a>
     {/if}
   {/if}
@@ -188,7 +234,7 @@
       <a href={`/conversations/${conversationId}/members`} class='text-surface-300 text-sm'>
         {@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}
       </a>
-      {#if $processedMessages.length === 0 && isEqual(conversation.data.progenitor, myPubKey)}
+      {#if $processedMessages.length === 0 && encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64}
         <div class='flex flex-col items-center justify-center h-full w-full'>
           <img src='/clear-skies.png' alt='No contacts' class='w-32 h-32 mb-4 mt-4' />
           <p class='text-xs text-center text-secondary-500 mx-10 mb-8'>Nobody else is here! Share your invitation code to start the conversation.</p>
@@ -216,13 +262,30 @@
               {/if}
               <li class='mt-auto mb-3 flex {fromMe ? 'justify-end' : 'justify-start'}'>
                 {#if !fromMe}
-                  <Avatar agentPubKey={decodeHashFromBase64(message.authorKey)} size='24' showNickname={false} moreClasses='-ml-30'/>
+                  <Avatar agentPubKey={decodeHashFromBase64(message.authorKey)} size='24' showNickname={false} moreClasses='items-start mt-1'/>
                 {/if}
-                <div class='flex flex-col mb-2 ml-3 {fromMe && 'opacity-80'}'>
-                  <span class='flex items-baseline {fromMe && 'flex-row-reverse'}'>
+                <div class='mb-2 ml-3 {fromMe && 'items-end text-end'}'>
+                  <span class='flex items-baseline {fromMe && 'flex-row-reverse opacity-80'}'>
                     <span class="font-bold">{@html fromMe ? "You" : message.author}</span>
                     <span class="text-surface-200 mx-2 text-xxs"><Time timestamp={message.timestamp} format="h:mma" /></span>
                   </span>
+                  {#if message.images && message.images.length > 0}
+                      {#each message.images as image (image.name + image.lastModified)}
+                        {#if image && image.status === 'loaded' || image.status === 'pending'}
+                          <!-- svelte-ignore a11y-missing-attribute -->
+                          <div class='relative inline {fromMe && 'text-end'}'>
+                            <img src={image.dataURL} class='inline max-w-2/3 object-cover mb-2' />
+                            {#if image.status === 'pending'}
+                              <SvgIcon icon='spinner' color='white' size='10' moreClasses='absolute top-1/2 left-1/2 -mt-1' />
+                            {/if}
+                          </div>
+                        {:else}
+                          <div class='w-20 h-20 bg-surface-400 mb-2 flex items-center justify-center'>
+                            <SvgIcon icon='spinner' color='white' size='10' />
+                          </div>
+                        {/if}
+                      {/each}
+                  {/if}
                   <div class="font-light {fromMe && 'text-end'}">{@html message.content}</div>
                 </div>
               </li>
@@ -232,11 +295,28 @@
       {/if}
     </div>
   </div>
-  <div class="w-full p-2 bg-surface-400 flex-shrink-0">
-    <!-- have this input when submitted add a conversation to the page data -->
+  <div class="w-full p-2 bg-surface-500 flex-shrink-0">
     <form class="flex" method='POST' on:submit={sendMessage} >
-      <!-- svelte-ignore a11y-autofocus -->
-      <input type="text" bind:this={newMessageInput} bind:value={newMessageText} autofocus class="w-full bg-surface-400 placeholder:text-gray-400 focus:border-gray-500 focus:ring-0 border-0" placeholder="Type a message...">
+      <input type="file" accept="image/jpeg, image/png, image/gif" capture multiple id="images" class='hidden' on:change={handleImagesSelected} />
+      <label for="images" class='cursor-pointer flex'>
+        <SvgIcon icon='image' color='white' size='26' moreClasses='ml-3' />
+      </label>
+      <div class='flex flex-col w-full'>
+        <!-- svelte-ignore a11y-autofocus -->
+        <input type="text" bind:this={newMessageInput} bind:value={newMessageText} autofocus class="w-full bg-surface-500 placeholder:text-sm placeholder:text-gray-400 focus:border-gray-500 focus:ring-0 border-0" placeholder="Type a message...">
+        <div class='flex flex-row px-4'>
+          {#each $newMessageImages as image, i}
+            {#if image.status === 'loading'}
+              <div class='w-10 h-10 bg-surface-400 mr-2 flex items-center justify-center'>
+                <SvgIcon icon='spinner' color='white' size='10' />
+              </div>
+            {:else}
+              <!-- svelte-ignore a11y-missing-attribute -->
+              <img src={image.dataURL} class='w-10 h-10 object-cover mr-2' />
+            {/if}
+          {/each}
+        </div>
+      </div>
       <button class='pr-2'><SvgIcon icon='caretRight' color='white' size='10' /></button>
     </form>
   </div>

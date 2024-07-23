@@ -19,7 +19,7 @@
     "@lightningrodlabs/we-applet": "^0.17.0-dev.2"
   },
   "devDependencies": {
-    "@holochain/client": "^0.18.0-dev.5",
+    "@holochain/client": "0.18.0-dev.5",
     "@holochain-open-dev/file-storage":  "^0.400.0-dev.0",
     "@holochain-open-dev/elements": "^0.400.0-dev.0",
     "@holochain-open-dev/profiles": "^0.400.0-dev.1",

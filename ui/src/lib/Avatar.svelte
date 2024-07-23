@@ -62,7 +62,7 @@
     justify-content: center;
     position: relative;
     // height: 100%;
-    align-items: center;
+    align-items: start;
   }
   .avatar-row .nickname {
     margin-left: 0.5em;

@@ -2,6 +2,7 @@ import type {
   ActionHash,
   AgentPubKeyB64,
   DnaHash,
+  EntryHash,
   SignedActionHashed,
   AgentPubKey,
   Create,
@@ -59,13 +60,13 @@ export type EntryTypes =
 
 export interface Conversation {
   id: string; // the network seed
+  agentProfiles: { [key: AgentPubKeyB64]: Profile };
   cellDnaHash: DnaHash;
-  description?: string;
   config: Config;
+  description?: string;
+  messages: { [key: string]: Message };
   privacy: Privacy;
   progenitor: AgentPubKey;
-  messages: { [key: string]: Message };
-  agentProfiles: { [key: AgentPubKeyB64]: Profile };
 }
 
 export interface MembraneProofData {
@@ -82,6 +83,18 @@ export interface Invitation {
   proof?: MembraneProof;
 }
 
+// TODO: Separate interface for the holochain Image struct
+export interface Image {
+  dataURL?: string;
+  fileType: string;
+  file?: File;
+  name: string;
+  lastModified: number;
+  size: number;
+  storageEntryHash?: EntryHash;
+  status?: 'loading' | 'loaded' | 'pending' | 'error'; // Pending = not yet sent to holochain, loading = loading from holochain, loaded = loaded from holochain, error = failed to load
+}
+
 export interface Message {
   hash: string;
   author?: string; // TODO: do we use this?
@@ -89,6 +102,7 @@ export interface Message {
   avatar?: string; // TODO: do we use this?
   content: string;
   header?: string; // an optional header to display above this message in the conversation
+  images: Image[];
   status?: 'pending' | 'confirmed' | 'delivered' | 'read'; // status of the message
   timestamp: Date;
 }
