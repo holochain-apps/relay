@@ -6,13 +6,14 @@ import { v4 as uuidv4 } from 'uuid';
 import { RelayClient } from '$store/RelayClient'
 import { type Config, type Conversation, type Image, type Invitation, type Message, type MessageRecord, Privacy, type Messages, } from '../types';
 import { Bucket } from './bucket';
+import { MsgHistory } from './msgHistory';
 
 export const MINUTES_IN_BUCKET = 1  // 60 * 24 * 7  // 1 week
 export const MIN_MESSAGES_LOAD = 30
 
 export class ConversationStore {
   private conversation: Writable<Conversation>;
-  private buckets: Array<Bucket> = []
+  private history: MsgHistory 
   public lastBucketLoaded: number = -1
 
   constructor(
@@ -26,12 +27,9 @@ export class ConversationStore {
   ) {
     const messages: Messages = {}
 
-    const dnaB64 = encodeHashToBase64(cellDnaHash)
     const currentBucket = this.currentBucket()
-    for (let b = 0; b<= currentBucket;  b+=1) {
-      const bucketJSON = localStorage.getItem(`c.${dnaB64}.${b}`)
-      this.buckets[b] = bucketJSON ? new Bucket(bucketJSON) : new Bucket(undefined)
-    }
+    this.history = new MsgHistory(currentBucket, this.cellDnaHash)
+    
     this.conversation = writable({ id, cellDnaHash, config, privacy, progenitor, agentProfiles: {}, messages });
   }
 
@@ -51,29 +49,15 @@ export class ConversationStore {
   }
 
   async loadMessageSetFrom(bucket: number) : Promise<[number,ActionHashB64[]]> {
-    const buckets:Array<number> = []
-    let count = 0
-    // add buckets until we get to threshold of what to load
-    do {
-      buckets.push(bucket)
-      const h = this.buckets[bucket]
-      console.log("BUCKET ", bucket, h, count)
-      if (h) {
-        const size = h.count
-        console.log("size", size)
-        count += size
-      }
-      bucket-=1
-    } while (bucket >= 0 && count < MIN_MESSAGES_LOAD)
+    const buckets = this.history.bucketsForSet(MIN_MESSAGES_LOAD, bucket)
     console.log("LOADING FROM", buckets)
     const messageHashes:ActionHashB64[] = []
     for (const b of buckets) {
       messageHashes.push(... await this.getMessagesForBucket(b))
     }
     console.log("FOUND", messageHashes)
-    return [bucket+1,messageHashes]
+    return [bucket - buckets.length +1,messageHashes]
   }
-
 
   get data() {
     return get(this.conversation);
@@ -107,11 +91,7 @@ export class ConversationStore {
   async getMessagesForBucket(b: number) {
     try {
       const newMessages: { [key: string] : Message } = this.data.messages
-      let bucket = this.buckets[b]
-      if (bucket === undefined) {
-        bucket = new Bucket([])
-        this.buckets[b] = bucket
-      }
+      let bucket = this.history.getBucket(b)
       bucket.ensureIsHashType()
       const count = bucket.count
       const messageHashes = await this.client.getMessageHashes(this.data.id, b, count)
@@ -120,7 +100,7 @@ export class ConversationStore {
       const missingHashes = bucket.missingHashes(messageHashesB64)
       if (missingHashes.length > 0) {
         bucket.add(missingHashes)
-        this.saveBucket(b)
+        this.history.saveBucket(b)
       }
 
       console.log("Bucket ",b, " has ", messageHashesB64)
@@ -129,7 +109,6 @@ export class ConversationStore {
       console.log("Our records have", bucket.hashes)
       const hashesToLoad: Array<ActionHash> = []
       bucket.hashes.forEach(h=> {
-        console.log(h)
         if (!newMessages[h]) hashesToLoad.push(decodeHashFromBase64(h))
       })
       console.log("we don't have loaded ", hashesToLoad)
@@ -256,7 +235,6 @@ export class ConversationStore {
     const oldMessage: Message = { authorKey, content, hash: id, status: 'pending', timestamp: now, bucket, images}
     this.addMessage(oldMessage)
     const newMessageEntry = await this.client.sendMessage(this.data.id, content, bucket, images, Object.keys(this.data.agentProfiles).map(k => decodeHashFromBase64(k)))
-      console.log("REC", newMessageEntry)
       const newMessage: Message = {
         ...oldMessage,
         hash: encodeHashToBase64(newMessageEntry.actionHash),
@@ -273,22 +251,11 @@ export class ConversationStore {
       return { ...conversation, messages: {...conversation.messages, [message.hash]: message } };
     });
     if (message.hash.startsWith("uhCkk")) {  // don't add placeholder to bucket yet.
-      const bucket = this.buckets[message.bucket]
-      if (bucket === undefined) { 
-        this.buckets[message.bucket] = new Bucket([message.hash])
-      } else {
-        bucket.add([message.hash])
-      }
-      this.saveBucket(message.bucket)
+      this.history.add(message)
     }
   }
 
-  saveBucket(b: number) {
-    const dnaB64 = encodeHashToBase64(this.cellDnaHash)
-    const bucket = this.buckets[b]
-    localStorage.setItem(`c.${dnaB64}.${b}`, bucket.toJSON())
-    console.log("Saved Bucket", b, bucket)
-  }
+
 
   updateMessage(oldMessage: Message, newMessage: Message): void {
     this.conversation.update(conversation => {
