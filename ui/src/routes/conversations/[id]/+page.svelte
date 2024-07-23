@@ -63,9 +63,10 @@
   }
 
   const checkForMessages = () => {
-    console.log("")
     conversation && conversation.loadMessageSetFrom(conversation.currentBucket()).then(([_,hashes]) => {
-      if (hashes.length == 0) {
+      // If this we aren't getting anything back and there are no messages loaded at all
+      // then keep trying as this is probably a no network, or a just joined situation
+      if (hashes.length == 0  && Object.keys(conversation.data.messages).length == 0) {
         messageTimeout = setTimeout(() => {
           checkForMessages()
         }, 2000)
@@ -92,12 +93,19 @@
       // TODO: do this check in one call of checkForStuff
       checkForAgents()
       checkForConfig()
-      //checkForMessages()
+      checkForMessages()
       conversationContainer.addEventListener('scroll', handleScroll);
       window.addEventListener('resize', debouncedHandleResize);
       newMessageInput.focus();
+      conversation.setStatus('opened')
     }
   });
+
+  onDestroy(()=>{
+    if (conversation) {
+      conversation.setStatus('closed')
+    }
+  })
 
   // Cleanup the subscription
   onDestroy(() => {

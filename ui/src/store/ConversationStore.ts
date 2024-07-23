@@ -13,8 +13,9 @@ export const MIN_MESSAGES_LOAD = 30
 
 export class ConversationStore {
   private conversation: Writable<Conversation>;
-  private history: MsgHistory 
+  public history: MsgHistory 
   public lastBucketLoaded: number = -1
+  public status
 
   constructor(
     public client: RelayClient,
@@ -31,6 +32,8 @@ export class ConversationStore {
     this.history = new MsgHistory(currentBucket, this.cellDnaHash)
     
     this.conversation = writable({ id, cellDnaHash, config, privacy, progenitor, agentProfiles: {}, messages });
+    this.status = writable('unread')
+
   }
 
   async initialize() {
@@ -39,7 +42,6 @@ export class ConversationStore {
   }
 
   async loadMessagesSet(): Promise<Array<ActionHashB64>> {
-    console.log("loadMessageSet", this.lastBucketLoaded)
     if (this.lastBucketLoaded == 0) return []
 
     let bucket = this.lastBucketLoaded < 0 ? this.currentBucket() : this.lastBucketLoaded-1
@@ -50,12 +52,10 @@ export class ConversationStore {
 
   async loadMessageSetFrom(bucket: number) : Promise<[number,ActionHashB64[]]> {
     const buckets = this.history.bucketsForSet(MIN_MESSAGES_LOAD, bucket)
-    console.log("LOADING FROM", buckets)
     const messageHashes:ActionHashB64[] = []
     for (const b of buckets) {
       messageHashes.push(... await this.getMessagesForBucket(b))
     }
-    console.log("FOUND", messageHashes)
     return [bucket - buckets.length +1,messageHashes]
   }
 
@@ -65,6 +65,10 @@ export class ConversationStore {
 
   subscribe(run: any) {
     return this.conversation.subscribe(run);
+  }
+
+  setStatus(s: string) {
+    this.status.update(status=>s)
   }
 
   async getAgents() {
@@ -99,19 +103,17 @@ export class ConversationStore {
       const messageHashesB64 = messageHashes.map(h => encodeHashToBase64(h))
       const missingHashes = bucket.missingHashes(messageHashesB64)
       if (missingHashes.length > 0) {
+        if (get(this.status) == 'closed') {
+          this.setStatus('unread')
+        }
         bucket.add(missingHashes)
         this.history.saveBucket(b)
       }
 
-      console.log("Bucket ",b, " has ", messageHashesB64)
-      console.log("Bucket ",b, " missing ", missingHashes)
-
-      console.log("Our records have", bucket.hashes)
       const hashesToLoad: Array<ActionHash> = []
       bucket.hashes.forEach(h=> {
         if (!newMessages[h]) hashesToLoad.push(decodeHashFromBase64(h))
       })
-      console.log("we don't have loaded ", hashesToLoad)
 
       if (hashesToLoad.length>0) {
         const messageRecords: Array<MessageRecord> = await this.client.getMessageEntries(this.data.id, hashesToLoad)
@@ -141,7 +143,6 @@ export class ConversationStore {
               if (!newMessages[message.hash]) {
                 const matchesPending = Object.values(this.data.messages).find(m => m.status === 'pending' && m.authorKey === message.authorKey && m.content === message.content);
                 if (matchesPending) {
-                  console.log("DELETE", matchesPending.hash)
                   delete newMessages[matchesPending.hash]
                 }
                 newMessages[message.hash] = message
@@ -164,55 +165,55 @@ export class ConversationStore {
     return []
   }
 
-  async getMessages(buckets: Array<number>) {
-    try {
-      const newMessages: { [key: string] : Message } = this.data.messages
-      const messageRecords: Array<MessageRecord> = await this.client.getAllMessages(this.data.id, buckets)
-      for (const messageRecord of messageRecords) {
-        try {
-          const message = messageRecord.message
-          if (message) {
-            message.hash = encodeHashToBase64(messageRecord.signed_action.hashed.hash)
-            message.timestamp = new Date(messageRecord.signed_action.hashed.content.timestamp / 1000)
-            message.authorKey = encodeHashToBase64(messageRecord.signed_action.hashed.content.author)
-            message.images = ((message.images as any[]) || []).map(i => ({
-              fileType: i.file_type,
-              lastModified: i.last_modified,
-              name: i.name,
-              size: i.size,
-              storageEntryHash: i.storage_entry_hash,
-              status: 'loading'
-            }))
-            message.status = 'confirmed'
+  // async getMessages(buckets: Array<number>) {
+  //   try {
+  //     const newMessages: { [key: string] : Message } = this.data.messages
+  //     const messageRecords: Array<MessageRecord> = await this.client.getAllMessages(this.data.id, buckets)
+  //     for (const messageRecord of messageRecords) {
+  //       try {
+  //         const message = messageRecord.message
+  //         if (message) {
+  //           message.hash = encodeHashToBase64(messageRecord.signed_action.hashed.hash)
+  //           message.timestamp = new Date(messageRecord.signed_action.hashed.content.timestamp / 1000)
+  //           message.authorKey = encodeHashToBase64(messageRecord.signed_action.hashed.content.author)
+  //           message.images = ((message.images as any[]) || []).map(i => ({
+  //             fileType: i.file_type,
+  //             lastModified: i.last_modified,
+  //             name: i.name,
+  //             size: i.size,
+  //             storageEntryHash: i.storage_entry_hash,
+  //             status: 'loading'
+  //           }))
+  //           message.status = 'confirmed'
 
-            // Async load the images
-            this.loadImagesForMessage(message)
+  //           // Async load the images
+  //           this.loadImagesForMessage(message)
 
-            if (!newMessages[message.hash]) {
-              const matchesPending = Object.values(this.data.messages).find(m => m.status === 'pending' && m.authorKey === message.authorKey && m.content === message.content);
-              if (matchesPending) {
-                delete newMessages[matchesPending.hash]
-              }
-              newMessages[message.hash] = message
-            }
-          }
-        } catch(e) {
-          console.error("Unable to parse message, ignoring", messageRecord, e)
-        }
-      }
+  //           if (!newMessages[message.hash]) {
+  //             const matchesPending = Object.values(this.data.messages).find(m => m.status === 'pending' && m.authorKey === message.authorKey && m.content === message.content);
+  //             if (matchesPending) {
+  //               delete newMessages[matchesPending.hash]
+  //             }
+  //             newMessages[message.hash] = message
+  //           }
+  //         }
+  //       } catch(e) {
+  //         console.error("Unable to parse message, ignoring", messageRecord, e)
+  //       }
+  //     }
 
-      // TODO: only add/update new messages
-      this.conversation.update(c => {
-        c.messages = {...newMessages}
-        return c
-      })
-      return newMessages
-    } catch (e) {
-      //@ts-ignore
-      console.error("Error getting messages", e)
-    }
-    return []
-  }
+  //     // TODO: only add/update new messages
+  //     this.conversation.update(c => {
+  //       c.messages = {...newMessages}
+  //       return c
+  //     })
+  //     return newMessages
+  //   } catch (e) {
+  //     //@ts-ignore
+  //     console.error("Error getting messages", e)
+  //   }
+  //   return []
+  // }
 
   bucketFromTimestamp(timestamp: number) : number {
     const diff = timestamp - this.created
@@ -250,8 +251,12 @@ export class ConversationStore {
       message.images = message.images || [];
       return { ...conversation, messages: {...conversation.messages, [message.hash]: message } };
     });
+
     if (message.hash.startsWith("uhCkk")) {  // don't add placeholder to bucket yet.
       this.history.add(message)
+      if (get(this.status) == 'closed') {
+        this.setStatus('unread')
+      }
     }
   }
 
