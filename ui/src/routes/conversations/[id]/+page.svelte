@@ -264,17 +264,16 @@
                 {#if !fromMe}
                   <Avatar agentPubKey={decodeHashFromBase64(message.authorKey)} size='24' showNickname={false} moreClasses='items-start mt-1'/>
                 {/if}
-                <div class='flex flex-col mb-2 ml-3 {fromMe && 'opacity-80'}'>
-                  <span class='flex items-baseline {fromMe && 'flex-row-reverse'}'>
+                <div class='mb-2 ml-3 {fromMe && 'items-end text-end'}'>
+                  <span class='flex items-baseline {fromMe && 'flex-row-reverse opacity-80'}'>
                     <span class="font-bold">{@html fromMe ? "You" : message.author}</span>
                     <span class="text-surface-200 mx-2 text-xxs"><Time timestamp={message.timestamp} format="h:mma" /></span>
                   </span>
                   {#if message.images && message.images.length > 0}
-                    <div class='flex flex-col {fromMe && 'justify-end'}'>
                       {#each message.images as image (image.name + image.lastModified)}
                         {#if image && image.status === 'loaded' || image.status === 'pending'}
                           <!-- svelte-ignore a11y-missing-attribute -->
-                          <div class='relative {fromMe && 'text-end'}'>
+                          <div class='relative inline {fromMe && 'text-end'}'>
                             <img src={image.dataURL} class='inline max-w-2/3 object-cover mb-2' />
                             {#if image.status === 'pending'}
                               <SvgIcon icon='spinner' color='white' size='10' moreClasses='absolute top-1/2 left-1/2 -mt-1' />
@@ -286,7 +285,6 @@
                           </div>
                         {/if}
                       {/each}
-                    </div>
                   {/if}
                   <div class="font-light {fromMe && 'text-end'}">{@html message.content}</div>
                 </div>
