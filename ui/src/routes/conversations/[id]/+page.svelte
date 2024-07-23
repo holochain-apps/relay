@@ -227,7 +227,7 @@
   <a class='absolute' href="/conversations"><SvgIcon icon='caretLeft' color='white' size='10' /></a>
   {#if conversation}
     <h1 class="flex-1 grow text-center"><a href={`/conversations/${conversationId}/members`}>{@html conversation.data.config.title}</a></h1>
-    {#if conversation.data.privacy === Privacy.Public || isEqual(conversation.data.progenitor, myPubKey)}
+    {#if conversation.data.privacy === Privacy.Public || encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64}
       <a class='absolute right-5' href="/conversations/{conversation.data.id}/invite"><SvgIcon icon='addPerson' color='white' /></a>
     {/if}
   {/if}
@@ -244,7 +244,7 @@
       <a href={`/conversations/${conversationId}/members`} class='text-surface-300 text-sm'>
         {@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}
       </a>
-      {#if $processedMessages.length === 0 && isEqual(conversation.data.progenitor, myPubKey)}
+      {#if $processedMessages.length === 0 && encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64}
         <div class='flex flex-col items-center justify-center h-full w-full'>
           <img src='/clear-skies.png' alt='No contacts' class='w-32 h-32 mb-4 mt-4' />
           <p class='text-xs text-center text-secondary-500 mx-10 mb-8'>Nobody else is here! Share your invitation code to start the conversation.</p>
