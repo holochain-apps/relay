@@ -24,6 +24,8 @@
   let myPubKeyB64 = relayStore.client.myPubKeyB64
 
   $: conversation = relayStore.getConversation(conversationId);
+  $: messageCount = conversation ? conversation.history.messageCount : undefined
+
   //let messages: { [key: string]: Message } = {};
   let agentProfiles: { [key: AgentPubKeyB64]: Profile } = {};
   let numMembers = 0;
@@ -269,12 +271,12 @@
           {/if}
         </div>
       {:else}
-      {#if conversation.lastBucketLoaded > 0}
-      <Button
-      onClick={()=>conversation.loadMessagesSet()}>
-        Load More... {conversation.lastBucketLoaded }
-      </Button>
-    {/if}
+      {#if $messageCount != $processedMessages.length}
+        <Button
+          onClick={()=>conversation.loadMessagesSet()}>
+          Load More...
+        </Button>
+      {/if}
         <div id='message-box' class="flex-1 p-4 flex flex-col-reverse w-full">
          
           <ul>
