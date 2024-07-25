@@ -8,6 +8,8 @@
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext('relayStore')
   let relayStore = relayStoreContext.getStore()
+
+  $: conversations = relayStore.conversations
 </script>
 
 <Header>
@@ -22,7 +24,7 @@
 
 <div class="container h-full mx-auto flex flex-col conversations-list">
   <ul class="flex-1 mt-10">
-    {#each $relayStore as $conversation ($conversation.data.id)}
+    {#each $conversations as $conversation ($conversation.data.id)}
       <li class='text-xl flex flex-row mb-5 items-start'>
         <a href="/conversations/{$conversation.data.id}" class='flex-1 flex flex-row items-center min-w-0 overflow-hidden'>
           {#if $conversation.data.config.image}
@@ -45,6 +47,7 @@
     {/each}
   </ul>
 </div>
+
 <style>
   .conversations-list {
     padding: 0 15px 0 15px;

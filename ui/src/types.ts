@@ -58,6 +58,13 @@ export type EntryTypes =
   content: string;
 }
 
+export interface Contact {
+  avatar: string;
+  firstName: string;
+  lastName: string;
+  publicKey: AgentPubKey;
+}
+
 export interface Conversation {
   id: string; // the network seed
   agentProfiles: { [key: AgentPubKeyB64]: Profile };

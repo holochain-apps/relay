@@ -98,12 +98,10 @@ pub fn create_message(input: SendMessageInput) -> ExternResult<Record> {
 #[hdk_extern]
 pub fn get_all_messages(_: ()) -> ExternResult<Vec<Link>> {
     let path = Path::from("all_messages");
-    debug!("path: {:?}", path);
     let links = get_links(
         GetLinksInputBuilder::try_new(path.path_entry_hash()?, LinkTypes::AllMessages)?
             .build(),
     )?;
-    debug!("links: {:?}", links);
     Ok(links)
 }
 

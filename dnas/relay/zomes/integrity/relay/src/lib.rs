@@ -1,3 +1,5 @@
+pub mod contact;
+pub use contact::*;
 pub mod message;
 pub use message::*;
 pub mod config;
@@ -11,6 +13,7 @@ use hdi::prelude::*;
 pub enum EntryTypes {
     Config(Config),
     Message(Message),
+    Contact(Contact),
 }
 
 #[derive(Serialize, Deserialize)]
@@ -19,6 +22,9 @@ pub enum LinkTypes {
     ConfigUpdates,
     MessageUpdates,
     AllMessages,
+    ContactToContacts,
+    ContactUpdates,
+    AllContacts,
 }
 
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone)]
@@ -47,54 +53,58 @@ pub struct Properties {
     pub progenitor: AgentPubKey,
 }
 
-pub fn check_agent(agent_pub_key: AgentPubKey, membrane_proof: Option<MembraneProof>) -> ExternResult<ValidateCallbackResult> {
+pub fn check_agent(
+    agent_pub_key: AgentPubKey,
+    membrane_proof: Option<MembraneProof>,
+) -> ExternResult<ValidateCallbackResult> {
     let info = dna_info()?;
-    // we have no properties so this is a conversation anyone can join
-    // TODO: do we actually want this to be the case?
     if info.modifiers.properties.bytes().len() == 1 {
         return Ok(ValidateCallbackResult::Valid);
     }
-    let props = Properties::try_from(info.modifiers.properties).map_err(|e| wasm_error!(e))?;
-
-    // Anyone can join a public conversation
+    let props = Properties::try_from(info.modifiers.properties)
+        .map_err(|e| wasm_error!(e))?;
     if props.privacy == Privacy::Public {
         return Ok(ValidateCallbackResult::Valid);
     }
-
-    // agent is the progenitor so check out
     if agent_pub_key == props.progenitor {
         return Ok(ValidateCallbackResult::Valid);
     }
     match membrane_proof {
-        None => Ok(ValidateCallbackResult::Invalid("membrane proof must be provided".to_string())),
+        None => {
+            Ok(
+                ValidateCallbackResult::Invalid(
+                    "membrane proof must be provided".to_string(),
+                ),
+            )
+        }
         Some(serialized_proof) => {
-            let envelope  = MembraneProofEnvelope::try_from((*serialized_proof).clone()).map_err(|e| wasm_error!(e))?;
+            let envelope = MembraneProofEnvelope::try_from((*serialized_proof).clone())
+                .map_err(|e| wasm_error!(e))?;
             if envelope.data.conversation_id != info.modifiers.network_seed {
-                return Ok(ValidateCallbackResult::Invalid("membrane proof is not for this conversation".to_string()));
+                return Ok(
+                    ValidateCallbackResult::Invalid(
+                        "membrane proof is not for this conversation".to_string(),
+                    ),
+                );
             }
             if envelope.data.for_agent != agent_pub_key {
-                return Ok(ValidateCallbackResult::Invalid("membrane proof is not for this agent".to_string()));
+                return Ok(
+                    ValidateCallbackResult::Invalid(
+                        "membrane proof is not for this agent".to_string(),
+                    ),
+                );
             }
             if verify_signature(props.progenitor, envelope.signature, envelope.data)? {
                 return Ok(ValidateCallbackResult::Valid);
             }
-            Ok(ValidateCallbackResult::Invalid("membrane proof signature invalid".to_string()))
+            Ok(
+                ValidateCallbackResult::Invalid(
+                    "membrane proof signature invalid".to_string(),
+                ),
+            )
         }
     }
 }
-
-// #[hdk_extern]
-// pub fn genesis_self_check(
-//     _data: GenesisSelfCheckData,
-// ) -> ExternResult<ValidateCallbackResult> {
-//     Ok(ValidateCallbackResult::Valid)
-// }
-// pub fn validate_agent_joining(
-//     _agent_pub_key: AgentPubKey,
-//     _membrane_proof: &Option<MembraneProof>,
-// ) -> ExternResult<ValidateCallbackResult> {
-//     Ok(ValidateCallbackResult::Valid)
-// }
 
 #[hdk_extern]
 pub fn genesis_self_check(
@@ -129,6 +139,12 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                                 message,
                             )
                         }
+                        EntryTypes::Contact(contact) => {
+                            validate_create_contact(
+                                EntryCreationAction::Create(action),
+                                contact,
+                            )
+                        }
                     }
                 }
                 OpEntry::UpdateEntry { app_entry, action, .. } => {
@@ -145,6 +161,12 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                                 message,
                             )
                         }
+                        EntryTypes::Contact(contact) => {
+                            validate_create_contact(
+                                EntryCreationAction::Update(action),
+                                contact,
+                            )
+                        }
                     }
                 }
                 _ => Ok(ValidateCallbackResult::Valid),
@@ -152,24 +174,55 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
         }
         FlatOp::RegisterUpdate(update_entry) => {
             match update_entry {
-                OpUpdate::Entry {
-                    app_entry,
-                    action,
-                } => {
+                OpUpdate::Entry { app_entry, action } => {
+                    let original_action = must_get_action(
+                            action.clone().original_action_address,
+                        )?
+                        .action()
+                        .to_owned();
+                    let original_create_action = match EntryCreationAction::try_from(
+                        original_action,
+                    ) {
+                        Ok(action) => action,
+                        Err(e) => {
+                            return Ok(
+                                ValidateCallbackResult::Invalid(
+                                    format!(
+                                        "Expected to get EntryCreationAction from Action: {e:?}"
+                                    ),
+                                ),
+                            );
+                        }
+                    };
                     match app_entry {
-
-                        EntryTypes::Message(message)=> {
-                            validate_update_message(
+                        EntryTypes::Contact(contact) => {
+                            let original_app_entry = must_get_valid_record(
+                                action.clone().original_action_address,
+                            )?;
+                            let original_contact = match Contact::try_from(
+                                original_app_entry,
+                            ) {
+                                Ok(entry) => entry,
+                                Err(e) => {
+                                    return Ok(
+                                        ValidateCallbackResult::Invalid(
+                                            format!("Expected to get Contact from Record: {e:?}"),
+                                        ),
+                                    );
+                                }
+                            };
+                            validate_update_contact(
                                 action,
-                                message,
+                                contact,
+                                original_create_action,
+                                original_contact,
                             )
-                        },
-                        EntryTypes::Config(config)
-                         => {
-                            validate_update_config(
-                                action,
-                                config,
-                            )
+                        }
+                        EntryTypes::Message(message) => {
+                            validate_update_message(action, message)
+                        }
+                        EntryTypes::Config(config) => {
+                            validate_update_config(action, config)
                         }
                         _ => {
                             Ok(
@@ -185,19 +238,77 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
             }
         }
         FlatOp::RegisterDelete(delete_entry) => {
-            match delete_entry {
-                OpDelete { action: _ } => {
-                    Ok(ValidateCallbackResult::Valid)
-                    // match original_app_entry {
-                    //     EntryTypes::Config(config) => {
-                    //         validate_delete_config(action, original_action, config)
-                    //     }
-                    //     EntryTypes::Message(message) => {
-                    //         validate_delete_message(action, original_action, message)
-                    //     }
-                    // }
+            let original_action_hash = delete_entry.clone().action.deletes_address;
+            let original_record = must_get_valid_record(original_action_hash)?;
+            let original_record_action = original_record.action().clone();
+            let original_action = match EntryCreationAction::try_from(
+                original_record_action,
+            ) {
+                Ok(action) => action,
+                Err(e) => {
+                    return Ok(
+                        ValidateCallbackResult::Invalid(
+                            format!(
+                                "Expected to get EntryCreationAction from Action: {e:?}"
+                            ),
+                        ),
+                    );
                 }
-                _ => Ok(ValidateCallbackResult::Valid),
+            };
+            let app_entry_type = match original_action.entry_type() {
+                EntryType::App(app_entry_type) => app_entry_type,
+                _ => {
+                    return Ok(ValidateCallbackResult::Valid);
+                }
+            };
+            let entry = match original_record.entry().as_option() {
+                Some(entry) => entry,
+                None => {
+                    return Ok(
+                        ValidateCallbackResult::Invalid(
+                            "Original record for a delete must contain an entry"
+                                .to_string(),
+                        ),
+                    );
+                }
+            };
+            let original_app_entry = match EntryTypes::deserialize_from_type(
+                app_entry_type.zome_index,
+                app_entry_type.entry_index,
+                entry,
+            )? {
+                Some(app_entry) => app_entry,
+                None => {
+                    return Ok(
+                        ValidateCallbackResult::Invalid(
+                            "Original app entry must be one of the defined entry types for this zome"
+                                .to_string(),
+                        ),
+                    );
+                }
+            };
+            match original_app_entry {
+                EntryTypes::Contact(original_contact) => {
+                    validate_delete_contact(
+                        delete_entry.clone().action,
+                        original_action,
+                        original_contact,
+                    )
+                }
+                EntryTypes::Message(original_message) => {
+                    validate_delete_message(
+                        delete_entry.clone().action,
+                        original_action,
+                        original_message,
+                    )
+                }
+                EntryTypes::Config(_original_config) => {
+                    return Ok(
+                        ValidateCallbackResult::Invalid(
+                            "Cannot delete Config Entry".to_string(),
+                        ),
+                    );
+                }
             }
         }
         FlatOp::RegisterCreateLink {
@@ -226,6 +337,30 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                 }
                 LinkTypes::AllMessages => {
                     validate_create_link_all_messages(
+                        action,
+                        base_address,
+                        target_address,
+                        tag,
+                    )
+                }
+                LinkTypes::ContactToContacts => {
+                    validate_create_link_contact_to_contacts(
+                        action,
+                        base_address,
+                        target_address,
+                        tag,
+                    )
+                }
+                LinkTypes::ContactUpdates => {
+                    validate_create_link_contact_updates(
+                        action,
+                        base_address,
+                        target_address,
+                        tag,
+                    )
+                }
+                LinkTypes::AllContacts => {
+                    validate_create_link_all_contacts(
                         action,
                         base_address,
                         target_address,
@@ -270,6 +405,33 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                         tag,
                     )
                 }
+                LinkTypes::ContactToContacts => {
+                    validate_delete_link_contact_to_contacts(
+                        action,
+                        original_action,
+                        base_address,
+                        target_address,
+                        tag,
+                    )
+                }
+                LinkTypes::ContactUpdates => {
+                    validate_delete_link_contact_updates(
+                        action,
+                        original_action,
+                        base_address,
+                        target_address,
+                        tag,
+                    )
+                }
+                LinkTypes::AllContacts => {
+                    validate_delete_link_all_contacts(
+                        action,
+                        original_action,
+                        base_address,
+                        target_address,
+                        tag,
+                    )
+                }
             }
         }
         FlatOp::StoreRecord(store_record) => {
@@ -286,6 +448,12 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                             validate_create_message(
                                 EntryCreationAction::Create(action),
                                 message,
+                            )
+                        }
+                        EntryTypes::Contact(contact) => {
+                            validate_create_contact(
+                                EntryCreationAction::Create(action),
+                                contact,
                             )
                         }
                     }
@@ -321,7 +489,7 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                                     .entry()
                                     .to_app_option()
                                     .map_err(|e| wasm_error!(e))?;
-                                let original_config = match original_config {
+                                let _original_config = match original_config {
                                     Some(config) => config,
                                     None => {
                                         return Ok(
@@ -332,10 +500,7 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                                         );
                                     }
                                 };
-                                validate_update_config(
-                                    action,
-                                    config,
-                                )
+                                validate_update_config(action, config)
                             } else {
                                 Ok(result)
                             }
@@ -350,7 +515,7 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                                     .entry()
                                     .to_app_option()
                                     .map_err(|e| wasm_error!(e))?;
-                                let original_message = match original_message {
+                                let _original_message = match original_message {
                                     Some(message) => message,
                                     None => {
                                         return Ok(
@@ -361,9 +526,37 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                                         );
                                     }
                                 };
-                                validate_update_message(
+                                validate_update_message(action, message)
+                            } else {
+                                Ok(result)
+                            }
+                        }
+                        EntryTypes::Contact(contact) => {
+                            let result = validate_create_contact(
+                                EntryCreationAction::Update(action.clone()),
+                                contact.clone(),
+                            )?;
+                            if let ValidateCallbackResult::Valid = result {
+                                let original_contact: Option<Contact> = original_record
+                                    .entry()
+                                    .to_app_option()
+                                    .map_err(|e| wasm_error!(e))?;
+                                let original_contact = match original_contact {
+                                    Some(contact) => contact,
+                                    None => {
+                                        return Ok(
+                                            ValidateCallbackResult::Invalid(
+                                                "The updated entry type must be the same as the original entry type"
+                                                    .to_string(),
+                                            ),
+                                        );
+                                    }
+                                };
+                                validate_update_contact(
                                     action,
-                                    message,
+                                    contact,
+                                    original_action,
+                                    original_contact,
                                 )
                             } else {
                                 Ok(result)
@@ -437,6 +630,13 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                                 original_message,
                             )
                         }
+                        EntryTypes::Contact(original_contact) => {
+                            validate_delete_contact(
+                                action,
+                                original_action,
+                                original_contact,
+                            )
+                        }
                     }
                 }
                 OpRecord::CreateLink {
@@ -465,6 +665,30 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                         }
                         LinkTypes::AllMessages => {
                             validate_create_link_all_messages(
+                                action,
+                                base_address,
+                                target_address,
+                                tag,
+                            )
+                        }
+                        LinkTypes::ContactToContacts => {
+                            validate_create_link_contact_to_contacts(
+                                action,
+                                base_address,
+                                target_address,
+                                tag,
+                            )
+                        }
+                        LinkTypes::ContactUpdates => {
+                            validate_create_link_contact_updates(
+                                action,
+                                base_address,
+                                target_address,
+                                tag,
+                            )
+                        }
+                        LinkTypes::AllContacts => {
+                            validate_create_link_all_contacts(
                                 action,
                                 base_address,
                                 target_address,
@@ -516,6 +740,33 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                         }
                         LinkTypes::AllMessages => {
                             validate_delete_link_all_messages(
+                                action,
+                                create_link.clone(),
+                                base_address,
+                                create_link.target_address,
+                                create_link.tag,
+                            )
+                        }
+                        LinkTypes::ContactToContacts => {
+                            validate_delete_link_contact_to_contacts(
+                                action,
+                                create_link.clone(),
+                                base_address,
+                                create_link.target_address,
+                                create_link.tag,
+                            )
+                        }
+                        LinkTypes::ContactUpdates => {
+                            validate_delete_link_contact_updates(
+                                action,
+                                create_link.clone(),
+                                base_address,
+                                create_link.target_address,
+                                create_link.tag,
+                            )
+                        }
+                        LinkTypes::AllContacts => {
+                            validate_delete_link_all_contacts(
                                 action,
                                 create_link.clone(),
                                 base_address,

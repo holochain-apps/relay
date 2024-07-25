@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
+  import { derived } from "svelte/store";
   import { goto } from '$app/navigation';
 	import Avatar from '$lib/Avatar.svelte';
   import Header from '$lib/Header.svelte';
@@ -14,22 +15,9 @@
 	const relayStoreContext: { getStore: () => RelayStore } = getContext('relayStore')
 	let relayStore = relayStoreContext.getStore()
 
-  const contacts : Contact[] = [{
-      name: 'Alice Walker',
-      avatar: 'https://picsum.photos/40',
-      publicKeyB64: 'HcSCJ7J9J9J9J'
-    },
-    {
-      name: 'George Miller',
-      avatar: 'https://picsum.photos/40',
-      publicKeyB64: 'HcSCJ7J9J9J9Jasfdsdf'
-    },
-    {
-      name: 'Bob Marley',
-      avatar: 'https://picsum.photos/40',
-      publicKeyB64: 'HcSCJ7J9J9J9Jasasd'
-    }
-  ].sort((a, b) => a.name.localeCompare(b.name))
+  $: contacts = derived(relayStore.contacts, ($contacts) => {
+    return $contacts.sort((a, b) => a.data.firstName.localeCompare(b.data.firstName))
+  })
 
   let currentContactLetter : string = ''
 </script>
@@ -54,7 +42,7 @@
 
     <button
       class='w-28 h-24 bg-surface-500 text-xs text-primary-700 rounded-2xl py-2 flex flex-col items-center disabled:opacity-50'
-      on:click={() => goto('/contact/new')}
+      on:click={() => goto('/contacts/new')}
     >
       <SvgIcon icon='newPerson' size='32' color='red' moreClasses='flex-grow' />
       <p>New Contact</p>
@@ -69,24 +57,24 @@
     </button>
   </div>
 
-  {#if contacts.length === 0}
+  {#if $contacts.length === 0}
     <img src='/clear-skies.png' alt='No contacts' class='w-32 h-32 mb-4 mt-10' />
-    <h2 class='text-lg text-primary-200'>You haven’t added any contacts</h2>
-    <p class='text-xs text-center'>There’s nobody to chat with yet! Add your trusted friends and family by requesting their Relay contact code, found in their personal profile inside the Relay app.</p>
+    <h2 class='text-lg text-primary-200'>You haven't added any contacts</h2>
+    <p class='text-xs text-center'>There's nobody to chat with yet! Add your trusted friends and family by requesting their Relay contact code, found in their personal profile inside the Relay app.</p>
   {:else}
     <div class='w-full overflow-hidden font-light'>
       <div class='mb-4'>
         <p>Recent Contacts</p>
       </div>
-      {#each contacts as contact}
-        {#if contact.name[0] !== currentContactLetter}
-          <p class='my-3'>{currentContactLetter = contact.name[0]}</p>
+
+      {#each $contacts as contact}
+        {#if contact.firstName[0] !== currentContactLetter}
+          <p class='my-3'>{currentContactLetter = contact.firstName[0]}</p>
         {/if}
         <div class='flex items-center justify-between w-full'>
           <div class='flex items-center'>
-            <!-- <Avatar agentPubKey={contact.publicKeyB64} size='32' showNickname={false} /> -->
             <img src={contact.avatar} alt='Avatar' class='rounded-full w-8 h-8 object-cover mr-3' />
-            <p class='text-primary-200 font-normal'>{contact.name}</p>
+            <p class='text-primary-200 font-normal'>{contact.firstName} {contact.lastName}</p>
           </div>
         </div>
       {/each}

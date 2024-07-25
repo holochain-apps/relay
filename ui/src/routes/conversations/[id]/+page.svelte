@@ -1,10 +1,9 @@
 <script lang="ts">
-	import { debounce, isEqual, isEmpty } from 'lodash-es';
-  import { type AgentPubKeyB64, decodeHashFromBase64, encodeHashToBase64, type EntryHashB64 } from '@holochain/client';
-  import { FileStorageClient } from "@holochain-open-dev/file-storage";
+	import { debounce } from 'lodash-es';
+  import { type AgentPubKeyB64, decodeHashFromBase64, encodeHashToBase64 } from '@holochain/client';
   import { type Profile } from '@holochain-open-dev/profiles';
   import { getContext, onDestroy, onMount } from 'svelte';
-  import { get, type Unsubscriber, derived, writable, type Readable, type Writable } from "svelte/store";
+  import { type Unsubscriber, derived, writable, type Writable } from "svelte/store";
   import Time from "svelte-time";
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
