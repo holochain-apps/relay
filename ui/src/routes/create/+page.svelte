@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
   import { derived } from "svelte/store";
+  import { encodeHashToBase64 } from "@holochain/client";
   import { goto } from '$app/navigation';
 	import Avatar from '$lib/Avatar.svelte';
   import Header from '$lib/Header.svelte';
@@ -15,11 +16,14 @@
 	const relayStoreContext: { getStore: () => RelayStore } = getContext('relayStore')
 	let relayStore = relayStoreContext.getStore()
 
-  $: contacts = derived(relayStore.contacts, ($contacts) => {
-    return $contacts.sort((a, b) => a.data.firstName.localeCompare(b.data.firstName))
-  })
-
+  let search = ''
   let currentContactLetter : string = ''
+
+  $: contacts = derived(relayStore.contacts, ($contacts) => {
+    const test = search.trim().toLowerCase()
+    return $contacts.filter(c => c.data.firstName.toLowerCase().includes(test) || c.data.lastName.toLowerCase().includes(test) || (test.length > 2 && encodeHashToBase64(c.data.publicKey).toLowerCase().includes(test)))
+      .sort((a, b) => a.data.firstName.localeCompare(b.data.firstName))
+  })
 </script>
 
 <Header>
@@ -29,7 +33,7 @@
 </Header>
 
 <div class="container mx-auto flex items-center flex-col flex-1 w-full p-4 text-secondary-500">
-  <input type='text' class='w-full h-12 bg-surface-500 text-primary-700 text-md rounded-full px-4 my-5 border-0' placeholder='Search name or contact code' />
+  <input type='text' class='w-full h-12 bg-surface-500 text-primary-700 text-md rounded-full px-4 my-5 border-0' placeholder='Search name or contact code' bind:value={search} />
 
   <div class='mb-5 flex justify-between w-full gap-4'>
     <button
