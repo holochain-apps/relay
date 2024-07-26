@@ -101,7 +101,7 @@
     clearTimeout(agentTimeout);
     clearTimeout(configTimeout);
     clearTimeout(messageTimeout);
-    conversationContainer.removeEventListener('scroll', handleScroll);
+    conversationContainer && conversationContainer.removeEventListener('scroll', handleScroll);
     window.removeEventListener('resize', debouncedHandleResize);
   });
 
@@ -215,7 +215,7 @@
 <Header>
   <a class='absolute' href="/conversations"><SvgIcon icon='caretLeft' color='white' size='10' /></a>
   {#if conversation}
-    <h1 class="flex-1 grow text-center"><a href={`/conversations/${conversationId}/members`}>{@html conversation.data.config.title}</a></h1>
+    <h1 class="flex-1 grow text-center"><a href={`/conversations/${conversationId}/details`}>{@html conversation.data.config.title}</a></h1>
     {#if conversation.data.privacy === Privacy.Public || encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64}
       <a class='absolute right-5' href="/conversations/{conversation.data.id}/invite"><SvgIcon icon='addPerson' color='white' /></a>
     {/if}
@@ -228,9 +228,9 @@
       {#if conversation.data.config.image}
         <img src={conversation.data.config.image} alt='Conversation' class='w-32 h-32 min-h-32 mb-5 rounded-full object-cover' />
       {/if}
-      <h1 class='text-3xl flex-shrink-0'>{@html conversation.data.config.title}</h1>
+      <h1 class='text-3xl flex-shrink-0 mb-1'>{@html conversation.data.config.title}</h1>
       <!-- if joining a conversation created by someone else, say still syncing here until thre are at least 2 members -->
-      <a href={`/conversations/${conversationId}/members`} class='text-surface-300 text-sm'>
+      <a href={`/conversations/${conversationId}/details`} class='text-surface-300 text-sm'>
         {@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}
       </a>
       {#if $processedMessages.length === 0 && encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64}
