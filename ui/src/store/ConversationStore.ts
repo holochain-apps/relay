@@ -41,6 +41,11 @@ export class ConversationStore {
     await this.loadMessagesSet()
   }
 
+  // 1. looks in the history, starting at a current bucket, for hashes, and retrieves all
+  // the actual messages in that bucket as well as any earlier buckets necessary 
+  // such that at least MIN_MESSAGES_LOAD messages.
+  // 2. then updates the "lateBucketLoaded" state variable so the next time earlier buckets
+  // will be loaded.
   async loadMessagesSet(): Promise<Array<ActionHashB64>> {
     if (this.lastBucketLoaded == 0) return []
 
@@ -50,13 +55,16 @@ export class ConversationStore {
     return messageHashes
   }
 
+  // looks in the history starting at a bucket number for hashes, and retrieves all
+  // the actual messages in that bucket as well as any earlier buckets necessary 
+  // such that at least MIN_MESSAGES_LOAD messages.
   async loadMessageSetFrom(bucket: number) : Promise<[number,ActionHashB64[]]> {
     const buckets = this.history.bucketsForSet(MIN_MESSAGES_LOAD, bucket)
     const messageHashes:ActionHashB64[] = []
     for (const b of buckets) {
       messageHashes.push(... await this.getMessagesForBucket(b))
     }
-    return [bucket - buckets.length +1,messageHashes]
+    return [bucket - buckets.length +1, messageHashes]
   }
 
   get data() {
@@ -115,7 +123,7 @@ export class ConversationStore {
         if (!newMessages[h]) hashesToLoad.push(decodeHashFromBase64(h))
       })
 
-      if (hashesToLoad.length>0) {
+      if (hashesToLoad.length > 0) {
         const messageRecords: Array<MessageRecord> = await this.client.getMessageEntries(this.data.id, hashesToLoad)
         if (hashesToLoad.length != messageRecords.length) {
           console.log("Warning: not all requested hashes were loaded")

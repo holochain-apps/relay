@@ -42,7 +42,7 @@
   let scrollAtBottom = true;
   let scrollAtTop = false;
   const SCROLL_BOTTOM_THRESHOLD = 100; // How close to the bottom must the user be to consider it "at the bottom"
-  const SCROLL_TOP_THRESHOLD = 300; // How close to the bottom must the user be to consider it "at the bottom"
+  const SCROLL_TOP_THRESHOLD = 300; // How close to the top must the user be to consider it "at the top"
 
   const checkForAgents = () => {
     conversation && conversation.getAgents().then((agentProfiles) => {
@@ -294,7 +294,7 @@
                 <div class='flex flex-col mb-2 ml-3 {fromMe && 'opacity-80'}'>
                   <span class='flex items-baseline {fromMe && 'flex-row-reverse'}'>
                     <span class="font-bold">{@html fromMe ? "You" : message.author}</span>
-                    <span class="text-surface-200 mx-2 text-xxs"><Time timestamp={message.timestamp} format="h:mma" />--{message.bucket} {message.status}</span>
+                    <span class="text-surface-200 mx-2 text-xxs"><Time timestamp={message.timestamp} format="h:mma" /></span>
                   </span>
                   {#if message.images && message.images.length > 0}
                     <div class='flex flex-col {fromMe && 'justify-end'}'>

@@ -55,8 +55,6 @@ export class RelayClient {
 
           const config = configRecord? configRecord.entry : { title: cell.name, image: "" }
 
-          const properties: Properties = decode(cell.dna_modifiers.properties) as Properties;
-
           const convoCellAndConfig: ConversationCellAndConfig = { cell, config }
 
           this.conversations[cell.dna_modifiers.network_seed] = convoCellAndConfig
