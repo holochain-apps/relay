@@ -20,7 +20,7 @@
 
 <Header>
   <button on:click={() => goto('/account')}>
-    <Avatar size={24} agentPubKey={relayClient.myPubKey} showNickname={false} />
+    <Avatar size={24} agentPubKey={relayClient.myPubKey} />
   </button>
 
   <button on:click={() => goto('/create')} class='absolute right-4'>

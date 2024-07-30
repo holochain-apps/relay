@@ -3,14 +3,16 @@ import { Base64 } from 'js-base64';
 import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64, type EntryHash } from "@holochain/client";
 import { writable, get, type Writable } from 'svelte/store';
 import { v4 as uuidv4 } from 'uuid';
-import { RelayClient } from '$store/RelayClient'
+import LocalStorageStore from '$store/LocalStorageStore'
+import { RelayStore } from '$store/RelayStore'
 import { type Config, type Conversation, type Image, type Invitation, type Message, type MessageRecord, Privacy } from '../types';
 
 export class ConversationStore {
   private conversation: Writable<Conversation>;
+  private client;
 
   constructor(
-    public client: RelayClient,
+    public relayStore: RelayStore,
     public id: string,
     public cellDnaHash: DnaHash,
     public config: Config,
@@ -18,6 +20,7 @@ export class ConversationStore {
     public progenitor: AgentPubKey,
   ) {
     this.conversation = writable({ id, cellDnaHash, config, privacy, progenitor, agentProfiles: {}, messages: {} });
+    this.client = relayStore.client
   }
 
   async initialize() {
@@ -25,12 +28,91 @@ export class ConversationStore {
     await this.getMessages()
   }
 
+  subscribe(run: any) {
+    return this.conversation.subscribe(run);
+  }
+
   get data() {
     return get(this.conversation);
   }
 
-  subscribe(run: any) {
-    return this.conversation.subscribe(run);
+  get publicInviteCode() {
+    if (this.data.privacy === Privacy.Public) {
+      const invitation: Invitation = {
+        conversationName: this.data.config.title,
+        networkSeed: this.data.id,
+        privacy: this.data.privacy,
+        progenitor: this.data.progenitor
+      }
+      const msgpck = encode(invitation);
+      return Base64.fromUint8Array(msgpck);
+    } else {
+      return ''
+    }
+  }
+
+  get invitedContactKeys() {
+    const localConversationStore = LocalStorageStore<string>(`conversation_${this.data.id}`, JSON.stringify(''))
+    return get(localConversationStore).split(',')
+  }
+
+  get invitedContacts() {
+    const contacts = get(this.relayStore.contacts)
+    return this.invitedContactKeys.map(contactKey => contacts.find(contact => contact.publicKeyB64 === contactKey))
+  }
+
+  get memberList() {
+    // return the list of agents that have joined the conversation, checking the relayStore for contacts and using the contact info first and if that doesn't exist using the agent profile
+    const joinedAgents = this.data.agentProfiles
+    const contacts = get(this.relayStore.contacts)
+
+    // Filter out progenitor, as they are always in the list,
+    // use contact data for each agent if it exists locally, otherwise use their profile
+    // sort by first name (for now)
+    return Object.keys(joinedAgents).filter(a => a !== encodeHashToBase64(this.data.progenitor)).map(agentKey => {
+      const agentProfile = joinedAgents[agentKey]
+      const contactProfile = contacts.find(contact => contact.publicKeyB64 === agentKey);
+
+      return {
+        publicKey: agentKey,
+        avatar: contactProfile?.avatar || agentProfile?.fields.avatar,
+        firstName: contactProfile?.firstName || agentProfile?.fields.firstName,
+        lastName: contactProfile?.firstName ? contactProfile?.lastName : agentProfile?.fields.lastName, // if any contact profile exists use that data
+      }
+    }).sort((a, b) => a.firstName.localeCompare(b.firstName))
+  }
+
+  get invitedList() {
+    const joinedAgents = this.data.agentProfiles
+    const contacts = get(this.relayStore.contacts)
+    return this.invitedContactKeys
+      .filter(contactKey => !joinedAgents[contactKey]) // filter out already joined agents
+      .map(contactKey => {
+        const contactProfile = contacts.find(contact => contact.publicKeyB64 === contactKey)
+
+        return {
+          publicKey: contactKey,
+          avatar: contactProfile?.avatar,
+          firstName: contactProfile?.firstName,
+          lastName: contactProfile?.lastName,
+        }
+      })
+  }
+
+  get title() {
+    const numInvited = Object.keys(this.invitedContactKeys).length
+    if (this.data.privacy === Privacy.Public) {
+      return this.data.config.title
+    }
+
+    if (numInvited === 1) {
+      // Use full name of the one other person in the chat
+      return this.invitedContacts[0]?.name || this.data.config.title
+    } else if (numInvited === 2) {
+      return this.invitedContacts.map(c => c?.firstName).join(' & ')
+    } else {
+      return this.invitedContacts.map(c => c?.firstName).join(', ')
+    }
   }
 
   async getAgents() {
@@ -185,20 +267,5 @@ export class ConversationStore {
         }
       }
     })
-  }
-
-  get publicInviteCode() {
-    if (this.data.privacy === Privacy.Public) {
-      const invitation: Invitation = {
-        conversationName: this.data.config.title,
-        networkSeed: this.data.id,
-        privacy: this.data.privacy,
-        progenitor: this.data.progenitor
-      }
-      const msgpck = encode(invitation);
-      return Base64.fromUint8Array(msgpck);
-    } else {
-      return ''
-    }
   }
 }

@@ -119,7 +119,7 @@
         return;
       }
 
-      message.author = ($value as Conversation).agentProfiles[message.authorKey].nickname;
+      message.author = ($value as Conversation).agentProfiles[message.authorKey].fields.firstName;
       message.avatar = ($value as Conversation).agentProfiles[message.authorKey].fields.avatar;
 
       const messageDate: Date = new Date(message.timestamp);
@@ -215,7 +215,7 @@
 <Header>
   <a class='absolute' href="/conversations"><SvgIcon icon='caretLeft' color='white' size='10' /></a>
   {#if conversation}
-    <h1 class="flex-1 grow text-center"><a href={`/conversations/${conversationId}/details`}>{@html conversation.data.config.title}</a></h1>
+    <h1 class="flex-1 grow text-center"><a href={`/conversations/${conversationId}/details`}>{@html conversation.title}</a></h1>
     {#if conversation.data.privacy === Privacy.Public || encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64}
       <a class='absolute right-5' href="/conversations/{conversation.data.id}/invite"><SvgIcon icon='addPerson' color='white' /></a>
     {/if}
@@ -225,10 +225,23 @@
 {#if conversation && typeof $processedMessages !== 'undefined'}
   <div class="container mx-auto flex justify-center items-center flex-col flex-1 overflow-hidden w-full">
     <div class='overflow-y-auto flex flex-col grow items-center w-full pt-10' bind:this={conversationContainer} id='message-container'>
-      {#if conversation.data.config.image}
+      {#if conversation.privacy === Privacy.Private}
+        <div class='flex gap-4'>
+          {#each conversation.invitedContacts.slice(0, 2) as contact, i}
+            {#if contact}
+              <img src={contact.avatar} alt='{contact.firstName} Avatar' class='w-32 h-32 min-h-32 mb-5 rounded-full object-cover' />
+            {/if}
+          {/each}
+          {#if conversation.invitedContacts.length > 2}
+            <div class='w-32 h-32 min-h-32 mb-5 rounded-full bg-surface-400 flex items-center justify-center'>
+              <span class='text-primary-700 text-3xl'>+{(conversation.invitedContacts.length - 2)}</span>
+            </div>
+          {/if}
+        </div>
+      {:else if conversation.data.config.image}
         <img src={conversation.data.config.image} alt='Conversation' class='w-32 h-32 min-h-32 mb-5 rounded-full object-cover' />
       {/if}
-      <h1 class='text-3xl flex-shrink-0 mb-1'>{@html conversation.data.config.title}</h1>
+      <h1 class='text-3xl flex-shrink-0 mb-1'>{@html conversation.title}</h1>
       <!-- if joining a conversation created by someone else, say still syncing here until thre are at least 2 members -->
       <a href={`/conversations/${conversationId}/details`} class='text-surface-300 text-sm'>
         {@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}
@@ -261,7 +274,7 @@
               {/if}
               <li class='mt-auto mb-3 flex {fromMe ? 'justify-end' : 'justify-start'}'>
                 {#if !fromMe}
-                  <Avatar agentPubKey={decodeHashFromBase64(message.authorKey)} size='24' showNickname={false} moreClasses='items-start mt-1'/>
+                  <Avatar agentPubKey={decodeHashFromBase64(message.authorKey)} size='24' moreClasses='items-start mt-1'/>
                 {/if}
                 <div class='mb-2 ml-3 {fromMe && 'items-end text-end'}'>
                   <span class='flex items-baseline {fromMe && 'flex-row-reverse opacity-80'}'>

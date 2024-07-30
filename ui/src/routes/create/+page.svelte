@@ -1,29 +1,52 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-  import { derived } from "svelte/store";
-  import { encodeHashToBase64 } from "@holochain/client";
+  import { derived, writable } from "svelte/store";
+  import { decodeHashFromBase64 } from "@holochain/client";
+  import "@holochain-open-dev/elements/dist/elements/holo-identicon.js";
   import { goto } from '$app/navigation';
-	import Avatar from '$lib/Avatar.svelte';
   import Header from '$lib/Header.svelte';
   import SvgIcon from '$lib/SvgIcon.svelte';
-  import { RelayClient } from '$store/RelayClient';
   import { RelayStore } from '$store/RelayStore';
-  import { type Contact } from '../../types';
-
-	const relayClientContext: { getClient: () => RelayClient } = getContext('relayClient')
-	let relayClient = relayClientContext.getClient()
+  import { type Contact, Privacy } from '../../types';
 
 	const relayStoreContext: { getStore: () => RelayStore } = getContext('relayStore')
 	let relayStore = relayStoreContext.getStore()
 
+  let selectedContacts = writable<Contact[]>([])
   let search = ''
-  let currentContactLetter : string = ''
 
   $: contacts = derived(relayStore.contacts, ($contacts) => {
     const test = search.trim().toLowerCase()
-    return $contacts.filter(c => c.data.firstName.toLowerCase().includes(test) || c.data.lastName.toLowerCase().includes(test) || (test.length > 2 && encodeHashToBase64(c.data.publicKey).toLowerCase().includes(test)))
+    return $contacts.filter(c => c.data.firstName.toLowerCase().includes(test) || c.data.lastName.toLowerCase().includes(test) || (test.length > 2 && c.data.publicKeyB64.toLowerCase().includes(test)))
       .sort((a, b) => a.data.firstName.localeCompare(b.data.firstName))
   })
+
+  function selectContact(publicKey: string) {
+    const contact = $contacts.find(c => c.data.publicKeyB64 === publicKey)
+    if (contact) {
+      selectedContacts.update(currentContacts => {
+        if (currentContacts.find(c => c.publicKeyB64 === contact.data.publicKeyB64)) {
+          // If already selected then unselect
+          return currentContacts.filter(c => c.publicKeyB64 !== contact.data.publicKeyB64)
+        } else {
+          // otherwise select the contact
+          return [...currentContacts, contact]
+        }
+      })
+    }
+  }
+
+  async function createConversation() {
+    const title = $selectedContacts.length == 1 ? $selectedContacts[0].firstName + ' ' + $selectedContacts[0].lastName
+      : $selectedContacts.length == 2 ? $selectedContacts.map(c => c.firstName).join(' & ')
+      : $selectedContacts.map(c => c.firstName).join(', ')
+
+    const conversation = await relayStore.createConversation(title, '', Privacy.Private)
+    if (conversation) {
+      localStorage.setItem(`conversation_${conversation.id}`, JSON.stringify($selectedContacts.map(c => c.publicKeyB64).join(',')))
+      goto(`/conversations/${conversation.id}/details`)
+    }
+  }
 </script>
 
 <Header>
@@ -32,7 +55,7 @@
   <h1 class="flex-1 text-center">Create</h1>
 </Header>
 
-<div class="container mx-auto flex items-center flex-col flex-1 w-full p-4 text-secondary-500">
+<div class="container mx-auto flex items-center flex-col flex-1 w-full p-4 text-secondary-500 relative">
   <input type='text' class='w-full h-12 bg-surface-500 text-primary-700 text-md rounded-full px-4 my-5 border-0' placeholder='Search name or contact code' bind:value={search} />
 
   <div class='mb-5 flex justify-between w-full gap-4'>
@@ -66,22 +89,44 @@
     <h2 class='text-lg text-primary-200'>You haven't added any contacts</h2>
     <p class='text-xs text-center'>There's nobody to chat with yet! Add your trusted friends and family by requesting their Relay contact code, found in their personal profile inside the Relay app.</p>
   {:else}
-    <div class='w-full overflow-hidden font-light'>
+    <div class='w-full font-light'>
       <div class='mb-4'>
-        <p>Recent Contacts</p>
+        <p class='pl-0'>Recent Contacts</p>
       </div>
 
-      {#each $contacts as contact}
-        {#if contact.firstName[0] !== currentContactLetter}
-          <p class='my-3'>{currentContactLetter = contact.firstName[0]}</p>
+      {#each $contacts as contact, i}
+        {#if i === 0 || contact.firstName.charAt(0).toUpperCase() !== $contacts[i - 1].firstName.charAt(0).toUpperCase()}
+          <p class='mt-2 mb-1 pl-0'>{contact.firstName[0].toUpperCase()}</p>
         {/if}
-        <div class='flex items-center justify-between w-full'>
-          <div class='flex items-center'>
-            <img src={contact.avatar} alt='Avatar' class='rounded-full w-8 h-8 object-cover mr-3' />
-            <p class='text-primary-200 font-normal'>{contact.firstName} {contact.lastName}</p>
+        {@const selected = $selectedContacts.find(c => c.publicKeyB64 === contact.data.publicKeyB64)}
+        <button class='flex items-center justify-between w-full rounded-2xl p-2 -ml-2 mb-2 {selected && 'bg-surface-400'}' on:click={() => selectContact(contact.data.publicKeyB64)}>
+          <div class='rounded-full w-8 h-8 mr-3'>
+            {#if contact.avatar}
+              <img src={contact.avatar} alt='Avatar' class='rounded-full w-8 h-8 object-cover mr-3' />
+            {:else}
+              <holo-identicon hash={decodeHashFromBase64(contact.publicKeyB64)}></holo-identicon>
+            {/if}
           </div>
-        </div>
+          <p class='text-primary-200 font-normal flex-1 text-start'>{contact.firstName} {contact.lastName}</p>
+          <span class='text-lg text-tertiary-600 font-extrabold'>+</span>
+        </button>
       {/each}
     </div>
+
+    {#if $selectedContacts.length > 0}
+      <button
+        class='absolute right-5 bottom-5 bg-tertiary-500 text-white rounded-full py-1 pl-2 pr-4 border-0 flex items-center justify-center max-w-1/2'
+        on:click={() => createConversation()}
+      >
+        <span class='rounded-full w-9 h-9 bg-primary-100 text-tertiary-500 text-sm flex items-center justify-center mr-2 font-extrabold'>
+          <SvgIcon icon='person' size='12' color='red' moreClasses='mr-1' />
+          {$selectedContacts.length}
+        </span>
+        <div class='overflow-hidden text-ellipsis nowrap'>
+          <div class='text-md text-start'>Create conversation</div>
+          <div class='text-xs font-light text-start pb-1'>with {$selectedContacts.map(c => c.firstName).join(', ')}</div>
+        </div>
+      </button>
+    {/if}
   {/if}
 </div>

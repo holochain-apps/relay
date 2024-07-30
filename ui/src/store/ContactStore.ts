@@ -1,10 +1,7 @@
-import { encode } from '@msgpack/msgpack';
-import { Base64 } from 'js-base64';
-import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64, type EntryHash } from "@holochain/client";
+import { type AgentPubKeyB64 } from "@holochain/client";
 import { writable, get, type Writable } from 'svelte/store';
-import { v4 as uuidv4 } from 'uuid';
 import { RelayClient } from '$store/RelayClient'
-import { type Config, type Contact, type Image, type Invitation, type Message, type MessageRecord, Privacy } from '../types';
+import { type Contact } from '../types';
 
 export class ContactStore {
   private contact: Writable<Contact>;
@@ -14,17 +11,21 @@ export class ContactStore {
     public avatar: string,
     public firstName: string,
     public lastName: string,
-    public publicKey: AgentPubKey,
+    public publicKeyB64: AgentPubKeyB64,
   ) {
-    this.contact = writable({ avatar, firstName, lastName, publicKey });
+    this.contact = writable({ avatar, firstName, lastName, publicKeyB64});
+  }
+
+  subscribe(run: any) {
+    return this.contact.subscribe(run);
   }
 
   get data() {
     return get(this.contact);
   }
 
-  subscribe(run: any) {
-    return this.contact.subscribe(run);
+  get name() {
+    return this.data.firstName + ' ' + this.data.lastName
   }
 
   // async getContact() {

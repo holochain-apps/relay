@@ -12,13 +12,15 @@
   const relayClientContext: { getClient: () => RelayClient } = getContext('relayClient')
 	let relayClient = relayClientContext.getClient()
 
-  let nickname = ''
+  let firstName = ''
+  let lastName = ''
   $: avatarDataUrl = writable('')
 
   $: {
     // Subscribe to the store and update local state
     UserStore.subscribe($profile => {
-      nickname = $profile.nickname;
+      firstName = $profile.firstName;
+      lastName = $profile.lastName;
       $avatarDataUrl = $profile.avatar;
     });
   }
@@ -50,7 +52,7 @@
   }
 
   function createAccount() {
-    relayClient.createProfile(nickname, $avatarDataUrl).then(() => {
+    relayClient.createProfile(firstName, lastName, $avatarDataUrl).then(() => {
       goto('/welcome');
     });
   }

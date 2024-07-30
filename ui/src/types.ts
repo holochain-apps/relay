@@ -62,7 +62,7 @@ export interface Contact {
   avatar: string;
   firstName: string;
   lastName: string;
-  publicKey: AgentPubKey;
+  publicKeyB64: AgentPubKeyB64;
 }
 
 export interface Conversation {

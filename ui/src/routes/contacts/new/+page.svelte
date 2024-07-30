@@ -50,9 +50,15 @@
   async function createContact(e: Event) {
     pendingCreate = true
     e.preventDefault()
-    const contact = await relayStore.createContact({ publicKey: decodedPublicKey, firstName, lastName, avatar: get(imageUrl) })
-    if (contact) {
-      goto(`/create`)
+    try {
+      const contact = await relayStore.createContact({ publicKeyB64: publicKey, firstName, lastName, avatar: get(imageUrl) })
+      if (contact) {
+        goto(`/create`)
+      }
+    } catch (e) {
+      console.error(e)
+      error.set("Error creating contact")
+      pendingCreate = false
     }
   }
 
@@ -65,7 +71,7 @@
     } else if (decodedPublicKey.length !== 39) {
       valid = false
       error.set('Invalid contact code')
-    } else if ($contacts.find(c => encodeHashToBase64(c.data.publicKey) === publicKey)) {
+    } else if ($contacts.find(c => c.data.publicKeyB64 === publicKey)) {
       valid = false
       error.set('Contact already exists')
     } else {

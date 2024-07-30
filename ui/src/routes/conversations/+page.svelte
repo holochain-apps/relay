@@ -14,7 +14,7 @@
 
 <Header>
   <button on:click={() => goto('/account')}>
-    <Avatar size={24} agentPubKey={relayStore.client.myPubKey} showNickname={false} />
+    <Avatar size={24} agentPubKey={relayStore.client.myPubKey} />
   </button>
 
   <button on:click={() => goto('/create')} class='absolute right-4'>
@@ -33,7 +33,7 @@
             <span class='mr-4 w-9 h-9 flex items-center justify-center bg-surface-400 rounded-full'><SvgIcon icon='group' size='16' color='#ccc' /></span>
           {/if}
           <div class='flex flex-col flex-1 min-w-0 overflow-hidden'>
-            <span class='text-base'>{@html $conversation.data.config.title}</span>
+            <span class='text-base'>{@html $conversation.title}</span>
             <span class='text-nowrap overflow-hidden text-ellipsis text-xs min-w-0'>
               {@html Object.values($conversation.data.messages).at(-1)?.content || ''}
             </span>

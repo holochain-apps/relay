@@ -13,7 +13,7 @@
   export let size : string | number = '32';
   export let namePosition = "row";
   export let showAvatar = true;
-  export let showNickname = true;
+  export let showNickname = false;
   export let moreClasses = ''
 
   $: agentPubKey;
@@ -21,16 +21,12 @@
   $: profile = agentPubKey && store.profiles.get(agentPubKey); // TODO: how to look in a specific cell
   $: nickname = $profile && agentPubKeyB64 ?
     ($profile.status == "complete" && $profile.value
-      ? $profile.value.entry.nickname
+      ? $profile.value.entry.fields.firstName + " " + $profile.value.entry.fields.lastName
       : agentPubKeyB64.slice(5, 9) + "...") : "";
 </script>
 
 <div class="avatar-{namePosition} {moreClasses}" title={showNickname ? "" : nickname}>
-  {#if image}
-    <div class="avatar-container" style="width: {size}px; height: {size}px">
-      <img src={image} alt="avatar" width={size} height={size} />
-    </div>
-  {:else if $profile && $profile.status == "pending"}
+  {#if $profile && $profile.status == "pending"}
     ...
   {:else if $profile && $profile.status == "complete" && $profile.value}
     {#if showAvatar}
@@ -47,6 +43,16 @@
     {#if showNickname}
       <div class="nickname">{nickname}</div>
     {/if}
+  {:else if image}
+    <div class="avatar-container" style="width: {size}px; height: {size}px">
+      <img src={image} alt="avatar" width={size} height={size} />
+    </div>
+  {:else}
+    <div class="avatar-container" style="width: {size}px; height: {size}px">
+      <holo-identicon
+        hash={agentPubKey}
+      ></holo-identicon>
+    </div>
   {/if}
 </div>
 

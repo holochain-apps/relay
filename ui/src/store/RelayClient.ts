@@ -10,7 +10,8 @@ import {
   type CellInfo,
   type RoleName,
   type MembraneProof,
-  type AgentPubKeyB64
+  type AgentPubKeyB64,
+  decodeHashFromBase64
 } from '@holochain/client';
 import { decode } from '@msgpack/msgpack';
 import { EntryRecord } from '@holochain-open-dev/utils';
@@ -38,13 +39,13 @@ export class RelayClient {
     return this.client.myPubKey
   }
 
-  async createProfile(nickname: string, avatar: string) : Promise<Profile> {
+  async createProfile(firstName: string, lastName: string, avatar: string) : Promise<Profile> {
     const req: AppCallZomeRequest = {
       role_name: 'relay',
       // cell_id: this.conversations[conversationId].cell_id,
       zome_name: 'profiles',
       fn_name: 'create_profile',
-      payload: { nickname, fields: { avatar } }
+      payload: { nickname: firstName + ' ' + lastName, fields: { avatar, firstName, lastName } }
     };
     const profile = await this.client.callZome(req, 30000);
     return profile
@@ -78,18 +79,18 @@ export class RelayClient {
     }
   }
 
-  async createConversation(name: string, image: string, privacy: Privacy) : Promise<ConversationCellAndConfig> {
-    return this._createConversation(name, image, privacy, this.client.myPubKey, undefined, undefined)
+  async createConversation(title: string, image: string, privacy: Privacy) : Promise<ConversationCellAndConfig> {
+    return this._createConversation(title, image, privacy, this.client.myPubKey, undefined, undefined)
   }
 
-  async joinConversation(name: string, privacy: Privacy, progenitor: AgentPubKey, proof: MembraneProof|undefined, networkSeed: string) : Promise<ConversationCellAndConfig> {
+  async joinConversation(title: string, privacy: Privacy, progenitor: AgentPubKey, proof: MembraneProof|undefined, networkSeed: string) : Promise<ConversationCellAndConfig> {
     // we don't have the image at join time, it get's loaded later
-    return this._createConversation(name, "", privacy, progenitor, proof, networkSeed)
+    return this._createConversation(title, "", privacy, progenitor, proof, networkSeed)
   }
 
-  async _createConversation(name: string, image: string, privacy: Privacy, progenitor: AgentPubKey, membrane_proof: MembraneProof|undefined, networkSeed: string|undefined) : Promise<ConversationCellAndConfig> {
+  async _createConversation(title: string, image: string, privacy: Privacy, progenitor: AgentPubKey, membrane_proof: MembraneProof|undefined, networkSeed: string|undefined) : Promise<ConversationCellAndConfig> {
     const properties: Properties = {
-      name,
+      name: title,
       privacy,
       progenitor: encodeHashToBase64(progenitor)
     }
@@ -98,7 +99,7 @@ export class RelayClient {
 
     const cloneReq : AppCreateCloneCellRequest = {
       role_name: this.roleName,
-      name,
+      name: title,
       membrane_proof,
       modifiers: {
         network_seed: conversationId,
@@ -107,7 +108,7 @@ export class RelayClient {
     }
 
     const cell = await this.client.createCloneCell(cloneReq)
-    let config: Config = { title: name, image }
+    let config: Config = { title, image }
     if (!networkSeed) {
       await this._setConfig(config, cell.cell_id)
     }
@@ -254,7 +255,7 @@ export class RelayClient {
         avatar: contact.avatar,
         first_name: contact.firstName,
         last_name: contact.lastName,
-        public_key: contact.publicKey
+        public_key: decodeHashFromBase64(contact.publicKeyB64)
       }
     }
     const result = await this.client.callZome(req, 30000)
