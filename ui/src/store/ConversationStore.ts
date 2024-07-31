@@ -1,6 +1,7 @@
+import { isEmpty } from 'lodash-es';
 import { encode } from '@msgpack/msgpack';
 import { Base64 } from 'js-base64';
-import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64, type EntryHash } from "@holochain/client";
+import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64 } from "@holochain/client";
 import { writable, get, type Writable } from 'svelte/store';
 import { v4 as uuidv4 } from 'uuid';
 import LocalStorageStore from '$store/LocalStorageStore'
@@ -52,8 +53,10 @@ export class ConversationStore {
   }
 
   get invitedContactKeys() {
-    const localConversationStore = LocalStorageStore<string>(`conversation_${this.data.id}`, JSON.stringify(''))
-    return get(localConversationStore).split(',')
+    if (this.data.privacy === Privacy.Public) return []
+    const localConversationStore = LocalStorageStore<string>(`conversation_${this.data.id}`, '')
+    const currentValue = get(localConversationStore)
+    return isEmpty(currentValue) ? [] : currentValue.split(',')
   }
 
   get invitedContacts() {
@@ -74,7 +77,7 @@ export class ConversationStore {
       const contactProfile = contacts.find(contact => contact.publicKeyB64 === agentKey);
 
       return {
-        publicKey: agentKey,
+        publicKeyB64: agentKey,
         avatar: contactProfile?.avatar || agentProfile?.fields.avatar,
         firstName: contactProfile?.firstName || agentProfile?.fields.firstName,
         lastName: contactProfile?.firstName ? contactProfile?.lastName : agentProfile?.fields.lastName, // if any contact profile exists use that data
@@ -91,7 +94,7 @@ export class ConversationStore {
         const contactProfile = contacts.find(contact => contact.publicKeyB64 === contactKey)
 
         return {
-          publicKey: contactKey,
+          publicKeyB64: contactKey,
           avatar: contactProfile?.avatar,
           firstName: contactProfile?.firstName,
           lastName: contactProfile?.lastName,

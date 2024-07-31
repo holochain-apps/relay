@@ -226,15 +226,15 @@
   <div class="container mx-auto flex justify-center items-center flex-col flex-1 overflow-hidden w-full">
     <div class='overflow-y-auto flex flex-col grow items-center w-full pt-10' bind:this={conversationContainer} id='message-container'>
       {#if conversation.privacy === Privacy.Private}
-        <div class='flex gap-4'>
+        <div class='flex gap-4 items-center justify-center'>
           {#each conversation.invitedContacts.slice(0, 2) as contact, i}
             {#if contact}
-              <img src={contact.avatar} alt='{contact.firstName} Avatar' class='w-32 h-32 min-h-32 mb-5 rounded-full object-cover' />
+              <Avatar image={contact.avatar} agentPubKey={contact.publicKeyB64} size={120} moreClasses='mb-5' />
             {/if}
           {/each}
           {#if conversation.invitedContacts.length > 2}
-            <div class='w-32 h-32 min-h-32 mb-5 rounded-full bg-surface-400 flex items-center justify-center'>
-              <span class='text-primary-700 text-3xl'>+{(conversation.invitedContacts.length - 2)}</span>
+            <div class='w-10 h-10 min-h-10 mb-5 rounded-full bg-surface-400 flex items-center justify-center'>
+              <span class='text-primary-400 text-xl'>+{(conversation.invitedContacts.length - 2)}</span>
             </div>
           {/if}
         </div>
@@ -249,13 +249,14 @@
       {#if $processedMessages.length === 0 && encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64}
         <div class='flex flex-col items-center justify-center h-full w-full'>
           <img src='/clear-skies.png' alt='No contacts' class='w-32 h-32 mb-4 mt-4' />
-          <p class='text-xs text-center text-secondary-500 mx-10 mb-8'>Nobody else is here! Share your invitation code to start the conversation.</p>
           {#if conversation.data.privacy === Privacy.Private}
-            <Button onClick={() => goto(`/conversations/${conversation.data.id}/invite`)} moreClasses='w-72 justify-center'>
+            <p class='text-xs text-center text-secondary-500 mx-10 mb-8'>Nobody else is here yet! Share personal invitations to start the conversation.</p>
+            <Button onClick={() => goto(`/conversations/${conversation.data.id}/details`)} moreClasses='w-72 justify-center'>
               <SvgIcon icon='invite' size='24' color='red' />
-              <strong class='ml-2'>Create personal invite code</strong>
+              <strong class='ml-2'>Send invitations</strong>
             </Button>
           {:else}
+            <p class='text-xs text-center text-secondary-500 mx-10 mb-8'>Nobody else is here! Share your invitation code to start the conversation.</p>
             <Button onClick={() => copyToClipboard(conversation.publicInviteCode)} moreClasses='w-64 justify-center'>
               <SvgIcon icon='copy' size='18' color='red' />
               <strong class='ml-2 text-sm'>Copy invitation code</strong>
@@ -274,7 +275,7 @@
               {/if}
               <li class='mt-auto mb-3 flex {fromMe ? 'justify-end' : 'justify-start'}'>
                 {#if !fromMe}
-                  <Avatar agentPubKey={decodeHashFromBase64(message.authorKey)} size='24' moreClasses='items-start mt-1'/>
+                  <Avatar agentPubKey={message.authorKey} size='24' moreClasses='items-start mt-1'/>
                 {/if}
                 <div class='mb-2 ml-3 {fromMe && 'items-end text-end'}'>
                   <span class='flex items-baseline {fromMe && 'flex-row-reverse opacity-80'}'>
