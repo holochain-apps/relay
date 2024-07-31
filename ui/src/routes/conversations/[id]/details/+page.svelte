@@ -18,12 +18,12 @@
   const myPublicKey64 = relayStore.client.myPubKeyB64
   $: conversation = relayStore.getConversation(conversationId)
 
-  // used for when this is a Group conversation
+  // used for editing Group conversation details
   $: image = conversation ? conversation.data.config.image : undefined
   $: title = conversation ? conversation.data.config.title : undefined
 
-  let editTitle = false
-  let titleElem:HTMLInputElement
+  let editingTitle = false
+  let titleElem: HTMLInputElement
   const createInviteCode = async (publicKeyB64: string) => {
 
     if (!conversation) return
@@ -45,7 +45,20 @@
     }
   }
 
-  const updateConfig = async (config:Config) => {
+  const saveTitle = async () => {
+    if (conversation && titleElem.value) {
+      await updateConfig({ image: image || conversation.data.config.image, title: titleElem.value.trim() })
+      title = titleElem.value
+      editingTitle = false
+    }
+  }
+
+  const cancelEditTitle = () => {
+    editingTitle = false
+    title = conversation?.data.config.title
+  }
+
+  const updateConfig = async (config: Config) => {
     if (!conversation) return
     await conversation.updateConfig(config)
     image = config.image
@@ -83,9 +96,9 @@
     {:else}
       <!-- Hidden file input -->
       <input type="file" id="avatarInput" accept="image/jpeg, image/png, image/gif" capture class='hidden'
-        on:change={(event)=>handleFileChange(event,
+        on:change={(event) => handleFileChange(event,
           (imageData) => {
-            updateConfig({image:imageData, title: conversation.config.title})
+            updateConfig({ image: imageData, title: title || conversation.data.config.title })
           }
         )} />
       {#if image}
@@ -105,7 +118,7 @@
         </label>
       {/if}
     {/if}
-    {#if editTitle}
+    {#if editingTitle}
       <div class="flex flex-row items-center justify-center">
         <input
           autofocus
@@ -116,22 +129,20 @@
           bind:this={titleElem}
           value={title}
           minlength={MIN_TITLE_LENGTH}
+          on:keydown={(event) => {
+            if (event.key === 'Enter') saveTitle();
+            if (event.key === 'Escape') cancelEditTitle();
+          }}
         />
           <Button
             moreClasses="h-6 w-6 rounded-md py-0 px-0 mb-0 mr-2 bg-primary-100 flex items-center justify-center"
-            onClick={async ()=>{
-              if (titleElem.value) {
-                await updateConfig({ image: conversation.config.image, title: titleElem.value })
-                title = titleElem.value
-                editTitle = false
-              }
-            }}
+            onClick={() => saveTitle()}
           >
             <SvgIcon icon='checkMark' color='red' size='12' />
           </Button>
           <Button
             moreClasses="h-6 w-6 px-0 py-0 mb-0 rounded-md bg-surface-400 flex items-center justify-center"
-            onClick={() => editTitle = false}
+            onClick={() => cancelEditTitle()}
           >
             <SvgIcon icon='x' color='gray' size='12' />
           </Button>
@@ -142,7 +153,7 @@
           {title}
         </h1>
         {#if conversation.privacy !== Privacy.Private}
-          <button on:click={() => editTitle = true}>
+          <button on:click={() => editingTitle = true}>
             <SvgIcon icon='write' size='24' color='gray' moreClasses='cursor-pointer' />
           </button>
         {/if}
