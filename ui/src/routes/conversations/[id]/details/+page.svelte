@@ -92,22 +92,24 @@
         <div style="position:relative">
           <img src={image} alt='Group' class='w-32 h-32 min-h-32 mb-5 rounded-full object-cover' />
           <label for="avatarInput"
-            class='rounded-full w-12 h-12 absolute flex items-center justify-center' style="padding-left:5px; bottom:5px;right:5px;background:black;">
+            class='rounded-full w-12 h-12 pl-1 bottom-5 right-0 bg-surface-500 absolute flex items-center justify-center cursor-pointer'
+          >
             <img src='/image-placeholder.png' alt='Group Image Uploader' />
           </label>
         </div>
       {:else}
         <label for="avatarInput"
-            class='rounded-full w-32 h-32 rounded-full bg-surface-400 flex items-center justify-center'>
+          class='rounded-full w-32 h-32 rounded-full bg-surface-400 flex items-center justify-center cursor-pointer'
+        >
           <img src='/image-placeholder.png' alt='Group Image Uploader' />
         </label>
       {/if}
     {/if}
     {#if editTitle}
-      <div class="flex flex-col items-center justify-center">
+      <div class="flex flex-row items-center justify-center">
         <input
           autofocus
-          class='text-3xl text-center mt-2 bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
+          class='text-3xl text-center bg-surface-900 border-none outline-none focus:outline-none pl-0.5 pt-0 focus:ring-0'
           type='text'
           placeholder='Enter name here'
           name='title'
@@ -115,30 +117,34 @@
           value={title}
           minlength={MIN_TITLE_LENGTH}
         />
-        <div class="flex flex-col">
-          <Button moreClasses="h-6"
+          <Button
+            moreClasses="h-6 w-6 rounded-md py-0 px-0 mb-0 mr-2 bg-primary-100 flex items-center justify-center"
             onClick={async ()=>{
               if (titleElem.value) {
-                await updateConfig({image:conversation.config.image, title: titleElem.value})
+                await updateConfig({ image: conversation.config.image, title: titleElem.value })
                 title = titleElem.value
                 editTitle = false
               }
             }}
-              >Save</Button>
-          <Button moreClasses="h-6"
-              onClick={()=>editTitle=false}
-            >Cancel</Button>
-        </div>
+          >
+            <SvgIcon icon='checkMark' color='red' size='12' />
+          </Button>
+          <Button
+            moreClasses="h-6 w-6 px-0 py-0 mb-0 rounded-md bg-surface-400 flex items-center justify-center"
+            onClick={() => editTitle = false}
+          >
+            <SvgIcon icon='x' color='gray' size='12' />
+          </Button>
       </div>
     {:else}
       <div class="flex row">
-        <h1 class='text-3xl flex-shrink-0 mb-1'>
+        <h1 class='text-3xl flex-shrink-0 mb-1 mr-1'>
           {title}
         </h1>
         {#if conversation.privacy !== Privacy.Private}
-          <span
-            on:click={()=>editTitle=true}
-          > <SvgIcon icon='write' size='24' color='gray' /></span>
+          <button on:click={() => editTitle = true}>
+            <SvgIcon icon='write' size='24' color='gray' moreClasses='cursor-pointer' />
+          </button>
         {/if}
       </div>
     {/if}
