@@ -15,7 +15,7 @@
 
   let firstName = ''
   let lastName = ''
-  let publicKey = ''
+  let publicKeyB64 = ''
   let imageUrl = writable('')
   let pendingCreate = false
   let valid = false
@@ -51,9 +51,9 @@
     pendingCreate = true
     e.preventDefault()
     try {
-      const contact = await relayStore.createContact({ publicKeyB64: publicKey, firstName, lastName, avatar: get(imageUrl) })
+      const contact = await relayStore.createContact({ publicKeyB64, firstName, lastName, avatar: get(imageUrl) })
       if (contact) {
-        goto(`/create`)
+        history.length > 0 ? history.back() : goto('/create')
       }
     } catch (e) {
       console.error(e)
@@ -64,14 +64,14 @@
 
   $: contacts = relayStore.contacts
   $: try {
-    decodedPublicKey = decodeHashFromBase64(publicKey)
-    if (firstName.trim().length === 0 || publicKey.trim().length === 0) {
+    decodedPublicKey = decodeHashFromBase64(publicKeyB64)
+    if (firstName.trim().length === 0 || publicKeyB64.trim().length === 0) {
       valid = false
       error.set('')
     } else if (decodedPublicKey.length !== 39) {
       valid = false
       error.set('Invalid contact code')
-    } else if ($contacts.find(c => c.data.publicKeyB64 === publicKey)) {
+    } else if ($contacts.find(c => c.data.publicKeyB64 === publicKeyB64)) {
       valid = false
       error.set('Contact already exists')
     } else {
@@ -130,7 +130,7 @@
     type='text'
     placeholder='Enter contact code'
     name='publicKey'
-    bind:value={publicKey}
+    bind:value={publicKeyB64}
     minlength={1}
   />
   {#if !isEmpty($error)}

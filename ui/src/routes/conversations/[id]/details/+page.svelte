@@ -24,10 +24,10 @@
 
   let editTitle = false
   let titleElem:HTMLInputElement
+  const createInviteCode = async (publicKeyB64: string) => {
 
-  const createInviteCode = async (publicKey: string) => {
     if (!conversation) return
-    const proof = await relayStore.inviteAgentToConversation(conversationId, decodeHashFromBase64(publicKey))
+    const proof = await relayStore.inviteAgentToConversation(conversationId, decodeHashFromBase64(publicKeyB64))
     if (proof !== undefined) {
       const invitation: Invitation = {
         conversationName: conversation.data.config.title,
@@ -68,15 +68,15 @@
 
   <div class="container mx-auto flex items-center flex-col flex-1 overflow-hidden w-full pt-10">
     {#if conversation.privacy === Privacy.Private}
-      <div class='flex gap-4'>
+      <div class='flex gap-4 items-center justify-center'>
         {#each conversation.invitedContacts.slice(0, 2) as contact, i}
           {#if contact}
-            <img src={contact.avatar} alt='{contact.firstName} Avatar' class='w-32 h-32 min-h-32 mb-5 rounded-full object-cover' />
+            <Avatar image={contact.avatar} agentPubKey={contact.publicKeyB64} size={120} moreClasses='mb-5' />
           {/if}
         {/each}
         {#if conversation.invitedContacts.length > 2}
-          <div class='w-32 h-32 min-h-32 mb-5 rounded-full bg-surface-400 flex items-center justify-center'>
-            <span class='text-primary-700 text-3xl'>+{(conversation.invitedContacts.length - 2)}</span>
+          <div class='w-10 h-10 min-h-10 mb-5 rounded-full bg-surface-400 flex items-center justify-center'>
+            <span class='text-primary-400 text-xl'>+{(conversation.invitedContacts.length - 2)}</span>
           </div>
         {/if}
       </div>
@@ -160,9 +160,9 @@
           <h3 class='text-lg mb-2 text-surface-200 font-light'>Invited</h3>
           {#each conversation.invitedList as contact}
             <li class='text-xl flex flex-row mb-4 items-center'>
-              <Avatar agentPubKey={decodeHashFromBase64(contact.publicKey)} size='38' moreClasses='-ml-30'/>
+              <Avatar image={contact.avatar} agentPubKey={contact.publicKeyB64} size='38' moreClasses='-ml-30'/>
               <span class='ml-4 text-md flex-1'>{contact.firstName + ' ' + contact.lastName}</span>
-              <button class='rounded-lg bg-primary-100 text-surface-800 font-bold text-sm p-2 flex items-center justify-center' on:click={() => createInviteCode(contact.publicKey)}>
+              <button class='rounded-lg bg-primary-100 text-surface-800 font-bold text-sm p-2 flex items-center justify-center' on:click={() => createInviteCode(contact.publicKeyB64)}>
                 <SvgIcon icon='copy' size='18' color='red' moreClasses='mr-2' />
                 Copy Invite
               </button>
@@ -172,13 +172,13 @@
 
         <h3 class='text-lg mt-4 mb-2 text-surface-200 font-light'>Members</h3>
         <li class='text-xl flex flex-row mb-4 items-center'>
-          <Avatar agentPubKey={decodeHashFromBase64(myPublicKey64)} size='38' moreClasses='-ml-30'/>
+          <Avatar agentPubKey={myPublicKey64} size='38' moreClasses='-ml-30'/>
           <span class='ml-4 text-md'>You</span>
         </li>
         {#each conversation.memberList as contact}
           <li class='text-xl flex flex-row mb-4 items-center'>
-            <Avatar agentPubKey={decodeHashFromBase64(contact.publicKey)} size='38' moreClasses='-ml-30'/>
-            <span class='ml-4 text-md'>{#if contact.publicKey === myPublicKey64}You{:else}{contact.firstName + ' ' + contact.lastName}{/if}</span>
+            <Avatar image={contact.avatar} agentPubKey={contact.publicKeyB64} size='38' moreClasses='-ml-30'/>
+            <span class='ml-4 text-md'>{#if contact.publicKeyB64 === myPublicKey64}You{:else}{contact.firstName + ' ' + contact.lastName}{/if}</span>
           </li>
         {/each}
       </ul>
