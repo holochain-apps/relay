@@ -7,15 +7,23 @@
   import Avatar from '$lib/Avatar.svelte';
   import Header from '$lib/Header.svelte';
   import SvgIcon from "$lib/SvgIcon.svelte";
-  import { copyToClipboard } from '$lib/utils';
+  import { copyToClipboard, handleFileChange, MIN_TITLE_LENGTH } from '$lib/utils';
   import type { RelayStore } from '$store/RelayStore';
-  import { Privacy, type Invitation } from '../../../../types';
+  import { Privacy, type Config, type Invitation } from '../../../../types';
+  import Button from '$lib/Button.svelte';
 
   $: conversationId = $page.params.id;
   const relayStoreContext: { getStore: () => RelayStore } = getContext('relayStore')
   let relayStore = relayStoreContext.getStore()
   const myPublicKey64 = relayStore.client.myPubKeyB64
   $: conversation = relayStore.getConversation(conversationId)
+
+  // used for when this is a Group conversation
+  $: image = conversation ? conversation.config.image : undefined
+  $: title = conversation ? conversation.title : undefined
+
+  let editTitle = false
+  let titleElem:HTMLInputElement
 
   const createInviteCode = async (publicKey: string) => {
     if (!conversation) return
@@ -35,6 +43,13 @@
     else {
       alert("Unable to create invitation code")
     }
+  }
+
+  const updateConfig = async (config:Config) => {
+    if (!conversation) return
+    await conversation.updateConfig(config)
+    image = config.image
+    title = config.title
   }
 </script>
 
@@ -65,10 +80,68 @@
           </div>
         {/if}
       </div>
-    {:else if conversation.data.config.image}
-      <img src={conversation.data.config.image} alt='Conversation' class='w-32 h-32 min-h-32 mb-5 rounded-full object-cover' />
+    {:else}
+      <!-- Hidden file input -->
+      <input type="file" id="avatarInput" accept="image/jpeg, image/png, image/gif" capture class='hidden'
+        on:change={(event)=>handleFileChange(event,
+          (imageData) => {
+            updateConfig({image:imageData, title: conversation.config.title})
+          }
+        )} />
+      {#if image}
+        <div style="position:relative">
+          <img src={image} alt='Group' class='w-32 h-32 min-h-32 mb-5 rounded-full object-cover' />
+          <label for="avatarInput"
+            class='rounded-full w-12 h-12 absolute flex items-center justify-center' style="padding-left:5px; bottom:5px;right:5px;background:black;">
+            <img src='/image-placeholder.png' alt='Group Image Uploader' />
+          </label>
+        </div>
+      {:else}
+        <label for="avatarInput"
+            class='rounded-full w-32 h-32 rounded-full bg-surface-400 flex items-center justify-center'>
+          <img src='/image-placeholder.png' alt='Group Image Uploader' />
+        </label>
+      {/if}
     {/if}
-    <h1 class='text-3xl flex-shrink-0 mb-1'>{@html conversation.title}</h1>
+    {#if editTitle}
+      <div class="flex flex-col items-center justify-center"> 
+        <input
+          autofocus
+          class='text-3xl text-center mt-2 bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
+          type='text'
+          placeholder='Enter name here'
+          name='title'
+          bind:this={titleElem}
+          value={title}
+          minlength={MIN_TITLE_LENGTH}
+        />
+        <div class="flex flex-col"> 
+          <Button moreClasses="h-6"
+            onClick={async ()=>{
+              if (titleElem.value) {
+                await updateConfig({image:conversation.config.image, title: titleElem.value})
+                title = titleElem.value
+                editTitle = false
+              }
+            }}
+              >Save</Button>
+          <Button moreClasses="h-6"
+              onClick={()=>editTitle=false}
+            >Cancel</Button>
+        </div>
+      </div>
+    {:else}
+      <div class="flex row"> 
+        <h1 class='text-3xl flex-shrink-0 mb-1'>
+          {title}
+        </h1>
+        {#if conversation.privacy !== Privacy.Private}
+          <span 
+            on:click={()=>editTitle=true}
+          > <SvgIcon icon='write' size='24' color='gray' /></span>
+        {/if}
+      </div>
+    {/if}
     <p class='text-sm text-surface-300'>{@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}</p>
 
     <div class="container mx-auto flex flex-col px-4">

@@ -234,6 +234,12 @@ export class ConversationStore {
     }
   }
 
+  async updateConfig(config: Config) {
+    const cellAndConfig = this.relayStore.client.conversations[this.id]
+    await this.relayStore.client._setConfig(config, cellAndConfig.cell.cell_id)
+    this.config = config
+  }
+
   async loadImage(image: Image, tryCount: number = 0): Promise<Image> {
     return new Promise(async (resolve, reject) => {
       try {
