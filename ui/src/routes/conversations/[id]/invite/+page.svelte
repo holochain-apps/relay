@@ -144,7 +144,7 @@
 
         {#if $selectedContacts.length > 0}
           <button
-            class='absolute right-5 bottom-5 bg-tertiary-500 text-white rounded-full py-1 pl-2 pr-4 border-0 flex items-center justify-center max-w-1/2'
+            class='fixed right-5 bottom-5 bg-tertiary-500 text-white rounded-full py-1 pl-2 pr-4 border-0 flex items-center justify-center max-w-1/2'
             on:click={() => addContactsToConversation()}
           >
             <span class='rounded-full w-9 h-9 bg-primary-100 text-tertiary-500 text-sm flex items-center justify-center mr-2 font-extrabold'>
