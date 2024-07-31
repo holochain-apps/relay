@@ -7,9 +7,10 @@
   import Avatar from '$lib/Avatar.svelte';
   import Header from '$lib/Header.svelte';
   import SvgIcon from "$lib/SvgIcon.svelte";
-  import { copyToClipboard } from '$lib/utils';
+  import { copyToClipboard, handleFileChange, MIN_TITLE_LENGTH } from '$lib/utils';
   import type { RelayStore } from '$store/RelayStore';
-  import { Privacy, type Invitation } from '../../../../types';
+  import { Privacy, type Config, type Invitation } from '../../../../types';
+  import Button from '$lib/Button.svelte';
 
   $: conversationId = $page.params.id;
   const relayStoreContext: { getStore: () => RelayStore } = getContext('relayStore')
@@ -17,7 +18,14 @@
   const myPublicKey64 = relayStore.client.myPubKeyB64
   $: conversation = relayStore.getConversation(conversationId)
 
+  // used for editing Group conversation details
+  $: image = conversation ? conversation.data.config.image : undefined
+  $: title = conversation ? conversation.data.config.title : undefined
+
+  let editingTitle = false
+  let titleElem: HTMLInputElement
   const createInviteCode = async (publicKeyB64: string) => {
+
     if (!conversation) return
     const proof = await relayStore.inviteAgentToConversation(conversationId, decodeHashFromBase64(publicKeyB64))
     if (proof !== undefined) {
@@ -35,6 +43,26 @@
     else {
       alert("Unable to create invitation code")
     }
+  }
+
+  const saveTitle = async () => {
+    if (conversation && titleElem.value) {
+      await updateConfig({ image: image || conversation.data.config.image, title: titleElem.value.trim() })
+      title = titleElem.value
+      editingTitle = false
+    }
+  }
+
+  const cancelEditTitle = () => {
+    editingTitle = false
+    title = conversation?.data.config.title
+  }
+
+  const updateConfig = async (config: Config) => {
+    if (!conversation) return
+    await conversation.updateConfig(config)
+    image = config.image
+    title = config.title
   }
 </script>
 
@@ -65,10 +93,72 @@
           </div>
         {/if}
       </div>
-    {:else if conversation.data.config.image}
-      <img src={conversation.data.config.image} alt='Conversation' class='w-32 h-32 min-h-32 mb-5 rounded-full object-cover' />
+    {:else}
+      <!-- Hidden file input -->
+      <input type="file" id="avatarInput" accept="image/jpeg, image/png, image/gif" capture class='hidden'
+        on:change={(event) => handleFileChange(event,
+          (imageData) => {
+            updateConfig({ image: imageData, title: title || conversation.data.config.title })
+          }
+        )} />
+      {#if image}
+        <div style="position:relative">
+          <img src={image} alt='Group' class='w-32 h-32 min-h-32 mb-5 rounded-full object-cover' />
+          <label for="avatarInput"
+            class='rounded-full w-12 h-12 pl-1 bottom-5 right-0 bg-surface-500 absolute flex items-center justify-center cursor-pointer'
+          >
+            <img src='/image-placeholder.png' alt='Group Image Uploader' />
+          </label>
+        </div>
+      {:else}
+        <label for="avatarInput"
+          class='rounded-full w-32 h-32 rounded-full bg-surface-400 flex items-center justify-center cursor-pointer'
+        >
+          <img src='/image-placeholder.png' alt='Group Image Uploader' />
+        </label>
+      {/if}
     {/if}
-    <h1 class='text-3xl flex-shrink-0 mb-1'>{@html conversation.title}</h1>
+    {#if editingTitle}
+      <div class="flex flex-row items-center justify-center">
+        <input
+          autofocus
+          class='text-3xl text-center bg-surface-900 border-none outline-none focus:outline-none pl-0.5 pt-0 focus:ring-0'
+          type='text'
+          placeholder='Enter name here'
+          name='title'
+          bind:this={titleElem}
+          value={title}
+          minlength={MIN_TITLE_LENGTH}
+          on:keydown={(event) => {
+            if (event.key === 'Enter') saveTitle();
+            if (event.key === 'Escape') cancelEditTitle();
+          }}
+        />
+          <Button
+            moreClasses="h-6 w-6 rounded-md py-0 px-0 mb-0 mr-2 bg-primary-100 flex items-center justify-center"
+            onClick={() => saveTitle()}
+          >
+            <SvgIcon icon='checkMark' color='red' size='12' />
+          </Button>
+          <Button
+            moreClasses="h-6 w-6 px-0 py-0 mb-0 rounded-md bg-surface-400 flex items-center justify-center"
+            onClick={() => cancelEditTitle()}
+          >
+            <SvgIcon icon='x' color='gray' size='12' />
+          </Button>
+      </div>
+    {:else}
+      <div class="flex row">
+        <h1 class='text-3xl flex-shrink-0 mb-1 mr-1'>
+          {title}
+        </h1>
+        {#if conversation.privacy !== Privacy.Private}
+          <button on:click={() => editingTitle = true}>
+            <SvgIcon icon='write' size='24' color='gray' moreClasses='cursor-pointer' />
+          </button>
+        {/if}
+      </div>
+    {/if}
     <p class='text-sm text-surface-300'>{@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}</p>
 
     <div class="container mx-auto flex flex-col px-4">
