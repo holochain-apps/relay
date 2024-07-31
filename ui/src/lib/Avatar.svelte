@@ -38,6 +38,7 @@
           <holo-identicon
             hash={agentPubKeyHash}
             size={size}
+            style={`width: ${size}px; height: ${size}px`}
           ></holo-identicon>
         {/if}
       </div>
@@ -54,6 +55,7 @@
       <holo-identicon
         hash={agentPubKeyHash}
         size={size}
+        style={`width: ${size}px; height: ${size}px`}
       ></holo-identicon>
     </div>
   {/if}
