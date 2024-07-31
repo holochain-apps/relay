@@ -19,8 +19,8 @@
   $: conversation = relayStore.getConversation(conversationId)
 
   // used for when this is a Group conversation
-  $: image = conversation ? conversation.config.image : undefined
-  $: title = conversation ? conversation.title : undefined
+  $: image = conversation ? conversation.data.config.image : undefined
+  $: title = conversation ? conversation.data.config.title : undefined
 
   let editTitle = false
   let titleElem:HTMLInputElement
@@ -104,7 +104,7 @@
       {/if}
     {/if}
     {#if editTitle}
-      <div class="flex flex-col items-center justify-center"> 
+      <div class="flex flex-col items-center justify-center">
         <input
           autofocus
           class='text-3xl text-center mt-2 bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
@@ -115,7 +115,7 @@
           value={title}
           minlength={MIN_TITLE_LENGTH}
         />
-        <div class="flex flex-col"> 
+        <div class="flex flex-col">
           <Button moreClasses="h-6"
             onClick={async ()=>{
               if (titleElem.value) {
@@ -131,12 +131,12 @@
         </div>
       </div>
     {:else}
-      <div class="flex row"> 
+      <div class="flex row">
         <h1 class='text-3xl flex-shrink-0 mb-1'>
           {title}
         </h1>
         {#if conversation.privacy !== Privacy.Private}
-          <span 
+          <span
             on:click={()=>editTitle=true}
           > <SvgIcon icon='write' size='24' color='gray' /></span>
         {/if}
