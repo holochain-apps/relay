@@ -35,7 +35,7 @@
 
 <div class='flex justify-center items-center flex-col my-10'>
   <!-- Hidden file input -->
-  <input type="file" id="avatarInput" accept="image/jpeg, image/png, image/gif" capture class='hidden' on:change={(event)=>handleFileChange(event,(imageData)=>imageUrl.set(imageData))} />
+  <input type="file" id="avatarInput" accept="image/jpeg, image/png, image/gif" class='hidden' on:change={(event)=>handleFileChange(event,(imageData)=>imageUrl.set(imageData))} />
 
   <!-- Label styled as a big clickable icon -->
   <label for="avatarInput" class="file-icon-label cursor-pointer bg-surface-400 hover:bg-surface-300 w-32 h-32 rounded-full flex items-center justify-center overflow-hidden">

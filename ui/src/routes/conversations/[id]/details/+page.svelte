@@ -95,12 +95,13 @@
       </div>
     {:else}
       <!-- Hidden file input -->
-      <input type="file" id="avatarInput" accept="image/jpeg, image/png, image/gif" capture class='hidden'
+      <input type="file" id="avatarInput" accept="image/jpeg, image/png, image/gif" class='hidden'
         on:change={(event) => handleFileChange(event,
           (imageData) => {
             updateConfig({ image: imageData, title: title || conversation.data.config.title })
           }
-        )} />
+        )}
+      />
       {#if image}
         <div style="position:relative">
           <img src={image} alt='Group' class='w-32 h-32 min-h-32 mb-5 rounded-full object-cover' />

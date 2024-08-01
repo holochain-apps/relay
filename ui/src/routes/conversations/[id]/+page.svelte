@@ -310,7 +310,7 @@
   </div>
   <div class="w-full p-2 bg-surface-500 flex-shrink-0">
     <form class="flex" method='POST' on:submit={sendMessage} >
-      <input type="file" accept="image/jpeg, image/png, image/gif" capture multiple id="images" class='hidden' on:change={handleImagesSelected} />
+      <input type="file" accept="image/jpeg, image/png, image/gif" multiple id="images" class='hidden' on:change={handleImagesSelected} />
       <label for="images" class='cursor-pointer flex'>
         <SvgIcon icon='image' color='white' size='26' moreClasses='ml-3' />
       </label>
