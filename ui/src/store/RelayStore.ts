@@ -1,30 +1,37 @@
 import { decode } from '@msgpack/msgpack';
 import { isEqual, camelCase, mapKeys } from 'lodash-es';
 import { writable, get, type Subscriber, type Invalidator, type Unsubscriber, type Writable } from 'svelte/store';
-import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64, type Signal, type EntryHash, type AppSignal } from "@holochain/client";
+import { type AgentPubKey, type AgentPubKeyB64, type DnaHash, decodeHashFromBase64, encodeHashToBase64, type Signal, type EntryHash, type AppSignal } from "@holochain/client";
+import { ContactStore } from './ContactStore';
 import { ConversationStore } from './ConversationStore';
 import { RelayClient } from '$store/RelayClient'
-import type { Image, ConversationCellAndConfig, Invitation, Message, Privacy, Properties, RelaySignal } from '../types';
+import type { Contact, Image, ConversationCellAndConfig, Invitation, Message, Privacy, Properties, RelaySignal } from '../types';
 
 export class RelayStore {
-  private conversations: Writable<ConversationStore[]>;
-  public subscribe: (this: void, run: Subscriber<ConversationStore[]>, invalidate?: Invalidator<ConversationStore[]>) => Unsubscriber;
+  public contacts: Writable<ContactStore[]>;
+  public conversations: Writable<ConversationStore[]>;
 
   constructor(public client: RelayClient) {
-    this.conversations = writable([]);
-    this.subscribe = this.conversations.subscribe;
+    this.contacts = writable([])
+    this.conversations = writable([])
+  }
+
+  get contactData() {
+    return get(this.contacts)
   }
 
   get conversationsData() {
-    return get(this.conversations);
+    return get(this.conversations)
   }
 
   async initialize() {
-    await this.client.initConversations();
+    await this.client.initConversations()
 
     for (const conversation of Object.values(this.client.conversations)) {
-      await this._addConversation(conversation);
+      await this._addConversation(conversation)
     }
+
+    await this.fetchAllContacts()
 
     this.client.client.on('signal', async (signal:AppSignal)=>{
       console.log("Got Signal:", signal)
@@ -84,7 +91,7 @@ export class RelayStore {
     const progenitor = decodeHashFromBase64(properties.progenitor);
     const privacy = properties.privacy
     const seed = convoCellAndConfig.cell.dna_modifiers.network_seed
-    const newConversation = new ConversationStore(this.client, seed, convoCellAndConfig.cell.cell_id[0], convoCellAndConfig.config, properties.created, privacy, progenitor )
+    const newConversation = new ConversationStore(this, seed, convoCellAndConfig.cell.cell_id[0], convoCellAndConfig.config, properties.created, privacy, progenitor )
 
     this.conversations.update(conversations => [...conversations, newConversation])
     await newConversation.initialize()
@@ -130,5 +137,45 @@ export class RelayStore {
     })();
 
     return foundConversation;
+  }
+
+  /***** Contacts ******/
+  async fetchAllContacts() {
+    const contactRecords = await this.client.getAllContacts()
+    this.contacts.set(contactRecords.map((contactRecord: any) => {
+      const contact = contactRecord.contact
+      return new ContactStore(this.client, contact.avatar, contactRecord.signed_action.hashed.hash, contact.first_name, contact.last_name, contactRecord.original_action, encodeHashToBase64(contact.public_key))
+    }))
+  }
+
+  async createContact(contact: Contact) {
+    if (!this.client) return false
+    const contactStore = new ContactStore(this.client, contact.avatar, undefined, contact.firstName, contact.lastName, undefined, contact.publicKeyB64)
+
+    // TODO: if adding contact fails we should remove it from the store
+    const contactResult = await this.client.createContact(contact)
+    if (contactResult) {
+      this.contacts.update(contacts => [...contacts, contactStore])
+    }
+    return contactResult
+  }
+
+  async updateContact(contact: Contact) {
+    if (!this.client) return false
+    const contactResult = await this.client.updateContact(contact)
+    const contactStore = new ContactStore(this.client, contact.avatar, contactResult.signed_action.hashed.hash, contact.firstName, contact.lastName, contactResult.original_action, contact.publicKeyB64)
+    if (contactResult) {
+      this.contacts.update(contacts => [...contacts.filter(c => c.publicKeyB64 !== contact.publicKeyB64), contactStore])
+    }
+    return contactResult
+  }
+
+  getContact(publicKey: AgentPubKeyB64): ContactStore | undefined {
+    let foundContact
+    this.contacts.subscribe(contacts => {
+      foundContact = contacts.find(contact => contact.data.publicKeyB64 === publicKey);
+    })();
+
+    return foundContact;
   }
 }

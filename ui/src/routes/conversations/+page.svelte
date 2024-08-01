@@ -9,11 +9,13 @@
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext('relayStore')
   let relayStore = relayStoreContext.getStore()
+
+  $: conversations = relayStore.conversations
 </script>
 
 <Header>
   <button on:click={() => goto('/account')}>
-    <Avatar size={24} agentPubKey={relayStore.client.myPubKey} showNickname={false} />
+    <Avatar size={24} agentPubKey={relayStore.client.myPubKey} />
   </button>
 
   <button on:click={() => goto('/create')} class='absolute right-4'>
@@ -21,15 +23,13 @@
   </button>
 </Header>
 
-<div class="container h-full mx-auto flex flex-col conversations-list">
+<div class="container h-full mx-auto flex flex-col px-4">
   <ul class="flex-1 mt-10">
-    {#each $relayStore as conversation}
+    {#each $conversations as conversation}
       <ConversationSummary store={conversation}></ConversationSummary>
     {/each}
   </ul>
 </div>
+
 <style>
-  .conversations-list {
-    padding: 0 15px 0 15px;
-  }
 </style>

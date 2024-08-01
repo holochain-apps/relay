@@ -1,4 +1,4 @@
-//pub mod contact;
+pub mod contact;
 pub mod message;
 pub mod config;
 // pub mod utils;

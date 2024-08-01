@@ -25,8 +25,8 @@
 
 {#if $prof && $prof.status === 'complete'}
 <div class='flex flex-col grow items-center w-full pt-10' >
-  <Avatar agentPubKey={relayClient.myPubKey} size='100' showNickname={false} moreClasses='mb-4'/>
-  <h1 class='text-3xl flex-shrink-0 mb-10'>{@html $prof.value?.entry.nickname}</h1>
+  <Avatar agentPubKey={relayClient.myPubKey} size='100' moreClasses='mb-4'/>
+  <h1 class='text-3xl flex-shrink-0 mb-10'>{@html $prof.value?.entry.fields.firstName} {@html $prof.value?.entry.fields.lastName}</h1>
 
   <QRCodeImage text={agentPublicKey64} width={7} />
 

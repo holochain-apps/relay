@@ -60,7 +60,16 @@ export interface Properties {
 export type EntryTypes =
  | ({ type: 'Message'; } & MessageInput);
 
- export interface MessageInput {
+export interface Contact {
+  currentActionHash?: ActionHash;
+  originalActionHash?: ActionHash;
+  avatar: string;
+  firstName: string;
+  lastName: string;
+  publicKeyB64: AgentPubKeyB64;
+}
+
+export interface MessageInput {
   content: string;
   bucket: number;
 }

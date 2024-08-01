@@ -109,6 +109,7 @@ pub fn get_message_hashes(input: BucketInput) -> ExternResult<Vec<ActionHash>> {
         GetLinksInputBuilder::try_new(path.path_entry_hash()?, LinkTypes::AllMessages)?
             .build(),
     )?;
+
     // only return the hashes if the counts don't match
     if links.len() != input.count {
         for l in links {
@@ -329,7 +330,7 @@ pub fn delete_message(original_message_hash: ActionHash) -> ExternResult<ActionH
             ),
         )
     }?;
-       
+
     let path = messages_path(message.bucket);
     let links = get_links(
         GetLinksInputBuilder::try_new(path.path_entry_hash()?, LinkTypes::AllMessages)?

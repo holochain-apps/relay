@@ -5,42 +5,16 @@
   import Button from "$lib/Button.svelte";
   import Header from '$lib/Header.svelte';
   import SvgIcon from "$lib/SvgIcon.svelte";
-  import { resizeAndExportAvatar } from '$lib/utils';
+  import { handleFileChange, MIN_TITLE_LENGTH, resizeAndExportAvatar } from '$lib/utils';
   import { RelayStore } from '$store/RelayStore';
   import { Privacy } from '../../../types';
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext('relayStore')
 	let relayStore = relayStoreContext.getStore()
 
-  const MIN_TITLE_LENGTH = 3;
   let title = ''
   let imageUrl = writable('')
   let pendingCreate = false
-
-  function handleFileChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      const file = input.files[0];
-      const reader = new FileReader();
-
-      reader.onload = (e: ProgressEvent<FileReader>): void => {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => {
-          const imageData = resizeAndExportAvatar(img)
-          imageUrl.set(imageData);
-        };
-        img.src = e.target?.result as string;
-      };
-
-      reader.onerror = (e): void => {
-        console.error('Error reading file:', e);
-        reader.abort();
-      };
-
-      reader.readAsDataURL(file);
-    }
-  }
 
   async function createConversation(e: Event, privacy: Privacy) {
     pendingCreate = true;
@@ -61,7 +35,7 @@
 
 <div class='flex justify-center items-center flex-col my-10'>
   <!-- Hidden file input -->
-  <input type="file" id="avatarInput" accept="image/jpeg, image/png, image/gif" capture class='hidden' on:change={handleFileChange} />
+  <input type="file" id="avatarInput" accept="image/jpeg, image/png, image/gif" class='hidden' on:change={(event)=>handleFileChange(event,(imageData)=>imageUrl.set(imageData))} />
 
   <!-- Label styled as a big clickable icon -->
   <label for="avatarInput" class="file-icon-label cursor-pointer bg-surface-400 hover:bg-surface-300 w-32 h-32 rounded-full flex items-center justify-center overflow-hidden">

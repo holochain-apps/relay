@@ -12,13 +12,15 @@
   const relayClientContext: { getClient: () => RelayClient } = getContext('relayClient')
 	let relayClient = relayClientContext.getClient()
 
-  let nickname = ''
+  let firstName = ''
+  let lastName = ''
   $: avatarDataUrl = writable('')
 
   $: {
     // Subscribe to the store and update local state
     UserStore.subscribe($profile => {
-      nickname = $profile.nickname;
+      firstName = $profile.firstName;
+      lastName = $profile.lastName;
       $avatarDataUrl = $profile.avatar;
     });
   }
@@ -50,7 +52,7 @@
   }
 
   function createAccount() {
-    relayClient.createProfile(nickname, $avatarDataUrl).then(() => {
+    relayClient.createProfile(firstName, lastName, $avatarDataUrl).then(() => {
       goto('/welcome');
     });
   }
@@ -64,7 +66,7 @@
   <h1 class='h1 mb-10'>Select an avatar</h1>
 
   <!-- Hidden file input -->
-  <input type="file" accept="image/jpeg, image/png, image/gif" capture id="avatarInput" class='hidden' on:change={handleFileChange} />
+  <input type="file" accept="image/jpeg, image/png, image/gif" capture="user" id="avatarInput" class='hidden' on:change={handleFileChange} />
 
   <!-- Label styled as a big clickable icon -->
   <label for="avatarInput" class="file-icon-label cursor-pointer bg-surface-400 hover:bg-surface-300 w-32 h-32 rounded-full flex items-center justify-center overflow-hidden">

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { encodeHashToBase64, type AgentPubKey } from "@holochain/client";
+  import { decodeHashFromBase64, encodeHashToBase64, type AgentPubKey } from "@holochain/client";
   import { ProfilesStore } from "@holochain-open-dev/profiles";
   import { getContext } from "svelte";
   import SvgIcon from "./SvgIcon.svelte";
@@ -8,21 +8,24 @@
   const profilesContext: { getStore: () => ProfilesStore } = getContext("profiles");
   const store = profilesContext.getStore();
 
-  export let agentPubKey: AgentPubKey | null = null;
+  export let agentPubKey: AgentPubKey | string | null = null;
   export let image: string | undefined = undefined; // If image is passed in this will ignore the agentPubKey
   export let size : string | number = '32';
   export let namePosition = "row";
   export let showAvatar = true;
-  export let showNickname = true;
+  export let showNickname = false;
   export let moreClasses = ''
 
   $: agentPubKey;
-  $: agentPubKeyB64 = agentPubKey && encodeHashToBase64(agentPubKey);
-  $: profile = agentPubKey && store.profiles.get(agentPubKey); // TODO: how to look in a specific cell
+  $: agentPubKeyB64 = agentPubKey ? typeof(agentPubKey) === 'string' ? agentPubKey : encodeHashToBase64(agentPubKey) : null
+  $: agentPubKeyHash = agentPubKey instanceof Uint8Array ? agentPubKey : agentPubKeyB64 ? decodeHashFromBase64(agentPubKeyB64) : null
+  $: profile = agentPubKeyHash && store.profiles.get(agentPubKeyHash) // TODO: how to look in a specific cell
   $: nickname = $profile && agentPubKeyB64 ?
     ($profile.status == "complete" && $profile.value
-      ? $profile.value.entry.nickname
-      : agentPubKeyB64.slice(5, 9) + "...") : "";
+      ? $profile.value.entry.fields.firstName + " " + $profile.value.entry.fields.lastName
+      : agentPubKeyB64.slice(5, 9) + "...") : ""
+
+
 </script>
 
 <div class="avatar-{namePosition} {moreClasses}" title={showNickname ? "" : nickname}>
@@ -39,7 +42,9 @@
           <img src={$profile.value.entry.fields.avatar} alt="avatar" width={size} height={size} />
         {:else}
           <holo-identicon
-            hash={agentPubKey}
+            hash={agentPubKeyHash}
+            size={size}
+            style={`width: ${size}px; height: ${size}px`}
           ></holo-identicon>
         {/if}
       </div>
@@ -47,6 +52,14 @@
     {#if showNickname}
       <div class="nickname">{nickname}</div>
     {/if}
+  {:else}
+    <div class="avatar-container" style="width: {size}px; height: {size}px">
+      <holo-identicon
+        hash={agentPubKeyHash}
+        size={size}
+        style={`width: ${size}px; height: ${size}px`}
+      ></holo-identicon>
+    </div>
   {/if}
 </div>
 
