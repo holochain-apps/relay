@@ -25,8 +25,8 @@ export class ConversationStore {
   }
 
   async initialize() {
-    await this.getAgents()
-    await this.getMessages()
+    await this.fetchAgents()
+    await this.fetchMessages()
   }
 
   subscribe(run: any) {
@@ -78,9 +78,9 @@ export class ConversationStore {
 
       return {
         publicKeyB64: agentKey,
-        avatar: contactProfile?.avatar || agentProfile?.fields.avatar,
-        firstName: contactProfile?.firstName || agentProfile?.fields.firstName,
-        lastName: contactProfile?.firstName ? contactProfile?.lastName : agentProfile?.fields.lastName, // if any contact profile exists use that data
+        avatar: contactProfile?.data.avatar || agentProfile?.fields.avatar,
+        firstName: contactProfile?.data.firstName || agentProfile?.fields.firstName,
+        lastName: contactProfile?.data.firstName ? contactProfile?.data.lastName : agentProfile?.fields.lastName, // if any contact profile exists use that data
       }
     }).sort((a, b) => a.firstName.localeCompare(b.firstName))
   }
@@ -95,9 +95,9 @@ export class ConversationStore {
 
         return {
           publicKeyB64: contactKey,
-          avatar: contactProfile?.avatar,
-          firstName: contactProfile?.firstName,
-          lastName: contactProfile?.lastName,
+          avatar: contactProfile?.data.avatar,
+          firstName: contactProfile?.data.firstName,
+          lastName: contactProfile?.data.lastName,
         }
       })
   }
@@ -112,13 +112,13 @@ export class ConversationStore {
       // Use full name of the one other person in the chat
       return this.invitedContacts[0]?.name || this.data.config.title
     } else if (numInvited === 2) {
-      return this.invitedContacts.map(c => c?.firstName).join(' & ')
+      return this.invitedContacts.map(c => c?.data.firstName).join(' & ')
     } else {
-      return this.invitedContacts.map(c => c?.firstName).join(', ')
+      return this.invitedContacts.map(c => c?.data.firstName).join(', ')
     }
   }
 
-  async getAgents() {
+  async fetchAgents() {
     const agentProfiles = await this.client.getAllAgents(this.data.id)
     this.conversation.update(c => {
       c.agentProfiles = {...agentProfiles}
@@ -139,7 +139,7 @@ export class ConversationStore {
     return null
   }
 
-  async getMessages() {
+  async fetchMessages() {
     try {
       //const messages: Array<MessageRecord> = await this.client.getMessagesByWeek()
       const newMessages: { [key: string] : Message } = this.data.messages
@@ -237,12 +237,6 @@ export class ConversationStore {
     }
   }
 
-  async updateConfig(config: Config) {
-    const cellAndConfig = this.relayStore.client.conversations[this.id]
-    await this.relayStore.client._setConfig(config, cellAndConfig.cell.cell_id)
-    this.conversation.update(conversation => ({ ...conversation, config }))
-  }
-
   async loadImage(image: Image, tryCount: number = 0): Promise<Image> {
     return new Promise(async (resolve, reject) => {
       try {
@@ -276,5 +270,11 @@ export class ConversationStore {
         }
       }
     })
+  }
+
+  async updateConfig(config: Config) {
+    const cellAndConfig = this.relayStore.client.conversations[this.id]
+    await this.relayStore.client._setConfig(config, cellAndConfig.cell.cell_id)
+    this.conversation.update(conversation => ({ ...conversation, config }))
   }
 }

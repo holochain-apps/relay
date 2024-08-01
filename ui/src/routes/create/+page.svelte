@@ -114,7 +114,18 @@
         <button class='flex items-center justify-between w-full rounded-2xl p-2 -ml-2 mb-2 {selected && 'bg-surface-400'}' on:click={() => selectContact(contact.data.publicKeyB64)}>
             <Avatar size={38} image={contact.avatar} agentPubKey={contact.publicKeyB64} moreClasses='mr-3' />
           <p class='text-primary-200 font-normal flex-1 text-start'>{contact.firstName} {contact.lastName}</p>
-          <span class='text-lg text-tertiary-600 font-extrabold'>+</span>
+          {#if selected}
+            <button
+              class='h-8 pl-4 pr-2 bg-white text-secondary-700 rounded-full flex items-center justify-center'
+              on:click={() => goto('/contacts/' + contact.publicKeyB64)}
+            >
+              <SvgIcon icon='person' size='12' color='#999' moreClasses='mb-0.5' />
+              <span class='ml-1 mr-2 text-xs'>View</span>
+              <span class='w-5 h-5 rounded-full bg-tertiary-400'><span>
+            </button>
+          {:else}
+            <span class='text-lg text-tertiary-600 font-extrabold'>+</span>
+          {/if}
         </button>
       {/each}
     </div>

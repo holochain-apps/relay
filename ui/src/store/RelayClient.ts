@@ -262,6 +262,26 @@ export class RelayClient {
     return result
   }
 
+  public async updateContact(contact: Contact) {
+    const req: AppCallZomeRequest = {
+      role_name: 'relay',
+      zome_name: this.zomeName,
+      fn_name: 'update_contact',
+      payload: {
+        original_contact_hash: contact.originalActionHash,
+        previous_contact_hash: contact.currentActionHash,
+        updated_contact: {
+          avatar: contact.avatar,
+          first_name: contact.firstName,
+          last_name: contact.lastName,
+          public_key: decodeHashFromBase64(contact.publicKeyB64)
+        }
+      }
+    }
+    const result = await this.client.callZome(req, 30000)
+    return result
+  }
+
   /********* Util **********/
   protected async callZomeForCell(fn_name: string, payload: any, cell_id: any) {
     console.log("call zome", fn_name, payload, cell_id)

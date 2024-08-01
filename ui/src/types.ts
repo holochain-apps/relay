@@ -59,6 +59,8 @@ export type EntryTypes =
 }
 
 export interface Contact {
+  currentActionHash?: ActionHash;
+  originalActionHash?: ActionHash;
   avatar: string;
   firstName: string;
   lastName: string;

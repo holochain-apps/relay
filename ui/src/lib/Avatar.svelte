@@ -24,10 +24,16 @@
     ($profile.status == "complete" && $profile.value
       ? $profile.value.entry.fields.firstName + " " + $profile.value.entry.fields.lastName
       : agentPubKeyB64.slice(5, 9) + "...") : ""
+
+
 </script>
 
 <div class="avatar-{namePosition} {moreClasses}" title={showNickname ? "" : nickname}>
-  {#if $profile && $profile.status == "pending"}
+  {#if image}
+    <div class="avatar-container" style="width: {size}px; height: {size}px">
+      <img src={image} alt="avatar" width={size} height={size} />
+    </div>
+  {:else if $profile && $profile.status == "pending"}
     ...
   {:else if $profile && $profile.status == "complete" && $profile.value}
     {#if showAvatar}
@@ -46,10 +52,6 @@
     {#if showNickname}
       <div class="nickname">{nickname}</div>
     {/if}
-  {:else if image}
-    <div class="avatar-container" style="width: {size}px; height: {size}px">
-      <img src={image} alt="avatar" width={size} height={size} />
-    </div>
   {:else}
     <div class="avatar-container" style="width: {size}px; height: {size}px">
       <holo-identicon

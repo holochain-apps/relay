@@ -145,18 +145,28 @@ export class RelayStore {
     const contactRecords = await this.client.getAllContacts()
     this.contacts.set(contactRecords.map((contactRecord: any) => {
       const contact = contactRecord.contact
-      return new ContactStore(this.client, contact.avatar, contact.first_name, contact.last_name, encodeHashToBase64(contact.public_key))
+      return new ContactStore(this.client, contact.avatar, contactRecord.signed_action.hashed.hash, contact.first_name, contact.last_name, contactRecord.original_action, encodeHashToBase64(contact.public_key))
     }))
   }
 
   async createContact(contact: Contact) {
     if (!this.client) return false
-    const contactStore = new ContactStore(this.client, contact.avatar, contact.firstName, contact.lastName, contact.publicKeyB64)
+    const contactStore = new ContactStore(this.client, contact.avatar, undefined, contact.firstName, contact.lastName, undefined, contact.publicKeyB64)
 
     // TODO: if adding contact fails we should remove it from the store
     const contactResult = await this.client.createContact(contact)
     if (contactResult) {
       this.contacts.update(contacts => [...contacts, contactStore])
+    }
+    return contactResult
+  }
+
+  async updateContact(contact: Contact) {
+    if (!this.client) return false
+    const contactResult = await this.client.updateContact(contact)
+    const contactStore = new ContactStore(this.client, contact.avatar, contactResult.signed_action.hashed.hash, contact.firstName, contact.lastName, contactResult.original_action, contact.publicKeyB64)
+    if (contactResult) {
+      this.contacts.update(contacts => [...contacts.filter(c => c.publicKeyB64 !== contact.publicKeyB64), contactStore])
     }
     return contactResult
   }
