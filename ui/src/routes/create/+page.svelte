@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-  import { derived, writable } from "svelte/store";
+  import { derived, get, writable } from "svelte/store";
   import { decodeHashFromBase64 } from "@holochain/client";
   import "@holochain-open-dev/elements/dist/elements/holo-identicon.js";
   import { goto } from '$app/navigation';
   import Avatar from '$lib/Avatar.svelte';
   import Header from '$lib/Header.svelte';
   import SvgIcon from '$lib/SvgIcon.svelte';
+  import { ConversationStore } from '$store/ConversationStore';
   import { RelayStore } from '$store/RelayStore';
   import { type Contact, Privacy } from '../../types';
 
@@ -15,6 +16,15 @@
 
   let selectedContacts = writable<Contact[]>([])
   let search = ''
+  let existingConvesation : ConversationStore | undefined = undefined
+
+  selectedContacts.subscribe(value => {
+    if (value.length > 0) {
+      existingConvesation = get(relayStore.conversations).find(c => c.invitedContactKeys.length === value.length && c.invitedContactKeys.every(k => value.find(c => c.publicKeyB64 === k)))
+    } else {
+      existingConvesation = undefined
+    }
+  })
 
   $: contacts = derived(relayStore.contacts, ($contacts) => {
     const test = search.trim().toLowerCase()
@@ -38,6 +48,11 @@
   }
 
   async function createConversation() {
+    if (existingConvesation) {
+      goto(`/conversations/${existingConvesation.id}`)
+      return
+    }
+
     const title = $selectedContacts.length == 1 ? $selectedContacts[0].firstName + ' ' + $selectedContacts[0].lastName
       : $selectedContacts.length == 2 ? $selectedContacts.map(c => c.firstName).join(' & ')
       : $selectedContacts.map(c => c.firstName).join(', ')
@@ -114,7 +129,7 @@
           {$selectedContacts.length}
         </span>
         <div class='overflow-hidden text-ellipsis nowrap'>
-          <div class='text-md text-start'>Create conversation</div>
+          <div class='text-md text-start'>{#if existingConvesation}Open{:else}Create{/if} conversation</div>
           <div class='text-xs font-light text-start pb-1'>with {$selectedContacts.map(c => c.firstName).join(', ')}</div>
         </div>
       </button>
