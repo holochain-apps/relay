@@ -122,17 +122,17 @@ export class RelayClient {
   }
 
   public async getAllMessages(conversationId: string, buckets: Array<number>) : Promise<Array<MessageRecord>> {
-    const messages = await this.callZome("get_messages_for_buckets", buckets, this.conversations[conversationId].cell.cell_id);
+    const messages = await this.callZomeForCell("get_messages_for_buckets", buckets, this.conversations[conversationId].cell.cell_id);
     return messages
   }
 
   public async getMessageHashes(conversationId: string, bucket: number, count: number) : Promise<Array<ActionHash>> {
-    const hashes = await this.callZome("get_message_hashes", {bucket, count}, this.conversations[conversationId].cell.cell_id);
+    const hashes = await this.callZomeForCell("get_message_hashes", {bucket, count}, this.conversations[conversationId].cell.cell_id);
     return hashes
   }
 
   public async getMessageEntries(conversationId: string, hashes: Array<ActionHash>) : Promise<Array<MessageRecord>> {
-    const messages = await this.callZome("get_message_entries", hashes, this.conversations[conversationId].cell.cell_id);
+    const messages = await this.callZomeForCell("get_message_entries", hashes, this.conversations[conversationId].cell.cell_id);
     return messages
   }
 
