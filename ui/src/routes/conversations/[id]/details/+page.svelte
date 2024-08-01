@@ -150,7 +150,7 @@
       </div>
     {:else}
       <div class="flex row">
-        <h1 class='text-3xl flex-shrink-0 mb-1 mr-1'>
+        <h1 class='text-3xl flex-shrink-0 mb-1 mr-1 text-nowrap text-ellipsis overflow-hidden'>
           {title}
         </h1>
         {#if conversation.privacy !== Privacy.Private}

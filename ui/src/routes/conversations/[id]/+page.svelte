@@ -241,7 +241,7 @@
       {:else if conversation.data.config.image}
         <img src={conversation.data.config.image} alt='Conversation' class='w-32 h-32 min-h-32 mb-5 rounded-full object-cover' />
       {/if}
-      <h1 class='text-3xl flex-shrink-0 mb-1'>{@html conversation.title}</h1>
+      <h1 class='text-3xl flex-shrink-0 mb-1 text-nowrap text-ellipsis overflow-hidden'>{@html conversation.title}</h1>
       <!-- if joining a conversation created by someone else, say still syncing here until thre are at least 2 members -->
       <a href={`/conversations/${conversationId}/details`} class='text-surface-300 text-sm'>
         {@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}
