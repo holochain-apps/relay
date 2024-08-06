@@ -20,18 +20,19 @@
   $: conversation = relayStore.getConversation(conversationId)
 
   // used for editing Group conversation details
-  $: image = conversation ? conversation.data.config.image : undefined
-  $: title = conversation ? conversation.data.config.title : undefined
+  $: image = conversation ? conversation.data?.config.image : undefined
+  $: title = conversation ? conversation.data?.config.title : undefined
 
   let editingTitle = false
   let titleElem: HTMLInputElement
-  const createInviteCode = async (publicKeyB64: string) => {
 
+  const createInviteCode = async (publicKeyB64: string) => {
     if (!conversation) return
     const proof = await relayStore.inviteAgentToConversation(conversationId, decodeHashFromBase64(publicKeyB64))
     if (proof !== undefined) {
       const invitation: Invitation = {
-        conversationName: conversation.data.config.title,
+        created: conversation.created, // TODO: put in data
+        conversationName: conversation.data?.config.title,
         progenitor: conversation.data.progenitor,
         privacy: conversation.data.privacy,
         proof,
@@ -48,7 +49,7 @@
 
   const saveTitle = async () => {
     if (conversation && titleElem.value) {
-      await updateConfig({ image: image || conversation.data.config.image, title: titleElem.value.trim() })
+      await updateConfig({ image: image || conversation?.data?.config.image, title: titleElem.value.trim() })
       title = titleElem.value
       editingTitle = false
     }
@@ -56,7 +57,7 @@
 
   const cancelEditTitle = () => {
     editingTitle = false
-    title = conversation?.data.config.title
+    title = conversation?.data?.config.title
   }
 
   const updateConfig = async (config: Config) => {
@@ -83,14 +84,14 @@
   <div class="container mx-auto flex items-center flex-col flex-1 overflow-hidden w-full pt-10">
     {#if conversation.privacy === Privacy.Private}
       <div class='flex gap-4 items-center justify-center'>
-        {#each conversation.invitedContacts.slice(0, 2) as contact, i}
+        {#each conversation.allMembers.slice(0, 2) as contact, i}
           {#if contact}
             <Avatar image={contact.avatar} agentPubKey={contact.publicKeyB64} size={120} moreClasses='mb-5' />
           {/if}
         {/each}
-        {#if conversation.invitedContacts.length > 2}
+        {#if conversation.allMembers.length > 2}
           <div class='w-10 h-10 min-h-10 mb-5 rounded-full bg-surface-400 flex items-center justify-center'>
-            <span class='text-primary-400 text-xl'>+{(conversation.invitedContacts.length - 2)}</span>
+            <span class='text-primary-400 text-xl'>+{(conversation.allMembers.length - 2)}</span>
           </div>
         {/if}
       </div>
@@ -99,7 +100,7 @@
       <input type="file" id="avatarInput" accept="image/jpeg, image/png, image/gif" class='hidden'
         on:change={(event) => handleFileChange(event,
           (imageData) => {
-            updateConfig({ image: imageData, title: title || conversation.data.config.title })
+            updateConfig({ image: imageData, title: title || conversation.data?.config.title })
           }
         )}
       />
@@ -161,7 +162,7 @@
         {/if}
       </div>
     {/if}
-    <p class='text-surface-300'>Created: <Time timestamp={new Date(conversation.created)} format="YYYY/MM/DD" /></p>
+    <p class='text-sm text-surface-300'>Created: <Time timestamp={new Date(conversation.created)} format="MMMM DD, YYYY" /></p>
     <p class='text-sm text-surface-300'>{@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}</p>
 
     <div class="container mx-auto flex flex-col px-4">
@@ -176,9 +177,9 @@
             </button>
           </li>
         {/if}
-        {#if conversation.invitedList.length > 0}
+        {#if conversation.invitedUnjoined.length > 0}
           <h3 class='text-lg mb-2 text-surface-200 font-light'>Invited</h3>
-          {#each conversation.invitedList as contact}
+          {#each conversation.invitedUnjoined as contact}
             <li class='text-xl flex flex-row mb-4 items-center'>
               <Avatar image={contact.avatar} agentPubKey={contact.publicKeyB64} size='38' moreClasses='-ml-30'/>
               <span class='ml-4 text-md flex-1'>{contact.firstName + ' ' + contact.lastName}</span>
@@ -194,11 +195,19 @@
         <li class='text-xl flex flex-row mb-4 items-center'>
           <Avatar agentPubKey={myPublicKey64} size='38' moreClasses='-ml-30'/>
           <span class='ml-4 text-md'>You</span>
+          {#if myPublicKey64 === encodeHashToBase64(conversation.data.progenitor)}
+            <span class='text-xs text-primary-100 font-bold ml-2'>(Creator)</span>
+          {/if}
         </li>
-        {#each conversation.memberList as contact}
+        {#each conversation.memberList() as contact}
           <li class='text-xl flex flex-row mb-4 items-center'>
             <Avatar image={contact.avatar} agentPubKey={contact.publicKeyB64} size='38' moreClasses='-ml-30'/>
-            <span class='ml-4 text-md'>{#if contact.publicKeyB64 === myPublicKey64}You{:else}{contact.firstName + ' ' + contact.lastName}{/if}</span>
+            <span class='ml-4 text-md'>
+              {contact.firstName + ' ' + contact.lastName}
+              {#if contact.publicKeyB64 === encodeHashToBase64(conversation.data.progenitor)}
+                <span class='text-xs text-primary-100 font-bold ml-2'>(Creator)</span>
+              {/if}
+            </span>
           </li>
         {/each}
       </ul>

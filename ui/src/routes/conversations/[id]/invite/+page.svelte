@@ -120,8 +120,8 @@
               <p class='mt-2 mb-1 pl-0'>{contact.firstName[0].toUpperCase()}</p>
             {/if}
             {@const selected = $selectedContacts.find(c => c.publicKeyB64 === contact.data.publicKeyB64)}
-            {@const alreadyInvited = !!conversation.invitedContacts.find(c => c?.publicKeyB64 === contact.data.publicKeyB64)}
-            {@const alreadyInConversation = !!conversation.memberList.find(m => m?.publicKeyB64 === contact.data.publicKeyB64)}
+            {@const alreadyInvited = !!conversation.invitedContactKeys.find(k => k === contact.data.publicKeyB64)}
+            {@const alreadyInConversation = !!conversation.memberList().find(m => m?.publicKeyB64 === contact.data.publicKeyB64)}
             <button
               class='flex items-center justify-between w-full rounded-2xl p-2 -ml-2 mb-2 {selected && 'bg-surface-400'} text-primary-200 font-normal disabled:text-primary-700 disabled:font-light'
               on:click={() => selectContact(contact.data.publicKeyB64)}

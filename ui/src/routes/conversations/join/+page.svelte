@@ -52,7 +52,7 @@
   </div>
 
   <footer>
-    <Button>
+    <Button disabled={!inviteCode}>
       <SvgIcon icon='newConversation' size='20' /> <strong class='ml-2'>Join Conversation</strong>
     </Button>
   </footer>

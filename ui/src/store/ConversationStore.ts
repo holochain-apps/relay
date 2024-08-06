@@ -1,4 +1,4 @@
-import { isEmpty } from 'lodash-es';
+import { isEmpty, uniq } from 'lodash-es';
 import { encode } from '@msgpack/msgpack';
 import { Base64 } from 'js-base64';
 import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64, type ActionHashB64, type ActionHash } from "@holochain/client";
@@ -14,7 +14,7 @@ export const MINUTES_IN_BUCKET = 1  // 60 * 24 * 7  // 1 week
 export const MIN_MESSAGES_LOAD = 30
 
 export class ConversationStore {
-  private conversation: Writable<Conversation>;
+  public conversation: Writable<Conversation>;
   public history: MsgHistory
   public lastBucketLoaded: number = -1
   public status
@@ -34,7 +34,7 @@ export class ConversationStore {
     const currentBucket = this.currentBucket()
     this.history = new MsgHistory(currentBucket, this.cellDnaHash)
 
-    this.conversation = writable({ id, cellDnaHash, config, privacy, progenitor, agentProfiles: {}, messages });
+    this.conversation = writable({ id, cellDnaHash, config, lastActivityAt: new Date(-8640000000000000), privacy, progenitor, agentProfiles: {}, messages });
     this.status = writable('unread')
     this.client = relayStore.client
   }
@@ -86,7 +86,7 @@ export class ConversationStore {
     if (this.data.privacy === Privacy.Public) {
       const invitation: Invitation = {
         created: this.created,
-        conversationName: this.data.config.title,
+        conversationName: this?.data?.config.title,
         networkSeed: this.data.id,
         privacy: this.data.privacy,
         progenitor: this.data.progenitor
@@ -110,15 +110,21 @@ export class ConversationStore {
     return this.invitedContactKeys.map(contactKey => contacts.find(contact => contact.publicKeyB64 === contactKey))
   }
 
-  get memberList() {
+  get allMembers() {
+    return this.memberList(true)
+  }
+
+  memberList(includeInvited = false) {
     // return the list of agents that have joined the conversation, checking the relayStore for contacts and using the contact info first and if that doesn't exist using the agent profile
     const joinedAgents = this.data.agentProfiles
     const contacts = get(this.relayStore.contacts)
 
+    const keys = uniq(Object.keys(joinedAgents).concat(includeInvited ? this.invitedContactKeys : []))
+
     // Filter out progenitor, as they are always in the list,
     // use contact data for each agent if it exists locally, otherwise use their profile
     // sort by first name (for now)
-    return Object.keys(joinedAgents).filter(a => a !== encodeHashToBase64(this.data.progenitor)).map(agentKey => {
+    return keys.filter(k => k !== this.client.myPubKeyB64).map(agentKey => {
       const agentProfile = joinedAgents[agentKey]
       const contactProfile = contacts.find(contact => contact.publicKeyB64 === agentKey);
 
@@ -131,7 +137,7 @@ export class ConversationStore {
     }).sort((a, b) => a.firstName.localeCompare(b.firstName))
   }
 
-  get invitedList() {
+  get invitedUnjoined() {
     const joinedAgents = this.data.agentProfiles
     const contacts = get(this.relayStore.contacts)
     return this.invitedContactKeys
@@ -149,18 +155,19 @@ export class ConversationStore {
   }
 
   get title() {
-    const numInvited = Object.keys(this.invitedContactKeys).length
-    if (this.data.privacy === Privacy.Public) {
-      return this.data.config.title
+    // TODO: when invited contacts is stored in HC this can go back to invitedContactKeys
+    const numInvited = this.allMembers.length // Object.keys(this.invitedContactKeys).length
+    if (this.data?.privacy === Privacy.Public) {
+      return this.data?.config.title
     }
 
     if (numInvited === 1) {
       // Use full name of the one other person in the chat
-      return this.invitedContacts[0]?.name || this.data.config.title
+      return this.allMembers[0] ? this.allMembers[0].firstName + " " + this.allMembers[0].lastName : this.data?.config.title
     } else if (numInvited === 2) {
-      return this.invitedContacts.map(c => c?.data.firstName).join(' & ')
+      return this.allMembers.map(c => c?.firstName).join(' & ')
     } else {
-      return this.invitedContacts.map(c => c?.data.firstName).join(', ')
+      return this.allMembers.map(c => c?.firstName).join(', ')
     }
   }
 
@@ -204,7 +211,7 @@ export class ConversationStore {
       }
 
       const hashesToLoad: Array<ActionHash> = []
-      bucket.hashes.forEach(h=> {
+      get(bucket.hashes).forEach(h => {
         if (!newMessages[h]) hashesToLoad.push(decodeHashFromBase64(h))
       })
 
@@ -213,12 +220,16 @@ export class ConversationStore {
         if (hashesToLoad.length != messageRecords.length) {
           console.log("Warning: not all requested hashes were loaded")
         }
+        let lastActivityAt = this.data.lastActivityAt
         for (const messageRecord of messageRecords) {
           try {
             const message = messageRecord.message
             if (message) {
               message.hash = encodeHashToBase64(messageRecord.signed_action.hashed.hash)
               message.timestamp = new Date(messageRecord.signed_action.hashed.content.timestamp / 1000)
+              if (message.timestamp > lastActivityAt) {
+                lastActivityAt = message.timestamp
+              }
               message.authorKey = encodeHashToBase64(messageRecord.signed_action.hashed.content.author)
               message.images = ((message.images as any[]) || []).map(i => ({
                 fileType: i.file_type,
@@ -246,6 +257,7 @@ export class ConversationStore {
           }
         }
         this.conversation.update(c => {
+          c.lastActivityAt = lastActivityAt
           c.messages = {...newMessages}
           return c
         })
@@ -329,25 +341,27 @@ export class ConversationStore {
     const oldMessage: Message = { authorKey, content, hash: id, status: 'pending', timestamp: now, bucket, images}
     this.addMessage(oldMessage)
     const newMessageEntry = await this.client.sendMessage(this.data.id, content, bucket, images, Object.keys(this.data.agentProfiles).map(k => decodeHashFromBase64(k)))
-      const newMessage: Message = {
-        ...oldMessage,
-        hash: encodeHashToBase64(newMessageEntry.actionHash),
-        status: 'confirmed',
-        images: images.map(i => ({ ...i, status: 'loaded' }))
-      }
-      this.updateMessage(oldMessage, newMessage)
+    const newMessage: Message = {
+      ...oldMessage,
+      hash: encodeHashToBase64(newMessageEntry.actionHash),
+      status: 'confirmed',
+      images: images.map(i => ({ ...i, status: 'loaded' }))
+    }
+    this.updateMessage(oldMessage, newMessage)
   }
 
   addMessage(message: Message): void {
-    console.log("ADD MSG", message)
     this.conversation.update(conversation => {
       message.images = message.images || [];
+      if (message.timestamp > conversation.lastActivityAt) {
+        conversation.lastActivityAt = message.timestamp
+      }
       return { ...conversation, messages: {...conversation.messages, [message.hash]: message } };
     });
 
     if (message.hash.startsWith("uhCkk")) {  // don't add placeholder to bucket yet.
       this.history.add(message)
-      if (get(this.status) == 'closed') {
+      if (get(this.status) == 'closed' && message.authorKey !== this.client.myPubKeyB64) {
         this.setStatus('unread')
       }
     }
@@ -359,13 +373,13 @@ export class ConversationStore {
       delete messages[oldMessage.hash]
       return { ...conversation, messages: {...messages, [newMessage.hash]: newMessage } };
     })
+    this.history.add(newMessage)
   }
 
   async loadImagesForMessage(message: Message, tryCount: number = 0) {
     if (message.images && message.images.length > 0) {
       // We have to load them all and then update the message otherwise the various updates overwrite each other
       for (const image of message.images) {
-        console.log("loading", image)
         const newImage = await this.loadImage(image)
         this.conversation.update(conversation => {
           const messages = {...conversation.messages}
@@ -408,7 +422,7 @@ export class ConversationStore {
             resolve(this.loadImage(image, tryCount + 1))
           }, 3000)
         } else {
-          console.log("Coulnd't find image after 10 retries", image)
+          console.error("Coulnd't find image after 10 retries", image)
           resolve({ ...image, status: 'error', dataURL: ''})
         }
       }

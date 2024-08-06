@@ -37,9 +37,7 @@
 				const adminWebsocket = await AdminWebsocket.connect({ url: new URL(`ws://localhost:${adminPort}`) })
 				tokenResp = await adminWebsocket.issueAppAuthenticationToken({installed_app_id:appId})
 				const x = await adminWebsocket.listApps({})
-				console.log("apps", x)
 				const cellIds = await adminWebsocket.listCellIds()
-				console.log("CELL IDS",cellIds)
 				await adminWebsocket.authorizeSigningCredentials(cellIds[0])
 			}
 			console.log("appPort and Id is", appPort, appId)
@@ -52,7 +50,7 @@
 			relayStore = new RelayStore(relayClient)
 			await relayStore.initialize()
 			connected = true
-			console.log("connected. profiles store", profilesStore)
+			console.log("Connected)
 		}
 
 		initHolochain()

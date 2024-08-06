@@ -135,14 +135,13 @@
       message.author = ($value as Conversation).agentProfiles[message.authorKey].fields.firstName;
       message.avatar = ($value as Conversation).agentProfiles[message.authorKey].fields.avatar;
 
-      const messageDate: Date = new Date(message.timestamp);
-      const formattedDate: string = messageDate.toLocaleDateString('en-US', {
+      const formattedDate: string = message.timestamp.toLocaleDateString('en-US', {
         weekday: 'long', month: 'long', day: 'numeric'
       });
 
-      if (!lastDate || messageDate.toDateString() !== lastDate.toDateString()) {
+      if (!lastDate || message.timestamp.toDateString() !== lastDate.toDateString()) {
         result.push({ ...message, header: formattedDate });
-        lastDate = messageDate;
+        lastDate = message.timestamp;
       } else {
         result.push({ ...message });
       }
@@ -162,8 +161,6 @@
   const handleScroll = debounce(() => {
     const atTop = conversationContainer.scrollTop < SCROLL_TOP_THRESHOLD
     if (!scrollAtTop && atTop && conversation) {
-      console.log("CALLING LOAD SET FROM scroll")
-
       conversation.loadMessagesSet()
     }
     scrollAtTop = atTop
@@ -247,19 +244,19 @@
     <div class='overflow-y-auto flex flex-col grow items-center w-full pt-10' bind:this={conversationContainer} id='message-container'>
       {#if conversation.privacy === Privacy.Private}
         <div class='flex gap-4 items-center justify-center'>
-          {#each conversation.invitedContacts.slice(0, 2) as contact, i}
+          {#each conversation.allMembers.slice(0, 2) as contact, i}
             {#if contact}
               <Avatar image={contact.avatar} agentPubKey={contact.publicKeyB64} size={120} moreClasses='mb-5' />
             {/if}
           {/each}
-          {#if conversation.invitedContacts.length > 2}
+          {#if conversation.allMembers.length > 2}
             <div class='w-10 h-10 min-h-10 mb-5 rounded-full bg-surface-400 flex items-center justify-center'>
-              <span class='text-primary-400 text-xl'>+{(conversation.invitedContacts.length - 2)}</span>
+              <span class='text-primary-400 text-xl'>+{(conversation.allMembers.length - 2)}</span>
             </div>
           {/if}
         </div>
-      {:else if conversation.data.config.image}
-        <img src={conversation.data.config.image} alt='Conversation' class='w-32 h-32 min-h-32 mb-5 rounded-full object-cover' />
+      {:else if conversation.data?.config.image}
+        <img src={conversation.data?.config.image} alt='Conversation' class='w-32 h-32 min-h-32 mb-5 rounded-full object-cover' />
       {/if}
       <h1 class='text-3xl flex-shrink-0 mb-1 text-nowrap text-ellipsis overflow-hidden'>{@html conversation.title}</h1>
       <!-- if joining a conversation created by someone else, say still syncing here until thre are at least 2 members -->
@@ -284,14 +281,7 @@
           {/if}
         </div>
       {:else}
-      {#if $messageCount != $processedMessages.length}
-        <Button
-          onClick={()=>conversation.loadMessagesSet()}>
-          Load More...
-        </Button>
-      {/if}
         <div id='message-box' class="flex-1 p-4 flex flex-col-reverse w-full">
-
           <ul>
             {#each $processedMessages as message (message.hash)}
               {@const fromMe = message.authorKey === myPubKeyB64}

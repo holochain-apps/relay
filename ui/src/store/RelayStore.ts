@@ -48,7 +48,7 @@ export class RelayStore {
           authorKey: encodeHashToBase64(from),
           content: payload.message.content,
           bucket: payload.message.bucket,
-          images: payload.message.images.map((i: any) => ({ ...mapKeys(i, (v, k) => camelCase(k)), status: 'loading'  })), // convert snake_case to camelCase
+          images: payload.message.images.map((i: any) => ({ ...mapKeys(i, (v, k) => camelCase(k)) as Image, status: 'loading'  }) as Image), // convert snake_case to camelCase
           status: 'confirmed',
           timestamp: new Date(payload.action.hashed.content.timestamp / 1000)
         }

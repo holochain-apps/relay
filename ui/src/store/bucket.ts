@@ -1,9 +1,11 @@
 import type { ActionHashB64 } from "@holochain/client";
+import { get, writable, type Writable } from "svelte/store";
 
 export class Bucket {
   public type: BucketType = BucketType.Hashes;
-  public hashes: Set<ActionHashB64> = new Set();
-  private _count: number = 0;
+  public hashes: Writable<Set<ActionHashB64>> = writable(new Set());
+  private _count = writable(0);
+
   constructor(input: Array<ActionHashB64> | number | string | undefined) {
     switch (typeof input) {
       case "number":
@@ -17,7 +19,7 @@ export class Bucket {
             this.initAsHashes(sb);
           }
         } catch (e) {
-          console.log("badly formed bucket ", input, e);
+          console.error("badly formed bucket ", input, e);
         }
         break;
       case "object":
@@ -27,23 +29,23 @@ export class Bucket {
 
   private initAsHashes(hashes: Array<ActionHashB64>) {
     this.type = BucketType.Hashes;
-    this.hashes = new Set(hashes);
+    this.hashes.set(new Set(hashes))
   }
 
   private initAsCount(count: number) {
-    this.type = BucketType.Hashes;
-    this._count = count;
+    this.type = BucketType.Count;
+    this._count.set(count);
   }
 
   get count(): number {
-    if (this.type === BucketType.Count) return this._count;
-    return this.hashes!.size;
+    if (this.type === BucketType.Count) return get(this._count);
+    return get(this.hashes).size;
   }
 
   toJSON(): string {
     const sb =
       this.type === BucketType.Hashes
-        ? Array.from(this.hashes!.keys())
+        ? Array.from(get(this.hashes)!.keys())
         : this._count;
     return JSON.stringify(sb);
   }
@@ -51,14 +53,17 @@ export class Bucket {
   add(hashes: Array<ActionHashB64>): boolean {
     const countBefore = this.count;
     if (this.type == BucketType.Count) {
-      if (this._count == 0) {
+      if (get(this._count) == 0) {
         this.type = BucketType.Hashes;
-        this.hashes = new Set(hashes);
+        this.hashes.set(new Set(hashes));
       } else {
-        this._count += hashes.length;
+        this._count.update(c => c + hashes.length);
       }
     } else {
-      hashes.forEach((item) => this.hashes!.add(item));
+      this.hashes.update((old) => {
+        hashes.forEach((item) => old.add(item));
+        return new Set(old);
+      })
     }
     return countBefore != this.count;
   }
@@ -69,7 +74,7 @@ export class Bucket {
     } else {
       const s: Set<ActionHashB64> = new Set(hashes);
       // @ts-ignore  Why isn't "difference" not being understood by my IDE?
-      return Array.from(s.difference(this.hashes!));
+      return Array.from(s.difference(get(this.hashes)));
     }
   }
 

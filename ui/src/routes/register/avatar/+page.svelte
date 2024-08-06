@@ -44,7 +44,7 @@
     on:change={(event) => handleFileChange(event,
       (imageData) => {
         UserStore.update(current => {
-          return { ...current, avatar: imageData};
+          return { firstName, lastName, avatar: imageData};
         })
       }
     )}

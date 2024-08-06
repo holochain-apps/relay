@@ -81,6 +81,7 @@ export interface Conversation {
   cellDnaHash: DnaHash;
   config: Config;
   description?: string;
+  lastActivityAt: Date;
   privacy: Privacy;
   progenitor: AgentPubKey;
   messages: Messages;

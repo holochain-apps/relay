@@ -61,7 +61,6 @@
     }
   }
 
-  $: console.log("imageUrl", contact?.data.avatar, $imageUrl)
 </script>
 
 <div class='flex justify-center items-center flex-col my-10'>

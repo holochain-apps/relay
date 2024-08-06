@@ -95,7 +95,7 @@ export class RelayClient {
 
           this.conversations[cell.dna_modifiers.network_seed] = convoCellAndConfig
         } catch(e) {
-          console.log("Unable to get config for cell:", cell, e)
+          console.error("Unable to get config for cell:", cell, e)
         }
       }
     }
@@ -204,7 +204,6 @@ export class RelayClient {
 
   public async sendMessage(conversationId: string, content: string, bucket: number, images: Image[], agents: AgentPubKey[]): Promise<EntryRecord<Message>> {
     // TODO: upload these asynchonously and then add to the message when done
-    console.log("client send message", conversationId, content, images, agents)
     const imageStructs = await Promise.all(images.map(async (image) => {
       if (image.file) {
         const hash = await this.fileStorageClient.uploadFile(image.file)
@@ -313,7 +312,7 @@ export class RelayClient {
 
   /********* Util **********/
   protected async callZomeForCell(fn_name: string, payload: any, cell_id: any) {
-    console.log("call zome", fn_name, payload, cell_id)
+    console.log("Call Zome", fn_name, payload, cell_id)
     const req: AppCallZomeRequest = {
       //role_name: cell_id ? undefined : this.roleName,
       cell_id,
