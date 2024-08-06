@@ -20,16 +20,19 @@
 	let relayStore = relayStoreContext.getStore()
 
   let inviteCode = ''
+  let joining = false
 
   async function joinConversation(e: SubmitEvent) {
     e.preventDefault();
+    joining = true
     const msgpack = Base64.toUint8Array(inviteCode)
     try {
       const invitation : Invitation = decode(msgpack) as Invitation;
       const conversation = await relayStore.joinConversation(invitation)
       conversation && goto(`/conversations/${conversation.data.id}`)
     } catch(e) {
-      alert(`error decoding invitation: ${e}`)
+      alert(`Error joining conversation: ${e}`)
+      joining = false
     }
   }
 </script>
@@ -52,8 +55,9 @@
   </div>
 
   <footer>
-    <Button disabled={!inviteCode}>
-      <SvgIcon icon='newConversation' size='20' /> <strong class='ml-2'>Join Conversation</strong>
+    <Button disabled={!inviteCode || joining}>
+      {#if joining}<SvgIcon icon='spinner' size='20' />{:else}<SvgIcon icon='newConversation' size='20' />{/if}
+      <strong class='ml-2'>Join Conversation</strong>
     </Button>
   </footer>
 </form>

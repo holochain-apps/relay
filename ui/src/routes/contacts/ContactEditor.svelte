@@ -120,7 +120,7 @@
     <p class='text-xs text-error-500 mt-1 ml-1'>{$error}</p>
   {/if}
   {#if !editContactId}
-    <p class='text-xs text-secondary-600 mt-4'>Request your contact's unique Relay contact code, which is found by visiting their personal profile in the Relay App.</p>
+    <p class='text-xs text-secondary-600 mt-4 mb-4'>Request your contact's unique Relay contact code, which is found by visiting their personal profile in the Relay App.</p>
   {/if}
 </div>
 
