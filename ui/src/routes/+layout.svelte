@@ -50,7 +50,7 @@
 			relayStore = new RelayStore(relayClient)
 			await relayStore.initialize()
 			connected = true
-			console.log("Connected)
+			console.log("Connected")
 		}
 
 		initHolochain()
