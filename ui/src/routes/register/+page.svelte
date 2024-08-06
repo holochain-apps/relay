@@ -40,7 +40,7 @@
       autofocus
       class='mt-2 bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
       type='text'
-      placeholder='First name'
+      placeholder='First name *'
       name='firstName'
       bind:value={firstName}
       minlength={MIN_FIRST_NAME_LENGTH}

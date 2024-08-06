@@ -73,7 +73,7 @@
           autofocus
           class='text-3xl max-w-40 text-start bg-surface-900 border-none outline-none focus:outline-none pl-0.5 pt-0 focus:ring-0'
           type='text'
-          placeholder='First Name'
+          placeholder='First name *'
           name='firstName'
           bind:this={firstNameElem}
           value={firstName}
