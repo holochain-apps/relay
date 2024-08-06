@@ -42,12 +42,34 @@ export class RelayClient {
   async createProfile(firstName: string, lastName: string, avatar: string) : Promise<Profile> {
     const req: AppCallZomeRequest = {
       role_name: 'relay',
-      // cell_id: this.conversations[conversationId].cell_id,
       zome_name: 'profiles',
       fn_name: 'create_profile',
       payload: { nickname: firstName + ' ' + lastName, fields: { avatar, firstName, lastName } }
     };
     const profile = await this.client.callZome(req, 30000);
+    return profile
+  }
+
+  async updateProfile(firstName: string, lastName: string, avatar: string) : Promise<Profile> {
+    const req: AppCallZomeRequest = {
+      role_name: 'relay',
+      zome_name: 'profiles',
+      fn_name: 'update_profile',
+      payload: { nickname: firstName + ' ' + lastName, fields: { avatar, firstName, lastName } }
+    };
+    const profile = await this.client.callZome(req, 30000);
+
+    // Update profile in every conversation I am a part of
+    Object.values(this.conversations).forEach(async (conversation) => {
+      const req: AppCallZomeRequest = {
+        cell_id: conversation.cell.cell_id,
+        zome_name: 'profiles',
+        fn_name: 'update_profile',
+        payload: { nickname: firstName + ' ' + lastName, fields: { avatar, firstName, lastName } }
+      };
+      await this.client.callZome(req, 30000);
+    })
+
     return profile
   }
 

@@ -5,7 +5,7 @@
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { UserStore } from '$store/UserStore';
 
-  const MIN_NAME_LENGTH = 3;
+  const MIN_FIRST_NAME_LENGTH = 3;
   let firstName = ''
   let lastName = ''
 
@@ -23,7 +23,7 @@
     UserStore.update(current => {
         return { ...current, firstName, lastName };
     });
-    if (firstName.length >= MIN_NAME_LENGTH) {
+    if (firstName.length >= MIN_FIRST_NAME_LENGTH) {
       goto('/register/avatar');
     }
   }
@@ -40,22 +40,22 @@
       autofocus
       class='mt-2 bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
       type='text'
-      placeholder='Enter your first name'
+      placeholder='First name'
       name='firstName'
       bind:value={firstName}
-      minlength={MIN_NAME_LENGTH}
+      minlength={MIN_FIRST_NAME_LENGTH}
     />
     <input
       class='mt-2 bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
       type='text'
-      placeholder='Enter your last name'
+      placeholder='Last name'
       name='lastName'
       bind:value={lastName}
     />
   </div>
 
   <div class='items-right w-full flex justify-end pr-4'>
-    <Button on:click={saveName} disabled={firstName.trim().length < MIN_NAME_LENGTH}>
+    <Button on:click={saveName} disabled={firstName.trim().length < MIN_FIRST_NAME_LENGTH}>
       Next:&nbsp;<strong>Avatar</strong> <SvgIcon icon='arrowRight' size='42' />
     </Button>
   </div>

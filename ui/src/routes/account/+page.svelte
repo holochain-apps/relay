@@ -5,9 +5,9 @@
   import Button from "$lib/Button.svelte";
   import Header from '$lib/Header.svelte';
   import SvgIcon from '$lib/SvgIcon.svelte';
-  import { copyToClipboard } from '$lib/utils';
+  import { copyToClipboard, handleFileChange } from '$lib/utils';
   import { RelayClient } from '$store/RelayClient';
-	import { type Profile, ProfilesStore } from '@holochain-open-dev/profiles';
+	import { ProfilesStore } from '@holochain-open-dev/profiles';
 
 	const relayClientContext: { getClient: () => RelayClient } = getContext('relayClient')
 	let relayClient = relayClientContext.getClient()
@@ -15,18 +15,108 @@
   const profilesContext: { getStore: () => ProfilesStore } = getContext('profiles')
   let profilesStore = profilesContext.getStore()
 	$: prof = profilesStore ? profilesStore.myProfile : undefined
+  $: profileData = $prof?.status === 'complete' ? $prof.value?.entry : undefined
 
 	const agentPublicKey64 = relayClient.myPubKeyB64
+
+  const MIN_FIRST_NAME_LENGTH = 3;
+
+  $: firstName = profileData?.fields.firstName || '';
+  $: lastName = profileData?.fields.lastName || ''
+
+  let editingName = false
+  let firstNameElem: HTMLInputElement
+  let lastNameElem: HTMLInputElement
+
+  $: saveName = async () => {
+    if (profileData && firstNameElem.value?.length >= MIN_FIRST_NAME_LENGTH) {
+      firstName = firstNameElem.value
+      lastName = lastNameElem.value
+      await relayClient.updateProfile(firstName, lastName, profileData.fields.avatar)
+      editingName = false
+    }
+  }
+
+  $: cancelEditName = () => {
+    editingName = false
+    firstName = profileData?.fields.firstName || ''
+    lastName = profileData?.fields.lastName || ''
+  }
 </script>
 
 <Header>
   <button class='text-4xl mr-5 absolute' on:click={() => history.back()}><SvgIcon icon='caretLeft' color='white' size='10' /></button>
 </Header>
 
-{#if $prof && $prof.status === 'complete'}
+{#if $prof && $prof.status === 'complete' && $prof.value}
 <div class='flex flex-col grow items-center w-full pt-10' >
-  <Avatar agentPubKey={relayClient.myPubKey} size='100' moreClasses='mb-4'/>
-  <h1 class='text-3xl flex-shrink-0 mb-10'>{@html $prof.value?.entry.fields.firstName} {@html $prof.value?.entry.fields.lastName}</h1>
+  <!-- Hidden file input -->
+  <input type="file" id="avatarInput" accept="image/jpeg, image/png, image/gif" class='hidden'
+    on:change={(event) => handleFileChange(event,
+      (imageData) => {
+        relayClient.updateProfile(firstName, lastName, imageData)
+      }
+    )}
+  />
+  <div style="position:relative">
+    <Avatar agentPubKey={relayClient.myPubKey} size='128' moreClasses='mb-4'/>
+    <label for="avatarInput"
+      class='rounded-full w-12 h-12 pl-1 bottom-5 right-0 bg-surface-500 absolute flex items-center justify-center cursor-pointer'
+    >
+      <img src='/image-placeholder.png' alt='Group Image Uploader' />
+    </label>
+  </div>
+
+  {#if editingName}
+      <div class="flex flex-row items-center justify-center">
+        <input
+          autofocus
+          class='text-3xl max-w-40 text-start bg-surface-900 border-none outline-none focus:outline-none pl-0.5 pt-0 focus:ring-0'
+          type='text'
+          placeholder='First Name'
+          name='firstName'
+          bind:this={firstNameElem}
+          value={firstName}
+          minlength={MIN_FIRST_NAME_LENGTH}
+          on:keydown={(event) => {
+            if (event.key === 'Escape') cancelEditName();
+          }}
+        />
+        <input
+          class='text-3xl max-w-40 text-start bg-surface-900 border-none outline-none focus:outline-none pl-0.5 pt-0 focus:ring-0'
+          type='text'
+          placeholder='Last Name'
+          name='lastName'
+          bind:this={lastNameElem}
+          value={lastName}
+          on:keydown={(event) => {
+            if (event.key === 'Enter') saveName();
+            if (event.key === 'Escape') cancelEditName();
+          }}
+        />
+        <Button
+          moreClasses="h-6 w-6 rounded-md py-0 !px-0 mb-0 mr-2 bg-primary-100 flex items-center justify-center"
+          onClick={() => saveName()}
+        >
+          <SvgIcon icon='checkMark' color='red' size='12' />
+        </Button>
+        <Button
+          moreClasses="h-6 w-6 !px-0 py-0 mb-0 rounded-md bg-surface-400 flex items-center justify-center"
+          onClick={() => cancelEditName()}
+        >
+          <SvgIcon icon='x' color='gray' size='12' />
+        </Button>
+      </div>
+    {:else}
+      <div class="flex row items-center justify-center mb-10">
+        <h1 class='text-3xl flex-shrink-0 mr-2'>{@html firstName} {@html lastName}</h1>
+
+        <button on:click={() => editingName = true}>
+          <SvgIcon icon='write' size='24' color='gray' moreClasses='cursor-pointer' />
+        </button>
+      </div>
+    {/if}
+
 
   <QRCodeImage text={agentPublicKey64} width={7} />
 
