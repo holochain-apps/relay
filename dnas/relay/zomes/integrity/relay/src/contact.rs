@@ -1,48 +1,83 @@
 use hdi::prelude::*;
 
-#[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
-pub struct File {
-    pub name: String,
-    pub last_modified: Timestamp,
-    pub size: usize, // Size in bytes
-    pub file_type: String,
-    pub storage_entry_hash: EntryHash,
-}
-
-#[hdk_entry_helper]
 #[derive(Clone, PartialEq)]
-pub struct Message {
-    pub content: String,
-    pub bucket: u32,
-    pub images: Vec<File>,
+#[hdk_entry_helper]
+pub struct Contact {
+    pub public_key: AgentPubKey,
+    pub first_name: String,
+    pub last_name: String,
+    pub avatar: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct MessageRecord {
+pub struct ContactRecord {
     pub original_action: ActionHash,
     pub signed_action: SignedActionHashed,
-    pub message: Option<Message>,
+    pub contact: Option<Contact>,
 }
-pub fn validate_create_message(
+
+pub fn validate_create_contact(
     _action: EntryCreationAction,
-    _message: Message,
+    _contact: Contact,
 ) -> ExternResult<ValidateCallbackResult> {
     Ok(ValidateCallbackResult::Valid)
 }
-pub fn validate_update_message(
+
+pub fn validate_update_contact(
     _action: Update,
-    _message: Message,
+    _contact: Contact,
+    _original_action: EntryCreationAction,
+    _original_contact: Contact,
 ) -> ExternResult<ValidateCallbackResult> {
     Ok(ValidateCallbackResult::Valid)
 }
-pub fn validate_delete_message(
+
+pub fn validate_delete_contact(
     _action: Delete,
     _original_action: EntryCreationAction,
-    _original_message: Message,
+    _original_contact: Contact,
 ) -> ExternResult<ValidateCallbackResult> {
     Ok(ValidateCallbackResult::Valid)
 }
-pub fn validate_create_link_message_updates(
+
+pub fn validate_create_link_contact_to_contacts(
+    _action: CreateLink,
+    _base_address: AnyLinkableHash,
+    target_address: AnyLinkableHash,
+    _tag: LinkTag,
+) -> ExternResult<ValidateCallbackResult> {
+    let action_hash = target_address
+        .into_action_hash()
+        .ok_or(
+            wasm_error!(
+                WasmErrorInner::Guest("No action hash associated with link".to_string())
+            ),
+        )?;
+    let record = must_get_valid_record(action_hash)?;
+    let _contact: crate::Contact = record
+        .entry()
+        .to_app_option()
+        .map_err(|e| wasm_error!(e))?
+        .ok_or(
+            wasm_error!(
+                WasmErrorInner::Guest("Linked action must reference an entry"
+                .to_string())
+            ),
+        )?;
+    Ok(ValidateCallbackResult::Valid)
+}
+
+pub fn validate_delete_link_contact_to_contacts(
+    _action: DeleteLink,
+    _original_action: CreateLink,
+    _base: AnyLinkableHash,
+    _target: AnyLinkableHash,
+    _tag: LinkTag,
+) -> ExternResult<ValidateCallbackResult> {
+    Ok(ValidateCallbackResult::Valid)
+}
+
+pub fn validate_create_link_contact_updates(
     _action: CreateLink,
     base_address: AnyLinkableHash,
     target_address: AnyLinkableHash,
@@ -56,7 +91,7 @@ pub fn validate_create_link_message_updates(
             ),
         )?;
     let record = must_get_valid_record(action_hash)?;
-    let _message: crate::Message = record
+    let _contact: crate::Contact = record
         .entry()
         .to_app_option()
         .map_err(|e| wasm_error!(e))?
@@ -74,7 +109,7 @@ pub fn validate_create_link_message_updates(
             ),
         )?;
     let record = must_get_valid_record(action_hash)?;
-    let _message: crate::Message = record
+    let _contact: crate::Contact = record
         .entry()
         .to_app_option()
         .map_err(|e| wasm_error!(e))?
@@ -86,7 +121,8 @@ pub fn validate_create_link_message_updates(
         )?;
     Ok(ValidateCallbackResult::Valid)
 }
-pub fn validate_delete_link_message_updates(
+
+pub fn validate_delete_link_contact_updates(
     _action: DeleteLink,
     _original_action: CreateLink,
     _base: AnyLinkableHash,
@@ -95,11 +131,12 @@ pub fn validate_delete_link_message_updates(
 ) -> ExternResult<ValidateCallbackResult> {
     Ok(
         ValidateCallbackResult::Invalid(
-            String::from("MessageUpdates links cannot be deleted"),
+            String::from("ContactUpdates links cannot be deleted"),
         ),
     )
 }
-pub fn validate_create_link_all_messages(
+
+pub fn validate_create_link_all_contacts(
     _action: CreateLink,
     _base_address: AnyLinkableHash,
     target_address: AnyLinkableHash,
@@ -114,7 +151,7 @@ pub fn validate_create_link_all_messages(
             ),
         )?;
     let record = must_get_valid_record(action_hash)?;
-    let _message: crate::Message = record
+    let _contact: crate::Contact = record
         .entry()
         .to_app_option()
         .map_err(|e| wasm_error!(e))?
@@ -127,7 +164,8 @@ pub fn validate_create_link_all_messages(
     // TODO: add the appropriate validation rules
     Ok(ValidateCallbackResult::Valid)
 }
-pub fn validate_delete_link_all_messages(
+
+pub fn validate_delete_link_all_contacts(
     _action: DeleteLink,
     _original_action: CreateLink,
     _base: AnyLinkableHash,

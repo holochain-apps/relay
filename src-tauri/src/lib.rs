@@ -1,6 +1,7 @@
 use holochain_types::prelude::AppBundle;
 use lair_keystore::dependencies::sodoken::{BufRead, BufWrite};
-use std::collections::HashMap;
+use std::time::UNIX_EPOCH;
+use std::{collections::HashMap, time::SystemTime};
 use std::path::PathBuf;
 use tauri::AppHandle;
 use tauri_plugin_holochain::{HolochainExt, HolochainPluginConfig};
@@ -10,9 +11,13 @@ const APP_ID: &'static str = "relay";
 const PRODUCTION_SIGNAL_URL: &'static str = "wss://signal.holo.host";
 const PRODUCTION_BOOTSTRAP_URL: &'static str = "https://bootstrap.holo.host";
 
-pub fn happ_bundle() -> AppBundle {
+pub fn happ_bundle() -> anyhow::Result<AppBundle> {
     let bytes = include_bytes!("../../workdir/relay.happ");
-    AppBundle::decode(bytes).expect("Failed to decode relay happ")
+    let original_bundle = AppBundle::decode(bytes)?;
+    let mut manifest = original_bundle.manifest().to_owned();
+    manifest.set_network_seed(format!("{}", SystemTime::now().duration_since(UNIX_EPOCH)?.as_micros()));
+    let bundle = AppBundle::from(original_bundle.into_inner().update_manifest(manifest)?);
+    Ok(bundle)
 }
 
 use tauri::{Manager, Window};
@@ -101,12 +106,12 @@ async fn setup(handle: AppHandle) -> anyhow::Result<()> {
     if installed_apps.len() == 0 {
         handle
             .holochain()?
-            .install_app(String::from(APP_ID), happ_bundle(), HashMap::new(), None)
+            .install_app(String::from(APP_ID), happ_bundle()?, HashMap::new(), None)
             .await?;
     } else {
         handle
             .holochain()?
-            .update_app_if_necessary(String::from(APP_ID), happ_bundle())
+            .update_app_if_necessary(String::from(APP_ID), happ_bundle()?)
             .await?;
     }
     // After set up we can be sure our app is installed and up to date, so we can just open it
@@ -115,7 +120,7 @@ async fn setup(handle: AppHandle) -> anyhow::Result<()> {
         .main_window_builder(
             String::from("main"),
             false,
-            Some(String::from("relay")),
+            Some(String::from("Relay")),
             None,
         )
         .await?
@@ -171,7 +176,7 @@ fn holochain_dir() -> PathBuf {
         app_dirs2::app_root(
             app_dirs2::AppDataType::UserData,
             &app_dirs2::AppInfo {
-                name: "relay",
+                name: "Relay",
                 author: std::env!("CARGO_PKG_AUTHORS"),
             },
         )

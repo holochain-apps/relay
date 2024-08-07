@@ -1,8 +1,8 @@
 [package]
 name = "relayapp"
-version = "0.0.0"
+version = "0.5.0-beta"
 description = "Relay"
-authors = ["you"]
+authors = ["Tibet Sprague", "Eric Harris-Braun"]
 license = ""
 repository = ""
 edition = "2021"

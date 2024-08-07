@@ -11,8 +11,7 @@ fn recv_remote_signal(message_record: MessageRecord) -> ExternResult<()> {
     let message = message_record.message.unwrap();
     let signal = Signal::Message {
         action: message_record.signed_action.clone(),
-        images: message.images,
-        content: message.content,
+        message,
         from: info.provenance,
     };
     emit_signal(signal)
@@ -34,7 +33,7 @@ pub fn init(_: ()) -> ExternResult<InitCallbackResult> {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
 pub enum Signal {
-    Message { action: SignedActionHashed, content: String, images: Vec<File>, from: AgentPubKey},
+    Message { action: SignedActionHashed, message: Message, from: AgentPubKey },
     LinkCreated { action: SignedActionHashed, link_type: LinkTypes },
     LinkDeleted {
         action: SignedActionHashed,

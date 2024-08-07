@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import {
   CellType,
+  decodeHashFromBase64,
   encodeHashToBase64,
   type AgentPubKey,
   type AppClient,
@@ -8,18 +9,17 @@ import {
   type AppCallZomeRequest,
   type CellId,
   type CellInfo,
-  type ClonedCell,
   type RoleName,
   type MembraneProof,
-  type AgentPubKeyB64
+  type AgentPubKeyB64,
+  type ActionHash
 } from '@holochain/client';
 import { decode } from '@msgpack/msgpack';
 import { EntryRecord } from '@holochain-open-dev/utils';
-import type { ActionCommittedSignal } from '@holochain-open-dev/utils';
 import { FileStorageClient } from "@holochain-open-dev/file-storage";
 import type { Profile, ProfilesStore } from '@holochain-open-dev/profiles'
 import { get } from 'svelte/store';
-import type { Config, ConversationCellAndConfig, EntryTypes, Image, MembraneProofData, MessageRecord, Privacy, Properties } from '../types';
+import type { Config, Contact, ConversationCellAndConfig, Image, Invitation, MembraneProofData, Message, MessageRecord, Privacy, Properties } from '../types';
 
 const ZOME_NAME = 'relay'
 
@@ -39,6 +39,41 @@ export class RelayClient {
     return this.client.myPubKey
   }
 
+  async createProfile(firstName: string, lastName: string, avatar: string) : Promise<Profile> {
+    const req: AppCallZomeRequest = {
+      role_name: 'relay',
+      zome_name: 'profiles',
+      fn_name: 'create_profile',
+      payload: { nickname: firstName + ' ' + lastName, fields: { avatar, firstName, lastName } }
+    };
+    const profile = await this.client.callZome(req, 30000);
+    return profile
+  }
+
+  async updateProfile(firstName: string, lastName: string, avatar: string) : Promise<Profile> {
+    const req: AppCallZomeRequest = {
+      role_name: 'relay',
+      zome_name: 'profiles',
+      fn_name: 'update_profile',
+      payload: { nickname: firstName + ' ' + lastName, fields: { avatar, firstName, lastName } }
+    };
+    const profile = await this.client.callZome(req, 30000);
+
+    // Update profile in every conversation I am a part of
+    Object.values(this.conversations).forEach(async (conversation) => {
+      const req: AppCallZomeRequest = {
+        cell_id: conversation.cell.cell_id,
+        zome_name: 'profiles',
+        fn_name: 'update_profile',
+        payload: { nickname: firstName + ' ' + lastName, fields: { avatar, firstName, lastName } }
+      };
+      await this.client.callZome(req, 30000);
+    })
+
+    return profile
+  }
+
+  /********* Conversations **********/
   async initConversations() {
     const appInfo = await this.client.appInfo()
 
@@ -52,53 +87,42 @@ export class RelayClient {
         const cell = c[CellType.Cloned]
 
         try {
-          const configEntry = await this._getConfig(cell.cell_id)
+          const configRecord = await this._getConfig(cell.cell_id)
 
-          const config = configEntry? configEntry.entry : { title: cell.name, image: "" }
+          const config = configRecord? configRecord.entry : { title: cell.name, image: "" }
 
           const convoCellAndConfig: ConversationCellAndConfig = { cell, config }
 
           this.conversations[cell.dna_modifiers.network_seed] = convoCellAndConfig
         } catch(e) {
-          console.log("Unable to get config for cell:", cell, e)
+          console.error("Unable to get config for cell:", cell, e)
         }
       }
     }
   }
 
-  async createProfile(nickname: string, avatar: string) : Promise<Profile> {
-    const req: AppCallZomeRequest = {
-      role_name: 'relay',
-      // cell_id: this.conversations[conversationId].cell_id,
-      zome_name: 'profiles',
-      fn_name: 'create_profile',
-      payload: { nickname, fields: { avatar } }
-    };
-    const profile = await this.client.callZome(req, 30000);
-    return profile
+  async createConversation(title: string, image: string, privacy: Privacy) : Promise<ConversationCellAndConfig> {
+    return this._createConversation(new Date().getTime(), title, image, privacy, this.client.myPubKey, undefined, undefined)
   }
 
-  async createConversation(name: string, image: string, privacy: Privacy) : Promise<ConversationCellAndConfig> {
-    return this._createConversation(name, image, privacy, this.client.myPubKey, undefined, undefined)
-  }
-
-  async joinConversation(name: string, privacy: Privacy, progenitor: AgentPubKey, proof: MembraneProof|undefined, networkSeed: string) : Promise<ConversationCellAndConfig> {
+  async joinConversation(invitation: Invitation) : Promise<ConversationCellAndConfig> {
     // we don't have the image at join time, it get's loaded later
-    return this._createConversation(name, "", privacy, progenitor, proof, networkSeed)
+    return this._createConversation(invitation.created, invitation.conversationName, "", invitation.privacy, invitation.progenitor, invitation.proof, invitation.networkSeed)
   }
 
-  async _createConversation(name: string, image: string, privacy: Privacy, progenitor: AgentPubKey, membrane_proof: MembraneProof|undefined, networkSeed: string|undefined) : Promise<ConversationCellAndConfig> {
+  async _createConversation(created: number, title: string, image: string, privacy: Privacy, progenitor: AgentPubKey, membrane_proof: MembraneProof|undefined, networkSeed: string|undefined) : Promise<ConversationCellAndConfig> {
     const properties: Properties = {
-      name,
+      created,
+      name: title,
       privacy,
-      progenitor: encodeHashToBase64(progenitor)
+      progenitor: encodeHashToBase64(progenitor),
     }
 
     const conversationId = networkSeed || uuidv4()
 
     const cloneReq : AppCreateCloneCellRequest = {
       role_name: this.roleName,
-      name,
+      name: title,
       membrane_proof,
       modifiers: {
         network_seed: conversationId,
@@ -106,10 +130,8 @@ export class RelayClient {
       },
     }
 
-    console.log("creating clone cell", cloneReq)
     const cell = await this.client.createCloneCell(cloneReq)
-    console.log("created clone cell", cell)
-    let config: Config = { title: name, image }
+    let config: Config = { title, image }
     if (!networkSeed) {
       await this._setConfig(config, cell.cell_id)
     }
@@ -121,13 +143,19 @@ export class RelayClient {
     return convoCellAndConfig
   }
 
-  public async getAllMessages(conversationId: string) : Promise<Array<MessageRecord>> {
-    const messages = await this.callZome("get_all_message_entries", null, this.conversations[conversationId].cell.cell_id);
+  public async getAllMessages(conversationId: string, buckets: Array<number>) : Promise<Array<MessageRecord>> {
+    const messages = await this.callZomeForCell("get_messages_for_buckets", buckets, this.conversations[conversationId].cell.cell_id);
     return messages
   }
 
-  public async getMessagesByWeek(conversationId: string, week?: string) : Promise<Array<MessageRecord>> {
-    return this.callZome("get_messages_hashes_for_week", { week }, this.conversations[conversationId].cell.cell_id);
+  public async getMessageHashes(conversationId: string, bucket: number, count: number) : Promise<Array<ActionHash>> {
+    const hashes = await this.callZomeForCell("get_message_hashes", {bucket, count}, this.conversations[conversationId].cell.cell_id);
+    return hashes
+  }
+
+  public async getMessageEntries(conversationId: string, hashes: Array<ActionHash>) : Promise<Array<MessageRecord>> {
+    const messages = await this.callZomeForCell("get_message_entries", hashes, this.conversations[conversationId].cell.cell_id);
+    return messages
   }
 
   public async getAllAgents(conversationId: string) : Promise<{ [key: AgentPubKeyB64]: Profile }> {
@@ -156,7 +184,7 @@ export class RelayClient {
   }
 
   async _setConfig(config: Config, cellId: CellId) : Promise<null> {
-    return this.callZome(
+    return this.callZomeForCell(
       'set_config',
       config,
       cellId
@@ -166,7 +194,7 @@ export class RelayClient {
   async _getConfig(id: CellId | string) : Promise<EntryRecord<Config>|undefined> {
     const cellId = typeof id === 'string' ? this.conversations[id].cell.cell_id : id;
 
-    const config = await this.callZome(
+    const config = await this.callZomeForCell(
       'get_config',
       null,
       cellId
@@ -174,9 +202,8 @@ export class RelayClient {
     return config ? new EntryRecord(config) : undefined
   }
 
-  public async sendMessage(conversationId: string, content: string, images: Image[], agents: AgentPubKey[]) {
+  public async sendMessage(conversationId: string, content: string, bucket: number, images: Image[], agents: AgentPubKey[]): Promise<EntryRecord<Message>> {
     // TODO: upload these asynchonously and then add to the message when done
-    console.log("client send message", conversationId, content, images, agents)
     const imageStructs = await Promise.all(images.map(async (image) => {
       if (image.file) {
         const hash = await this.fileStorageClient.uploadFile(image.file)
@@ -190,15 +217,15 @@ export class RelayClient {
       }
     }))
 
-    const message = await this.callZome(
+    const message = await this.callZomeForCell(
       'create_message',
       {
-        message: { content, images: await Promise.all(imageStructs) },
+        message: { content, bucket, images: await Promise.all(imageStructs) },
         agents
       },
       this.conversations[conversationId].cell.cell_id
     )
-    return message
+    return new EntryRecord(message)
   }
 
   public async setMyProfileForConversation(cellId: CellId) : Promise<null> {
@@ -226,7 +253,7 @@ export class RelayClient {
         as_role: role,
       }
 
-      const r = await this.callZome("generate_membrane_proof", data, conversation.cell.cell_id);
+      const r = await this.callZomeForCell("generate_membrane_proof", data, conversation.cell.cell_id);
       return r
     } catch(e) {
       console.error("Error generating membrane proof", e)
@@ -234,8 +261,58 @@ export class RelayClient {
     return undefined
   }
 
-  protected async callZome(fn_name: string, payload: any, cell_id: any) {
-    console.log("call zome", fn_name, payload, cell_id)
+  /********* Contacts **********/
+
+  public async getAllContacts() {
+    const req: AppCallZomeRequest = {
+      role_name: 'relay',
+      zome_name: this.zomeName,
+      fn_name: 'get_all_contact_entries',
+      payload: null
+    }
+    const result = await this.client.callZome(req, 30000)
+    return result
+  }
+
+  public async createContact(contact: Contact) {
+    const req: AppCallZomeRequest = {
+      role_name: 'relay',
+      zome_name: this.zomeName,
+      fn_name: 'create_contact',
+      payload: {
+        avatar: contact.avatar,
+        first_name: contact.firstName,
+        last_name: contact.lastName,
+        public_key: decodeHashFromBase64(contact.publicKeyB64)
+      }
+    }
+    const result = await this.client.callZome(req, 30000)
+    return result
+  }
+
+  public async updateContact(contact: Contact) {
+    const req: AppCallZomeRequest = {
+      role_name: 'relay',
+      zome_name: this.zomeName,
+      fn_name: 'update_contact',
+      payload: {
+        original_contact_hash: contact.originalActionHash,
+        previous_contact_hash: contact.currentActionHash,
+        updated_contact: {
+          avatar: contact.avatar,
+          first_name: contact.firstName,
+          last_name: contact.lastName,
+          public_key: decodeHashFromBase64(contact.publicKeyB64)
+        }
+      }
+    }
+    const result = await this.client.callZome(req, 30000)
+    return result
+  }
+
+  /********* Util **********/
+  protected async callZomeForCell(fn_name: string, payload: any, cell_id: any) {
+    console.log("Call Zome", fn_name, payload, cell_id)
     const req: AppCallZomeRequest = {
       //role_name: cell_id ? undefined : this.roleName,
       cell_id,

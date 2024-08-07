@@ -11,12 +11,17 @@ import type {
   CreateLink,
   DeleteLink,
   MembraneProof,
-  ClonedCell
+  ClonedCell,
 } from '@holochain/client';
 
 import type { Profile } from '@holochain-open-dev/profiles'
 
 export type RelaySignal = {
+  type: 'Message';
+  action: SignedActionHashed<Create>;
+  message: Message;
+  from: AgentPubKey;
+} |{
   type: 'EntryCreated';
   action: SignedActionHashed<Create>;
   app_entry: EntryTypes;
@@ -46,6 +51,7 @@ export enum Privacy {
 
 // DNA modifier properties for a conversation
 export interface Properties {
+  created: number,
   name: string;
   privacy: Privacy;
   progenitor: AgentPubKeyB64;
@@ -54,19 +60,32 @@ export interface Properties {
 export type EntryTypes =
  | ({ type: 'Message'; } & MessageInput);
 
- export interface MessageInput {
-  content: string;
+export interface Contact {
+  currentActionHash?: ActionHash;
+  originalActionHash?: ActionHash;
+  avatar: string;
+  firstName: string;
+  lastName: string;
+  publicKeyB64: AgentPubKeyB64;
 }
+
+export interface MessageInput {
+  content: string;
+  bucket: number;
+}
+
+export type Messages = { [key: string]: Message }
 
 export interface Conversation {
   id: string; // the network seed
-  agentProfiles: { [key: AgentPubKeyB64]: Profile };
   cellDnaHash: DnaHash;
   config: Config;
   description?: string;
-  messages: { [key: string]: Message };
+  lastActivityAt: Date;
   privacy: Privacy;
   progenitor: AgentPubKey;
+  messages: Messages;
+  agentProfiles: { [key: AgentPubKeyB64]: Profile };
 }
 
 export interface MembraneProofData {
@@ -76,6 +95,7 @@ export interface MembraneProofData {
 }
 
 export interface Invitation {
+  created: number,
   conversationName: string;
   networkSeed: string;
   privacy: Privacy;
@@ -105,6 +125,12 @@ export interface Message {
   images: Image[];
   status?: 'pending' | 'confirmed' | 'delivered' | 'read'; // status of the message
   timestamp: Date;
+  bucket: number;
+}
+
+export type BucketInput = {
+  bucket: number,
+  count: number,
 }
 
 export interface MessageRecord {

@@ -1,5 +1,7 @@
 use hdk::prelude::*;
 use relay_integrity::*;
+
+use crate::get_entry_for_action;
 // use chrono::{DateTime, Utc, Datelike};
 // use crate::utils::*;
 
@@ -32,7 +34,8 @@ pub fn create_message(input: SendMessageInput) -> ExternResult<Record> {
     //     LinkTypes::MessageBlock,
     //     (),
     // )?;
-    let path = Path::from("all_messages");
+    let path = messages_path(input.message.bucket);
+    debug!("create_message path {:?}", path);
     let link = create_link(
         path.path_entry_hash()?,
         message_hash.clone(),
@@ -43,10 +46,7 @@ pub fn create_message(input: SendMessageInput) -> ExternResult<Record> {
     // TODO: handle errors. look for ack, try again on fail
     let _ = send_remote_signal(
         MessageRecord {
-            message: Some(Message {
-                content: input.message.content,
-                images: input.message.images,
-            }),
+            message: Some(input.message),
             original_action: message_hash.clone(),
             signed_action: record.signed_action().clone()
         },
@@ -95,15 +95,41 @@ pub fn create_message(input: SendMessageInput) -> ExternResult<Record> {
 //     Ok(results)
 // }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BucketInput {
+    pub bucket: u32,
+    pub count: usize,
+}
+
 #[hdk_extern]
-pub fn get_all_messages(_: ()) -> ExternResult<Vec<Link>> {
-    let path = Path::from("all_messages");
-    debug!("path: {:?}", path);
+pub fn get_message_hashes(input: BucketInput) -> ExternResult<Vec<ActionHash>> {
+    let mut hashes: Vec<ActionHash> = Vec::new();
+    let path: Path = messages_path(input.bucket);
     let links = get_links(
         GetLinksInputBuilder::try_new(path.path_entry_hash()?, LinkTypes::AllMessages)?
             .build(),
     )?;
-    debug!("links: {:?}", links);
+
+    // only return the hashes if the counts don't match
+    if links.len() != input.count {
+        for l in links {
+            hashes.push(ActionHash::try_from(l.target).map_err(|e| wasm_error!(e))?);
+        }
+    }
+    Ok(hashes)
+}
+
+#[hdk_extern]
+pub fn get_message_links_for_buckets(buckets: Vec<u32>) -> ExternResult<Vec<Link>> {
+    let mut links: Vec<Link> = Vec::new();
+    for bucket in buckets {
+        let path = messages_path(bucket);
+        let mut l = get_links(
+            GetLinksInputBuilder::try_new(path.path_entry_hash()?, LinkTypes::AllMessages)?
+                .build(),
+        )?;
+        links.append(&mut l);
+    }
     Ok(links)
 }
 
@@ -113,8 +139,20 @@ struct GetAgenProfileInput {
 }
 
 #[hdk_extern]
-pub fn get_all_message_entries(_: ()) -> ExternResult<Vec<MessageRecord>> {
-    let links = get_all_messages(())?;
+pub fn get_message_entries(hashes: Vec<ActionHash>) -> ExternResult<Vec<MessageRecord>> {
+    let mut results: Vec<MessageRecord> = Vec::new();
+    for hash in hashes {
+        if let Some(r) = get_latest_message(hash)? {
+            results.push (r);
+        }
+    }
+    Ok(results)
+}
+
+// TODO deprecate
+#[hdk_extern]
+pub fn get_messages_for_buckets(buckets: Vec<u32>) -> ExternResult<Vec<MessageRecord>> {
+    let links = get_message_links_for_buckets(buckets)?;
     let mut results: Vec<MessageRecord> = Vec::new();
     for l in links {
         let hash  = ActionHash::try_from(l.target).map_err(|e|wasm_error!(e))?;
@@ -205,6 +243,7 @@ pub fn get_original_message(
         }
     }
 }
+
 #[hdk_extern]
 pub fn get_all_revisions_for_message(
     original_message_hash: ActionHash,
@@ -243,6 +282,7 @@ pub fn get_all_revisions_for_message(
     records.insert(0, original_record);
     Ok(records)
 }
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UpdateMessageInput {
     pub original_message_hash: ActionHash,
@@ -270,25 +310,28 @@ pub fn update_message(input: UpdateMessageInput) -> ExternResult<Record> {
         )?;
     Ok(record)
 }
+
 #[hdk_extern]
 pub fn delete_message(original_message_hash: ActionHash) -> ExternResult<ActionHash> {
-    let details = get_details(original_message_hash.clone(), GetOptions::default())?
-        .ok_or(
-            wasm_error!(
-                WasmErrorInner::Guest("{pascal_entry_def_name} not found".to_string())
-            ),
-        )?;
-    let record = match details {
-        Details::Record(details) => Ok(details.record),
-        _ => {
-            Err(
+    let maybe_entry = get_entry_for_action(&original_message_hash)?;
+    let message = if let Some(app_entry) = maybe_entry {
+        match app_entry {
+            EntryTypes::Message(message) => Ok(message),
+            _=> Err(
                 wasm_error!(
                     WasmErrorInner::Guest("Malformed get details response".to_string())
                 ),
             )
         }
+    } else {
+        Err(
+            wasm_error!(
+                WasmErrorInner::Guest("Entry not found".to_string())
+            ),
+        )
     }?;
-    let path = Path::from("all_messages");
+
+    let path = messages_path(message.bucket);
     let links = get_links(
         GetLinksInputBuilder::try_new(path.path_entry_hash()?, LinkTypes::AllMessages)?
             .build(),
@@ -302,6 +345,7 @@ pub fn delete_message(original_message_hash: ActionHash) -> ExternResult<ActionH
     }
     delete_entry(original_message_hash)
 }
+
 #[hdk_extern]
 pub fn get_all_deletes_for_message(
     original_message_hash: ActionHash,
