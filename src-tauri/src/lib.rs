@@ -120,7 +120,7 @@ async fn setup(handle: AppHandle) -> anyhow::Result<()> {
         .main_window_builder(
             String::from("main"),
             false,
-            Some(String::from("Relay")),
+            Some(String::from("relay")),
             None,
         )
         .await?
@@ -176,7 +176,7 @@ fn holochain_dir() -> PathBuf {
         app_dirs2::app_root(
             app_dirs2::AppDataType::UserData,
             &app_dirs2::AppInfo {
-                name: "Relay",
+                name: "relay",
                 author: std::env!("CARGO_PKG_AUTHORS"),
             },
         )

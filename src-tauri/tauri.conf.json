@@ -1,5 +1,5 @@
 {
-  "productName": "Relay",
+  "productName": "relay",
   "version": "0.5.0-beta",
   "identifier": "org.holochain.relay",
   "build": {
