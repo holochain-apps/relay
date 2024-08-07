@@ -10,8 +10,8 @@ import { type Config, type Conversation, type Image, type Invitation, type Messa
 import { Bucket } from './bucket';
 import { MsgHistory } from './msgHistory';
 
-export const MINUTES_IN_BUCKET = 1  // 60 * 24 * 7  // 1 week
-export const MIN_MESSAGES_LOAD = 30
+export const MINUTES_IN_BUCKET = 60 * 24 * 1  // 1 day for now
+export const MIN_MESSAGES_LOAD = 20
 
 export class ConversationStore {
   public conversation: Writable<Conversation>;
