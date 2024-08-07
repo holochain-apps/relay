@@ -1,7 +1,7 @@
 ---
 manifest_version: "1"
-name: relay
+name: Relay
 ui:
   bundled: "../ui/dist.zip"
 happ_manifest:
-  bundled: "./relay.happ"
+  bundled: "./Relay.happ"
