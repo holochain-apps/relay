@@ -42,14 +42,14 @@
     <div class="flex flex-col flex-1 min-w-0 overflow-hidden ml-4"
       class:unread={$status === 'unread'}
     >
-      <span class="text-base">{@html store.title}</span>
+      <span class="text-base">{store.title}</span>
       <span class="text-nowrap overflow-hidden text-ellipsis text-xs min-w-0 flex items-center">
         {#if $status === 'unread'}
           <span class="bg-tertiary-500 rounded-full w-2 h-2 inline-block mr-2"></span>
         {/if}
         {#if $lastMessage}
-          {@html lastMessageAuthor || ""}:
-          {@html $lastMessage.content || ""}
+          {lastMessageAuthor || ""}:
+          {$lastMessage.content || ""}
         {/if}
       </span>
     </div>

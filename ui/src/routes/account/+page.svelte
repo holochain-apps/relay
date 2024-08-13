@@ -109,7 +109,7 @@
       </div>
     {:else}
       <div class="flex row items-center justify-center mb-10">
-        <h1 class='text-3xl flex-shrink-0 mr-2'>{@html firstName} {@html lastName}</h1>
+        <h1 class='text-3xl flex-shrink-0 mr-2'>{firstName} {lastName}</h1>
 
         <button on:click={() => editingName = true}>
           <SvgIcon icon='write' size='24' color='gray' moreClasses='cursor-pointer' />

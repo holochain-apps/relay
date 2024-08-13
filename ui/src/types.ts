@@ -117,12 +117,13 @@ export interface Image {
 
 export interface Message {
   hash: string;
-  author?: string; // TODO: do we use this?
+  author?: string; // Used in the UI to display the author's name
   authorKey: string;
-  avatar?: string; // TODO: do we use this?
+  avatar?: string; // Used in the UI to display the author's avatar
   content: string;
-  header?: string; // an optional header to display above this message in the conversation
+  header?: string; // an optional header to display above this message in the conversation UI
   images: Image[];
+  hideDetails?: boolean; // Used in the UI to toggle the display of the message details
   status?: 'pending' | 'confirmed' | 'delivered' | 'read'; // status of the message
   timestamp: Date;
   bucket: number;

@@ -71,7 +71,7 @@
 <Header>
   <a class='absolute' href={`/conversations/${conversationId}`}><SvgIcon icon='caretLeft' color='white' size='10' /></a>
   {#if conversation}
-    <h1 class="flex-1 grow text-center">{#if conversation.data.privacy === Privacy.Public}Group Details{:else}{@html conversation.title}{/if}</h1>
+    <h1 class="flex-1 grow text-center">{#if conversation.data.privacy === Privacy.Public}Group Details{:else}{conversation.title}{/if}</h1>
     {#if conversation.data.privacy === Privacy.Public || encodeHashToBase64(conversation.data.progenitor) === relayStore.client.myPubKeyB64}
       <a class='absolute right-5' href="/conversations/{conversation.data.id}/invite"><SvgIcon icon='addPerson' color='white' /></a>
     {/if}
@@ -163,7 +163,7 @@
       </div>
     {/if}
     <p class='text-sm text-surface-300'>Created: <Time timestamp={new Date(conversation.created)} format="MMMM DD, YYYY" /></p>
-    <p class='text-sm text-surface-300'>{@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}</p>
+    <p class='text-sm text-surface-300'>{numMembers } {#if numMembers === 1}Member{:else}Members{/if}</p>
 
     <div class="container mx-auto flex flex-col px-4">
       <ul class="flex-1 mt-10">

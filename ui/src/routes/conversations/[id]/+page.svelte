@@ -19,13 +19,11 @@
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext('relayStore')
   let relayStore = relayStoreContext.getStore()
-  let myPubKey = relayStore.client.myPubKey
   let myPubKeyB64 = relayStore.client.myPubKeyB64
 
   $: conversation = relayStore.getConversation(conversationId);
-  $: messageCount = conversation ? conversation.history.messageCount : undefined
+  $: contacts = relayStore.contacts
 
-  //let messages: { [key: string]: Message } = {};
   let agentProfiles: { [key: AgentPubKeyB64]: Profile } = {};
   let numMembers = 0;
   let unsubscribe : Unsubscriber;
@@ -123,7 +121,7 @@
     const messages = Object.values(($value as Conversation).messages).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
     const result: Message[] = [];
 
-    let lastDate: Date | null = null;
+    let lastMessage: Message | null = null;
 
     messages.forEach(message => {
       // Don't display message if we don't have a profile from the author yet.
@@ -132,19 +130,25 @@
         return;
       }
 
-      message.author = ($value as Conversation).agentProfiles[message.authorKey].fields.firstName;
-      message.avatar = ($value as Conversation).agentProfiles[message.authorKey].fields.avatar;
+      const contact = $contacts.find(c => c.publicKeyB64 === message.authorKey)
 
-      const formattedDate: string = message.timestamp.toLocaleDateString('en-US', {
-        weekday: 'long', month: 'long', day: 'numeric'
-      });
-
-      if (!lastDate || message.timestamp.toDateString() !== lastDate.toDateString()) {
-        result.push({ ...message, header: formattedDate });
-        lastDate = message.timestamp;
-      } else {
-        result.push({ ...message });
+      const displayMessage = {
+        ...message,
+        author: contact?.firstName || ($value as Conversation).agentProfiles[message.authorKey].fields.firstName,
+        avatar: contact?.avatar || ($value as Conversation).agentProfiles[message.authorKey].fields.avatar
       }
+
+      if (!lastMessage || message.timestamp.toDateString() !== lastMessage.timestamp.toDateString()) {
+        displayMessage.header = message.timestamp.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+      }
+
+      // If same person is posting a bunch of messages in a row, hide their name and avatar
+      if (lastMessage?.authorKey === message.authorKey && message.timestamp.getTime() - lastMessage.timestamp.getTime() < 1000 * 60 * 5) {
+        displayMessage.hideDetails = true
+      }
+
+      result.push(displayMessage);
+      lastMessage = message;
     })
 
     return result
@@ -232,7 +236,7 @@
 <Header>
   <a class='absolute' href="/conversations"><SvgIcon icon='caretLeft' color='white' size='10' /></a>
   {#if conversation}
-    <h1 class="flex-1 grow text-center"><a href={`/conversations/${conversationId}/details`}>{@html conversation.title}</a></h1>
+    <h1 class="flex-1 grow text-center"><a href={`/conversations/${conversationId}/details`}>{conversation.title}</a></h1>
     {#if conversation.data.privacy === Privacy.Public || encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64}
       <a class='absolute right-5' href="/conversations/{conversation.data.id}/invite"><SvgIcon icon='addPerson' color='white' /></a>
     {/if}
@@ -258,10 +262,10 @@
       {:else if conversation.data?.config.image}
         <img src={conversation.data?.config.image} alt='Conversation' class='w-32 h-32 min-h-32 mb-5 rounded-full object-cover' />
       {/if}
-      <h1 class='text-3xl flex-shrink-0 mb-1 text-nowrap text-ellipsis overflow-hidden'>{@html conversation.title}</h1>
+      <h1 class='text-3xl flex-shrink-0 mb-1 text-nowrap text-ellipsis overflow-hidden'>{conversation.title}</h1>
       <!-- if joining a conversation created by someone else, say still syncing here until thre are at least 2 members -->
       <a href={`/conversations/${conversationId}/details`} class='text-surface-300 text-sm'>
-        {@html numMembers } {#if numMembers === 1}Member{:else}Members{/if}
+        {numMembers } {#if numMembers === 1}Member{:else}Members{/if}
       </a>
       {#if $processedMessages.length === 0 && encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64}
         <div class='flex flex-col items-center justify-center h-full w-full'>
@@ -290,15 +294,21 @@
                   <div class="text-center text-xs text-secondary-500">{message.header}</div>
                 </li>
               {/if}
-              <li class='mt-auto mb-3 flex {fromMe ? 'justify-end' : 'justify-start'}'>
+              <li class='mt-auto {!message.hideDetails && 'mt-3'} flex {fromMe ? 'justify-end' : 'justify-start'}'>
                 {#if !fromMe}
-                  <Avatar agentPubKey={message.authorKey} size='24' moreClasses='items-start mt-1'/>
+                  {#if !message.hideDetails}
+                    <Avatar image={message.avatar} agentPubKey={message.authorKey} size='24' moreClasses='items-start mt-1'/>
+                  {:else}
+                    <span class='min-w-6 inline-block'></span>
+                  {/if}
                 {/if}
-                <div class='mb-2 ml-3 {fromMe && 'items-end text-end'}'>
-                  <span class='flex items-baseline {fromMe && 'flex-row-reverse opacity-80'}'>
-                    <span class="font-bold">{@html fromMe ? "You" : message.author}</span>
-                    <span class="text-surface-200 mx-2 text-xxs"><Time timestamp={message.timestamp} format="h:mma" /></span>
-                  </span>
+                <div class='ml-3 {fromMe && 'items-end text-end'}'>
+                  {#if !message.hideDetails}
+                    <span class='flex items-baseline {fromMe && 'flex-row-reverse opacity-80'}'>
+                      <span class="font-bold">{fromMe ? "You" : message.author}</span>
+                      <span class="text-surface-200 mx-2 text-xxs"><Time timestamp={message.timestamp} format="h:mma" /></span>
+                    </span>
+                  {/if}
                   {#if message.images && message.images.length > 0}
                       {#each message.images as image (image.name + image.lastModified)}
                         {#if image && image.status === 'loaded' || image.status === 'pending'}
@@ -316,7 +326,7 @@
                         {/if}
                       {/each}
                   {/if}
-                  <div class="font-light {fromMe && 'text-end'}">{@html message.content}</div>
+                  <div class="font-light {fromMe && 'text-end'}">{message.content}</div>
                 </div>
               </li>
             {/each}
