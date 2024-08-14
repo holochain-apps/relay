@@ -5,7 +5,8 @@
   import Button from "$lib/Button.svelte";
   import Header from '$lib/Header.svelte';
   import SvgIcon from "$lib/SvgIcon.svelte";
-  import { handleFileChange, MIN_TITLE_LENGTH, resizeAndExportAvatar } from '$lib/utils';
+  import { t } from '$lib/translations';
+  import { handleFileChange, MIN_TITLE_LENGTH } from '$lib/utils';
   import { RelayStore } from '$store/RelayStore';
   import { Privacy } from '../../../types';
 
@@ -30,7 +31,7 @@
 
 <Header>
   <button class='text-4xl mr-5 absolute' on:click={() => history.back()}><SvgIcon icon='caretLeft' color='white' size='10' /></button>
-  <h1 class="flex-1 text-center">New Group</h1>
+  <h1 class="flex-1 text-center">{$t('common.new_group')}</h1>
 </Header>
 
 <div class='flex justify-center items-center flex-col my-10'>
@@ -48,12 +49,12 @@
 </div>
 
 <div class='flex flex-col justify-start grow'>
-  <h1 class='h1'>Group name</h1>
+  <h1 class='h1'>{$t('conversations.group_name')}</h1>
   <input
     autofocus
     class='mt-2 bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
     type='text'
-    placeholder='Enter name here'
+    placeholder={$t('conversations.enter_name_here')}
     name='title'
     bind:value={title}
     minlength={MIN_TITLE_LENGTH}
@@ -62,6 +63,6 @@
 
 <footer>
   <Button moreClasses='w-72 justify-center' onClick={(e) => { createConversation(e, Privacy.Public)}} disabled={!valid || pendingCreate}>
-    <strong class='ml-2'>Create group</strong>
+    <strong class='ml-2'>{$t('conversations.create_group')}</strong>
   </Button>
 </footer>

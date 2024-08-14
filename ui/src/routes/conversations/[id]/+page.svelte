@@ -11,9 +11,13 @@
   import Button from "$lib/Button.svelte";
   import Header from '$lib/Header.svelte';
   import SvgIcon from '$lib/SvgIcon.svelte';
-  import { RelayStore } from '$store/RelayStore';
+  import { t } from '$lib/translations';
   import { copyToClipboard } from '$lib/utils';
+  import { RelayStore } from '$store/RelayStore';
   import { Privacy, type Conversation, type Message, type Image } from '../../../types';
+
+  // Silly hack to get around issues with typescript in sveltekit-i18n
+  const tAny = t as any;
 
   $: conversationId = $page.params.id;
 
@@ -263,24 +267,24 @@
         <img src={conversation.data?.config.image} alt='Conversation' class='w-32 h-32 min-h-32 mb-5 rounded-full object-cover' />
       {/if}
       <h1 class='text-3xl flex-shrink-0 mb-1 text-nowrap text-ellipsis overflow-hidden'>{conversation.title}</h1>
-      <!-- if joining a conversation created by someone else, say still syncing here until thre are at least 2 members -->
+      <!-- if joining a conversation created by someone else, say still syncing here until there are at least 2 members -->
       <a href={`/conversations/${conversationId}/details`} class='text-surface-300 text-sm'>
-        {numMembers } {#if numMembers === 1}Member{:else}Members{/if}
+        {$tAny('conversations.num_members', { count: numMembers })}
       </a>
       {#if $processedMessages.length === 0 && encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64}
         <div class='flex flex-col items-center justify-center h-full w-full'>
           <img src='/clear-skies.png' alt='No contacts' class='w-32 h-32 mb-4 mt-4' />
           {#if conversation.data.privacy === Privacy.Private}
-            <p class='text-xs text-center text-secondary-500 mx-10 mb-8'>Nobody else is here yet! Share personal invitations to start the conversation.</p>
+            <p class='text-xs text-center text-secondary-500 mx-10 mb-8'>{$t('conversations.share_personal_invitations')}</p>
             <Button onClick={() => goto(`/conversations/${conversation.data.id}/details`)} moreClasses='w-72 justify-center'>
               <SvgIcon icon='invite' size='24' color='red' />
-              <strong class='ml-2'>Send invitations</strong>
+              <strong class='ml-2'>{$t('conversations.send_invitations')}</strong>
             </Button>
           {:else}
-            <p class='text-xs text-center text-secondary-500 mx-10 mb-8'>Nobody else is here! Share your invitation code to start the conversation.</p>
+            <p class='text-xs text-center text-secondary-500 mx-10 mb-8'>{$t('conversations.share_invitation_code')}</p>
             <Button onClick={() => copyToClipboard(conversation.publicInviteCode)} moreClasses='w-64 justify-center'>
               <SvgIcon icon='copy' size='18' color='red' />
-              <strong class='ml-2 text-sm'>Copy invitation code</strong>
+              <strong class='ml-2 text-sm'>{$t('conversations.copy_invitation_code')}</strong>
             </Button>
           {/if}
         </div>
@@ -343,7 +347,14 @@
       </label>
       <div class='flex flex-col w-full'>
         <!-- svelte-ignore a11y-autofocus -->
-        <input type="text" bind:this={newMessageInput} bind:value={newMessageText} autofocus class="w-full bg-surface-500 placeholder:text-sm placeholder:text-gray-400 focus:border-gray-500 focus:ring-0 border-0" placeholder="Type a message...">
+        <input
+          autofocus
+          type="text"
+          bind:this={newMessageInput}
+          bind:value={newMessageText}
+          class="w-full bg-surface-500 placeholder:text-sm placeholder:text-gray-400 focus:border-gray-500 focus:ring-0 border-0"
+          placeholder={$t('conversations.message_placeholder')}
+        />
         <div class='flex flex-row px-4'>
           {#each $newMessageImages as image, i}
             {#if image.status === 'loading'}

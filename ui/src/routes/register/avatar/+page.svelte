@@ -5,6 +5,7 @@
   import Button from "$lib/Button.svelte"
   import Header from '$lib/Header.svelte';
   import SvgIcon from "$lib/SvgIcon.svelte";
+  import { t } from '$lib/translations';
   import { RelayClient } from '$store/RelayClient';
   import { UserStore } from '$store/UserStore';
   import { handleFileChange, resizeAndExportAvatar } from '$lib/utils';
@@ -37,7 +38,7 @@
 </Header>
 
 <div class='flex justify-center items-center flex-col grow'>
-  <h1 class='h1 mb-10'>Select an avatar</h1>
+  <h1 class='h1 mb-10'>{$t('common.select_an_avatar')}</h1>
 
   <!-- Hidden file input -->
   <input type="file" accept="image/jpeg, image/png, image/gif" capture="user" id="avatarInput" class='hidden'
@@ -62,6 +63,6 @@
 
 <div class='items-right w-full flex justify-end pr-4'>
   <Button onClick={createAccount}>
-    <SvgIcon icon='hand' size='20' /> <strong class='ml-2'>Jump in</strong>
+    <SvgIcon icon='hand' size='20' /> <strong class='ml-2'>{$t('common.jump_in')}</strong>
   </Button>
 </div>

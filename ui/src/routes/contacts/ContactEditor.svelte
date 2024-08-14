@@ -2,11 +2,15 @@
 	import { isEmpty } from 'lodash-es';
   import { getContext } from 'svelte';
   import { writable, get } from 'svelte/store';
-  import { decodeHashFromBase64, encodeHashToBase64, type HoloHash } from "@holochain/client";
+  import { decodeHashFromBase64, type HoloHash } from "@holochain/client";
   import { goto } from '$app/navigation';
   import Button from "$lib/Button.svelte";
-  import { handleFileChange, resizeAndExportAvatar } from '$lib/utils';
+  import { t } from '$lib/translations';
+  import { handleFileChange } from '$lib/utils';
   import { RelayStore } from '$store/RelayStore';
+
+  // Silly thing to get around typescript issues with sveltekit-i18n
+  const tAny = t as any
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext('relayStore')
 	let relayStore = relayStoreContext.getStore()
@@ -32,17 +36,17 @@
       error.set('')
     } else if (decodedPublicKey.length !== 39) {
       valid = false
-      error.set('Invalid contact code')
+      error.set($t('contacts.invalid_contact_code'))
     } else if (!editContactId && $contacts.find(c => c.data.publicKeyB64 === publicKeyB64)) {
       valid = false
-      error.set('Contact already exists')
+      error.set($t('contacts.contact_already_exist'))
     } else {
       valid = true
       error.set('')
     }
   } catch (e) {
     valid = false
-    error.set('Invalid contact code')
+    error.set($t('contacts.invalid_contact_code'))
   }
 
   async function saveContact(e: Event) {
@@ -56,7 +60,7 @@
       }
     } catch (e) {
       console.error(e)
-      error.set(`Error ${editContactId ? 'updating' : 'creating'} contact`)
+      error.set($tAny('contacts.error_saving', { updating: !!editContactId }))
       pendingSave = false
     }
   }
@@ -87,31 +91,31 @@
 </div>
 
 <div class='flex flex-col justify-start grow px-8 w-full'>
-  <h3 class='h3'>First Name *</h3>
+  <h3 class='h3'>{$t('common.first_name')} *</h3>
   <input
     autofocus
     class='bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
     type='text'
-    placeholder='Enter first name'
+    placeholder={$t('contacts.enter_first_name')}
     name='name'
     bind:value={firstName}
     minlength={1}
   />
 
-  <h3 class='h3 mt-4'>Last Name</h3>
+  <h3 class='h3 mt-4'>{$t('common.last_name')}</h3>
   <input
     class='bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
     type='text'
-    placeholder='Enter last name'
+    placeholder={$t('contacts.enter_last_name')}
     name='name'
     bind:value={lastName}
   />
 
-  <h3 class='h3 mt-4'>Contact code *</h3>
+  <h3 class='h3 mt-4'>{$t('contacts.contact_code')} *</h3>
   <input
     class='bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
     type='text'
-    placeholder='Enter contact code'
+    placeholder={$t('contacts.enter_contact_code')}
     name='publicKey'
     bind:value={publicKeyB64}
     minlength={1}
@@ -120,7 +124,7 @@
     <p class='text-xs text-error-500 mt-1 ml-1'>{$error}</p>
   {/if}
   {#if !editContactId}
-    <p class='text-xs text-secondary-600 mt-4 mb-4'>Request your contact's unique Relay contact code, which is found by visiting their personal profile in the Relay App.</p>
+    <p class='text-xs text-secondary-600 mt-4 mb-4'>{$t('contacts.request_contact_code')}</p>
   {/if}
 </div>
 
@@ -130,6 +134,6 @@
     onClick={(e) => { saveContact(e)}}
     disabled={!valid || pendingSave}
   >
-    <strong class='ml-2'>{#if editContactId}Save{:else}Done{/if}</strong>
+    <strong class='ml-2'>{#if editContactId}{$t('common.save')}{:else}{$t('common.done')}{/if}</strong>
   </Button>
 </footer>

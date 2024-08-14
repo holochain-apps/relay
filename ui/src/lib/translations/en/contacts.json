@@ -1,0 +1,12 @@
+{
+  "contact_already_exist": "Contact already exists",
+  "contact_code": "Contact code",
+  "create_new_contact": "Create New Contact",
+  "edit_contact": "Edit Contact",
+  "enter_contact_code": "Enter contact code",
+  "enter_first_name": "Enter first name",
+  "enter_last_name": "Enter last name",
+  "error_saving": "Error {{updating; true:updating; false:creating;}} contact",
+  "invalid_contact_code": "Invalid contact code",
+  "request_contact_code": "Request your contact's unique Relay contact code, which is found by visiting their personal profile in the Relay App."
+}
