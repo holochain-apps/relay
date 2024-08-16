@@ -9,7 +9,7 @@
   $: conversation = store.conversation;
   $: messageCount = store.history.messageCount;
   $: status = store.status;
-  $: lastMessage = derived(conversation, ($conversation) => Object.values($conversation.messages).at(-1))
+  $: lastMessage = store.lastMessage
   $: lastMessageAuthor = $lastMessage ? $conversation.agentProfiles[$lastMessage.authorKey].fields.firstName : null
   $: allMembers = store.allMembers
 </script>

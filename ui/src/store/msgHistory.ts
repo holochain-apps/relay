@@ -11,7 +11,7 @@ export class MsgHistory {
   constructor(currentBucket:number, dnaHash: DnaHash) {
     this.dnaB64 = encodeHashToBase64(dnaHash)
     const buckets: Bucket[] = []
-    for (let b = 0; b<= currentBucket;  b+=1) {
+    for (let b = 0; b <= currentBucket; b += 1) {
       const bucketJSON = localStorage.getItem(`c.${this.dnaB64}.${b}`)
       buckets[b] = bucketJSON ? new Bucket(bucketJSON) : new Bucket(undefined)
     }

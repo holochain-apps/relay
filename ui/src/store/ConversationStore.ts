@@ -2,21 +2,22 @@ import { isEmpty, uniq } from 'lodash-es';
 import { encode } from '@msgpack/msgpack';
 import { Base64 } from 'js-base64';
 import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64, type ActionHashB64, type ActionHash } from "@holochain/client";
-import { writable, get, type Writable } from 'svelte/store';
+import { derived, get, writable, type Writable } from 'svelte/store';
 import { v4 as uuidv4 } from 'uuid';
 import LocalStorageStore from '$store/LocalStorageStore'
 import { RelayStore } from '$store/RelayStore'
-import { type Config, type Conversation, type Image, type Invitation, type Message, type MessageRecord, Privacy, type Messages, } from '../types';
-import { Bucket } from './bucket';
+import { type Config, type Contact, type Conversation, type Image, type Invitation, type Message, type MessageRecord, Privacy, type Messages, } from '../types';
 import { MsgHistory } from './msgHistory';
 
 export const MINUTES_IN_BUCKET = 60 * 24 * 1  // 1 day for now
 export const MIN_MESSAGES_LOAD = 20
 
 export class ConversationStore {
-  public conversation: Writable<Conversation>;
+  public conversation: Writable<Conversation>
   public history: MsgHistory
+  public invitedContactKeysStore: Writable<string>
   public lastBucketLoaded: number = -1
+  public lastMessage: Writable<Message | null>
   public status
   private client
 
@@ -34,8 +35,10 @@ export class ConversationStore {
     const currentBucket = this.currentBucket()
     this.history = new MsgHistory(currentBucket, this.cellDnaHash)
 
-    this.conversation = writable({ id, cellDnaHash, config, lastActivityAt: new Date(-8640000000000000), privacy, progenitor, agentProfiles: {}, messages });
-    this.status = writable('unread')
+    this.conversation = writable({ id, cellDnaHash, config, privacy, progenitor, agentProfiles: {}, messages });
+    this.invitedContactKeysStore = LocalStorageStore(`conversation_${this.data.id}`, '')
+    this.lastMessage = writable(null)
+    this.status = LocalStorageStore<string>(`conversation_${this.id}_status`, 'closed')
     this.client = relayStore.client
   }
 
@@ -70,16 +73,22 @@ export class ConversationStore {
     return [bucket - buckets.length +1, messageHashes]
   }
 
-  get data() {
-    return get(this.conversation);
+  async fetchAgents() {
+    const agentProfiles = await this.client.getAllAgents(this.data.id)
+    this.conversation.update(c => {
+      c.agentProfiles = {...agentProfiles}
+      return c
+    })
+    return agentProfiles
   }
 
   subscribe(run: any) {
     return this.conversation.subscribe(run);
   }
 
-  setStatus(s: string) {
-    this.status.update(status=>s)
+  /****** Getters ******/
+  get data() {
+    return get(this.conversation);
   }
 
   get publicInviteCode() {
@@ -100,8 +109,7 @@ export class ConversationStore {
 
   get invitedContactKeys() {
     if (this.data.privacy === Privacy.Public) return []
-    const localConversationStore = LocalStorageStore<string>(`conversation_${this.data.id}`, '')
-    const currentValue = get(localConversationStore)
+    const currentValue = get(this.invitedContactKeysStore)
     return isEmpty(currentValue) ? [] : currentValue.split(',')
   }
 
@@ -171,15 +179,6 @@ export class ConversationStore {
     }
   }
 
-  async fetchAgents() {
-    const agentProfiles = await this.client.getAllAgents(this.data.id)
-    this.conversation.update(c => {
-      c.agentProfiles = {...agentProfiles}
-      return c
-    })
-    return agentProfiles
-  }
-
   async getConfig() {
     const config = await this.client._getConfig(this.data.id)
     if (config) {
@@ -220,15 +219,15 @@ export class ConversationStore {
         if (hashesToLoad.length != messageRecords.length) {
           console.log("Warning: not all requested hashes were loaded")
         }
-        let lastActivityAt = this.data.lastActivityAt
+        let lastMessage = get(this.lastMessage)
         for (const messageRecord of messageRecords) {
           try {
             const message = messageRecord.message
             if (message) {
               message.hash = encodeHashToBase64(messageRecord.signed_action.hashed.hash)
               message.timestamp = new Date(messageRecord.signed_action.hashed.content.timestamp / 1000)
-              if (message.timestamp > lastActivityAt) {
-                lastActivityAt = message.timestamp
+              if (!lastMessage || message.timestamp > lastMessage.timestamp) {
+                lastMessage = message
               }
               message.authorKey = encodeHashToBase64(messageRecord.signed_action.hashed.content.author)
               message.images = ((message.images as any[]) || []).map(i => ({
@@ -257,10 +256,10 @@ export class ConversationStore {
           }
         }
         this.conversation.update(c => {
-          c.lastActivityAt = lastActivityAt
           c.messages = {...newMessages}
           return c
         })
+        this.lastMessage.set(lastMessage)
         return Object.keys(newMessages)
       }
     } catch (e) {
@@ -269,56 +268,6 @@ export class ConversationStore {
     }
     return []
   }
-
-  // async getMessages(buckets: Array<number>) {
-  //   try {
-  //     const newMessages: { [key: string] : Message } = this.data.messages
-  //     const messageRecords: Array<MessageRecord> = await this.client.getAllMessages(this.data.id, buckets)
-  //     for (const messageRecord of messageRecords) {
-  //       try {
-  //         const message = messageRecord.message
-  //         if (message) {
-  //           message.hash = encodeHashToBase64(messageRecord.signed_action.hashed.hash)
-  //           message.timestamp = new Date(messageRecord.signed_action.hashed.content.timestamp / 1000)
-  //           message.authorKey = encodeHashToBase64(messageRecord.signed_action.hashed.content.author)
-  //           message.images = ((message.images as any[]) || []).map(i => ({
-  //             fileType: i.file_type,
-  //             lastModified: i.last_modified,
-  //             name: i.name,
-  //             size: i.size,
-  //             storageEntryHash: i.storage_entry_hash,
-  //             status: 'loading'
-  //           }))
-  //           message.status = 'confirmed'
-
-  //           // Async load the images
-  //           this.loadImagesForMessage(message)
-
-  //           if (!newMessages[message.hash]) {
-  //             const matchesPending = Object.values(this.data.messages).find(m => m.status === 'pending' && m.authorKey === message.authorKey && m.content === message.content);
-  //             if (matchesPending) {
-  //               delete newMessages[matchesPending.hash]
-  //             }
-  //             newMessages[message.hash] = message
-  //           }
-  //         }
-  //       } catch(e) {
-  //         console.error("Unable to parse message, ignoring", messageRecord, e)
-  //       }
-  //     }
-
-  //     // TODO: only add/update new messages
-  //     this.conversation.update(c => {
-  //       c.messages = {...newMessages}
-  //       return c
-  //     })
-  //     return newMessages
-  //   } catch (e) {
-  //     //@ts-ignore
-  //     console.error("Error getting messages", e)
-  //   }
-  //   return []
-  // }
 
   bucketFromTimestamp(timestamp: number) : number {
     const diff = timestamp - this.created
@@ -331,6 +280,17 @@ export class ConversationStore {
 
   currentBucket() :number {
     return this.bucketFromDate(new Date())
+  }
+
+  get lastActivityAt() {
+    return derived(this.lastMessage, ($lastMessage) =>
+      $lastMessage ? $lastMessage.timestamp.getTime() : this.created
+    )
+  }
+
+  /***** Setters & actions ******/
+  setStatus(s: string) {
+    this.status.set(s)
   }
 
   async sendMessage(authorKey: string, content: string, images: Image[]) {
@@ -353,8 +313,9 @@ export class ConversationStore {
   addMessage(message: Message): void {
     this.conversation.update(conversation => {
       message.images = message.images || [];
-      if (message.timestamp > conversation.lastActivityAt) {
-        conversation.lastActivityAt = message.timestamp
+      const lastMessage = get(this.lastMessage)
+      if (!lastMessage || message.timestamp > lastMessage.timestamp) {
+        this.lastMessage.set(message)
       }
       return { ...conversation, messages: {...conversation.messages, [message.hash]: message } };
     });
@@ -433,5 +394,10 @@ export class ConversationStore {
     const cellAndConfig = this.relayStore.client.conversations[this.id]
     await this.relayStore.client._setConfig(config, cellAndConfig.cell.cell_id)
     this.conversation.update(conversation => ({ ...conversation, config }))
+  }
+
+  // Invite more contacts to this private conversation
+  addContacts(invitedContacts: Contact[]) {
+    this.invitedContactKeysStore.set(get(this.invitedContactKeysStore).split(',').concat(invitedContacts.map(c => c.publicKeyB64)).join(','))
   }
 }

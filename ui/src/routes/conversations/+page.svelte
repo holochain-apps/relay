@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getContext } from 'svelte';
-  import { derived } from 'svelte/store';
+  import { derived, get } from 'svelte/store';
   import { goto } from '$app/navigation';
   import Avatar from '$lib/Avatar.svelte';
   import Header from '$lib/Header.svelte';
@@ -12,7 +12,7 @@
   let relayStore = relayStoreContext.getStore()
 
   $: conversations = derived(relayStore.conversations, ($value) => {
-    return $value.sort((a, b) => b.data.lastActivityAt.getTime() - a.data.lastActivityAt.getTime())
+    return $value.sort((a, b) => get(b.lastActivityAt) - get(a.lastActivityAt))
   })
 </script>
 

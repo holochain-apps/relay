@@ -92,6 +92,12 @@ export class RelayStore {
     const privacy = properties.privacy
     const seed = convoCellAndConfig.cell.dna_modifiers.network_seed
     const newConversation = new ConversationStore(this, seed, convoCellAndConfig.cell.cell_id[0], convoCellAndConfig.config, properties.created, privacy, progenitor )
+    const unsub = newConversation.lastMessage.subscribe(() => {
+      // Trigger update to conversations store whenever lastMessage changes
+      this.conversations.update((convs) => {
+        return [...convs]; // Force reactivity by returning a new array reference
+      });
+    });
 
     this.conversations.update(conversations => [...conversations, newConversation])
     await newConversation.initialize()

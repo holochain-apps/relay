@@ -50,8 +50,7 @@
     // TODO: update config.title?
 
     if (conversation) {
-      const localStore = LocalStorageStore(`conversation_${conversation.id}`, '')
-      localStore.set(get(localStore).split(',').concat($selectedContacts.map(c => c.publicKeyB64)).join(','))
+      conversation.addContacts($selectedContacts)
       goto(`/conversations/${conversation.id}/details`)
     }
   }
