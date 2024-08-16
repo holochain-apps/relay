@@ -5,6 +5,7 @@
   import Button from "$lib/Button.svelte";
   import Header from '$lib/Header.svelte';
   import SvgIcon from '$lib/SvgIcon.svelte';
+  import { t } from '$lib/translations';
   import { copyToClipboard, handleFileChange } from '$lib/utils';
   import { RelayClient } from '$store/RelayClient';
 	import { ProfilesStore } from '@holochain-open-dev/profiles';
@@ -73,7 +74,7 @@
           autofocus
           class='text-3xl max-w-40 text-start bg-surface-900 border-none outline-none focus:outline-none pl-0.5 pt-0 focus:ring-0'
           type='text'
-          placeholder='First name *'
+          placeholder={$t('common.first_name') + ' *'}
           name='firstName'
           bind:this={firstNameElem}
           value={firstName}
@@ -85,7 +86,7 @@
         <input
           class='text-3xl max-w-40 text-start bg-surface-900 border-none outline-none focus:outline-none pl-0.5 pt-0 focus:ring-0'
           type='text'
-          placeholder='Last Name'
+          placeholder={$t('common.last_name')}
           name='lastName'
           bind:this={lastNameElem}
           value={lastName}
@@ -123,7 +124,7 @@
   <p class='w-64 text-nowrap overflow-hidden text-ellipsis mt-8 text-secondary-600 mb-4'>{agentPublicKey64}</p>
   <Button onClick={() => copyToClipboard(agentPublicKey64)} moreClasses='w-64 text-sm'>
     <SvgIcon icon='copy' size='22' color='black' moreClasses='mr-3' />
-    <strong>Copy your contact code</strong>
+    <strong>{$t('common.copy_your_contact_code')}</strong>
   </Button>
 </div>
 {/if}

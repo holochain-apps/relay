@@ -17,7 +17,7 @@
     "spin-network": "hc s clean && npm run build:happ && UI_PORT=1420 concurrently \"npm start -w ui\" \"npm run spin:happ\" \"holochain-playground\"",
     "test": "npm run build:zomes && hc app pack workdir --recursive && npm t -w tests",
     "launch:happ": "concurrently \"hc run-local-services --bootstrap-port $BOOTSTRAP_PORT --signal-port $SIGNAL_PORT\" \"echo pass | RUST_LOG=warn hc launch --piped -n $AGENTS workdir/relay.happ --ui-port $UI_PORT network --bootstrap http://127.0.0.1:\"$BOOTSTRAP_PORT\" webrtc ws://127.0.0.1:\"$SIGNAL_PORT\"\"",
-    "spin:happ": "hc-spin -n $AGENTS workdir/relay.happ --ui-port $UI_PORT ",
+    "spin:happ": "hc-spin -n $AGENTS workdir/relay.happ --ui-port $UI_PORT",
     "package": "npm run build:happ && npm run package -w ui && hc web-app pack workdir --recursive",
     "start:happ": "echo \"starting with admin $VITE_ADMIN_PORT\" && RUST_LOG=warn echo \"pass\" | hc s -f=$VITE_ADMIN_PORT --piped generate workdir/relay.happ --run=$VITE_APP_PORT -a relay network -b \"http://127.0.0.1:$BOOTSTRAP_PORT\"  webrtc \"ws://127.0.0.1:$SIGNAL_PORT\"",
     "build:happ": "npm run build:zomes && hc app pack workdir --recursive",

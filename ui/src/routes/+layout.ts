@@ -1,9 +1,15 @@
 export const prerender = true;
 export const ssr = false;
 
-// import * as db from '$lib/server/database';
 import type { LayoutLoad } from './$types';
+import { loadTranslations } from '$lib/translations';
 
-export const load: LayoutLoad = async () => {
-  return {}
+export const load: LayoutLoad = async ({ url }) => {
+  const { pathname } = url;
+
+  const initLocale = navigator.language.split('-')[0]
+
+  await loadTranslations(initLocale, pathname)
+
+  return {};
 };

@@ -1,19 +1,19 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
   import { derived, get, writable } from 'svelte/store';
-  import { encode } from '@msgpack/msgpack';
-  import { Base64 } from 'js-base64';
-  import { type AgentPubKey, decodeHashFromBase64 } from "@holochain/client";
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import Avatar from '$lib/Avatar.svelte';
   import Button from "$lib/Button.svelte";
   import Header from '$lib/Header.svelte';
   import SvgIcon from '$lib/SvgIcon.svelte';
+  import { t } from '$lib/translations';
   import LocalStorageStore from '$store/LocalStorageStore';
   import { RelayStore } from '$store/RelayStore';
   import { copyToClipboard } from '$lib/utils';
-  import { type Contact, type Invitation, Privacy } from '../../../../types'
+  import { type Contact, Privacy } from '../../../../types'
+
+  const tAny = t as any
 
 	$: conversationId = $page.params.id;
 
@@ -61,58 +61,37 @@
   <button class='text-4xl mr-5 absolute' on:click={() => history.back()}>
     <SvgIcon icon='caretLeft' color='white' size='10' />
   </button>
-  <h1 class="flex-1 text-center">Add people to {#if conversation && conversation.data.privacy === Privacy.Public}group{:else}conversation{/if}</h1>
+  <h1 class="flex-1 text-center">{$tAny('conversations.add_people', { public: conversation && conversation.data.privacy === Privacy.Public })}</h1>
 </Header>
 
 {#if conversation}
   {#if conversation.data.privacy === Privacy.Public}
     <div class="container mx-auto flex flex-col justify-center items-center grow px-10">
       <img src='/share-public-invite.png' alt="Share Key" class='mb-4'/>
-      <h1 class='h1 mb-2'>Open invite code</h1>
-      <p class='mb-5'>Share with people to begin chatting!</p>
+      <h1 class='h1 mb-2'>{$t('conversations.open_invite_code')}</h1>
+      <p class='mb-5'>{$t('conversations.share_with_people')}</p>
     </div>
 
     <footer>
       <Button onClick={() => copyToClipboard(conversation.publicInviteCode)} moreClasses='w-64'>
         <p class='w-64 text-nowrap overflow-hidden text-ellipsis'>{conversation.publicInviteCode}</p>
-        <img src="/copy.svg" alt="Copy Icon" width='16' /><span class='text-xs text-tertiary-200'>COPY</span>
+        <img src="/copy.svg" alt="Copy Icon" width='16' />&nbsp;<span class='text-xs text-tertiary-500'>{$t('common.copy')}</span>
       </Button>
-      <Button moreClasses='bg-surface-400 text-secondary-50 w-64 justify-center' onClick={() => goto(`/conversations/${conversationId}`)}>Done</Button>
+      <Button moreClasses='bg-surface-400 text-secondary-50 w-64 justify-center' onClick={() => goto(`/conversations/${conversationId}`)}>{$t('common.done')}</Button>
     </footer>
   {:else}
     <div class="container mx-auto flex items-center flex-col flex-1 w-full p-5 text-secondary-500 relative">
-      <input type='text' class='w-full h-12 bg-surface-500 text-primary-700 text-md rounded-full px-4 my-5 border-0' placeholder='Search name or contact code' bind:value={search} />
-
-      <div class='mb-5 flex justify-between w-full gap-4'>
-        <button
-          class='w-28 h-24 bg-surface-500 text-xs text-primary-700 rounded-2xl py-2 flex flex-col items-center disabled:opacity-50'
-          on:click={() => goto('/conversations/join')}
-        >
-          <SvgIcon icon='ticket' size='32' color='red' moreClasses='flex-grow' />
-          <p class=''>Use Invite Code</p>
-        </button>
-
-        <button
-          class='w-28 h-24 bg-surface-500 text-xs text-primary-700 rounded-2xl py-2 flex flex-col items-center disabled:opacity-50'
-          on:click={() => goto('/contacts/new')}
-        >
-          <SvgIcon icon='newPerson' size='32' color='red' moreClasses='flex-grow' />
-          <p>New Contact</p>
-        </button>
-
-        <button
-          class='w-28 h-24 bg-surface-500 text-xs text-primary-700 rounded-2xl py-2 flex flex-col items-center disabled:opacity-50'
-          on:click={() => goto('/conversations/new')}
-        >
-          <SvgIcon icon='people' size='32' color='red' moreClasses='flex-grow'/>
-          <p>New Group</p>
-        </button>
-      </div>
+      <input
+        type='text'
+        class='w-full h-12 bg-surface-500 text-primary-700 text-md rounded-full px-4 my-5 border-0'
+        placeholder={$t('conversations.search_placeholder')}
+        bind:value={search}
+      />
 
       {#if $contacts.length === 0}
         <img src='/clear-skies.png' alt='No contacts' class='w-32 h-32 mb-4 mt-10' />
-        <h2 class='text-lg text-primary-200'>You haven't added any contacts</h2>
-        <p class='text-xs text-center'>There's nobody to chat with yet! Add your trusted friends and family by requesting their Relay contact code, found in their personal profile inside the Relay app.</p>
+        <h2 class='text-lg text-primary-200'>{$t('create.no_contacts_header')}</h2>
+        <p class='text-xs text-center'>{$t('create.no_contacts_text')}</p>
       {:else}
         <div class='w-full font-light'>
           {#each $contacts as contact, i}
@@ -132,9 +111,9 @@
               </div>
               <p class='flex-1 text-start'>{contact.firstName} {contact.lastName}</p>
               {#if alreadyInConversation}
-                <span class='text-xs text-primary-700 font-extralight'>Already a member</span>
+                <span class='text-xs text-primary-700 font-extralight'>{$t('conversations.already_member')}</span>
               {:else if alreadyInvited}
-                <span class='text-xs text-primary-700 font-extralight'>Already invited</span>
+                <span class='text-xs text-primary-700 font-extralight'>{$t('conversations.already_invited')}</span>
               {:else}
                 <span class='text-lg text-tertiary-600 font-extrabold'>+</span>
               {/if}
@@ -152,7 +131,7 @@
               {$selectedContacts.length}
             </span>
             <div class='overflow-hidden text-ellipsis nowrap'>
-              <div class='text-md text-start'>Add to conversation</div>
+              <div class='text-md text-start'>{$t('conversations.add_to_conversation')}}</div>
               <div class='text-xs font-light text-start pb-1'>with {$selectedContacts.map(c => c.firstName).join(', ')}</div>
             </div>
           </button>

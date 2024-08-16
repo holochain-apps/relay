@@ -8,10 +8,14 @@
   import Avatar from '$lib/Avatar.svelte';
   import Header from '$lib/Header.svelte';
   import SvgIcon from "$lib/SvgIcon.svelte";
+  import { t } from '$lib/translations';
   import { copyToClipboard, handleFileChange, MIN_TITLE_LENGTH } from '$lib/utils';
   import type { RelayStore } from '$store/RelayStore';
   import { Privacy, type Config, type Invitation } from '../../../../types';
   import Button from '$lib/Button.svelte';
+
+  // Silly hack to get around issues with typescript in sveltekit-i18n
+  const tAny = t as any
 
   $: conversationId = $page.params.id;
   const relayStoreContext: { getStore: () => RelayStore } = getContext('relayStore')
@@ -43,7 +47,7 @@
       copyToClipboard(inviteCode)
     }
     else {
-      alert("Unable to create invitation code")
+      alert($t('conversations.unable_to_create_code'))
     }
   }
 
@@ -71,7 +75,7 @@
 <Header>
   <a class='absolute' href={`/conversations/${conversationId}`}><SvgIcon icon='caretLeft' color='white' size='10' /></a>
   {#if conversation}
-    <h1 class="flex-1 grow text-center">{#if conversation.data.privacy === Privacy.Public}Group Details{:else}{conversation.title}{/if}</h1>
+    <h1 class="flex-1 grow text-center">{#if conversation.data.privacy === Privacy.Public}{$t('conversations.group_details')}{:else}{conversation.title}{/if}</h1>
     {#if conversation.data.privacy === Privacy.Public || encodeHashToBase64(conversation.data.progenitor) === relayStore.client.myPubKeyB64}
       <a class='absolute right-5' href="/conversations/{conversation.data.id}/invite"><SvgIcon icon='addPerson' color='white' /></a>
     {/if}
@@ -127,7 +131,7 @@
           autofocus
           class='text-3xl text-center bg-surface-900 border-none outline-none focus:outline-none pl-0.5 pt-0 focus:ring-0'
           type='text'
-          placeholder='Enter name here'
+          placeholder={$t('conversations.enter_name_here')}
           name='title'
           bind:this={titleElem}
           value={title}
@@ -162,18 +166,18 @@
         {/if}
       </div>
     {/if}
-    <p class='text-sm text-surface-300'>Created: <Time timestamp={new Date(conversation.created)} format="MMMM DD, YYYY" /></p>
-    <p class='text-sm text-surface-300'>{numMembers } {#if numMembers === 1}Member{:else}Members{/if}</p>
+    <p class='text-sm text-surface-300'>{$tAny('conversations.created', { date: conversation.created })}</p>
+    <p class='text-sm text-surface-300'>{$tAny('conversations.num_members', { count: numMembers })}</p>
 
     <div class="container mx-auto flex flex-col px-4">
       <ul class="flex-1 mt-10">
         {#if conversation.privacy === Privacy.Public}
           <li class='text-xl flex flex-row mb-4 items-center'>
             <span class='rounded-full bg-primary-100 w-10 h-10 inline-block flex items-center justify-center'><SvgIcon icon='addPerson' size='24' color='red'/></span>
-            <span class='ml-4 text-md flex-1'>Add Members</span>
+            <span class='ml-4 text-md flex-1'>{$t('conversations.add_members')}</span>
             <button class='rounded-lg bg-primary-100 text-surface-800 font-bold text-sm p-2 flex items-center justify-center' on:click={() => copyToClipboard(conversation.publicInviteCode)}>
               <SvgIcon icon='copy' size='18' color='red' moreClasses='mr-2' />
-              Copy Invite
+              {$t('conversations.copy_invite')}
             </button>
           </li>
         {/if}
@@ -185,18 +189,18 @@
               <span class='ml-4 text-md flex-1'>{contact.firstName + ' ' + contact.lastName}</span>
               <button class='rounded-lg bg-primary-100 text-surface-800 font-bold text-sm p-2 flex items-center justify-center' on:click={() => createInviteCode(contact.publicKeyB64)}>
                 <SvgIcon icon='copy' size='18' color='red' moreClasses='mr-2' />
-                Copy Invite
+                {$t('conversations.copy_invite')}
               </button>
             </li>
           {/each}
         {/if}
 
-        <h3 class='text-lg mt-4 mb-2 text-surface-200 font-light'>Members</h3>
+        <h3 class='text-lg mt-4 mb-2 text-surface-200 font-light'>{$t('conversations.members')}</h3>
         <li class='text-xl flex flex-row mb-4 items-center'>
           <Avatar agentPubKey={myPublicKey64} size='38' moreClasses='-ml-30'/>
-          <span class='ml-4 text-md'>You</span>
+          <span class='ml-4 text-md'>{$t('conversations.you')}</span>
           {#if myPublicKey64 === encodeHashToBase64(conversation.data.progenitor)}
-            <span class='text-xs text-primary-100 font-bold ml-2'>(Creator)</span>
+            <span class='text-xs text-primary-100 font-bold ml-2'>({$t('conversations.creator')})</span>
           {/if}
         </li>
         {#each conversation.memberList() as contact}
@@ -205,7 +209,7 @@
             <span class='ml-4 text-md'>
               {contact.firstName + ' ' + contact.lastName}
               {#if contact.publicKeyB64 === encodeHashToBase64(conversation.data.progenitor)}
-                <span class='text-xs text-primary-100 font-bold ml-2'>(Creator)</span>
+                <span class='text-xs text-primary-100 font-bold ml-2'>({$t('conversations.creator')})</span>
               {/if}
             </span>
           </li>

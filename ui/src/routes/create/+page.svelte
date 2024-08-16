@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
   import { derived, get, writable } from "svelte/store";
-  import { decodeHashFromBase64 } from "@holochain/client";
   import "@holochain-open-dev/elements/dist/elements/holo-identicon.js";
   import { goto } from '$app/navigation';
   import Avatar from '$lib/Avatar.svelte';
   import Header from '$lib/Header.svelte';
   import SvgIcon from '$lib/SvgIcon.svelte';
+  import { t } from '$lib/translations';
   import { ConversationStore } from '$store/ConversationStore';
   import { RelayStore } from '$store/RelayStore';
   import { type Contact, Privacy } from '../../types';
@@ -16,13 +16,15 @@
 
   let selectedContacts = writable<Contact[]>([])
   let search = ''
-  let existingConvesation : ConversationStore | undefined = undefined
+  let existingConversation : ConversationStore | undefined = undefined
+
+  const tAny = t as any
 
   selectedContacts.subscribe(value => {
     if (value.length > 0) {
-      existingConvesation = get(relayStore.conversations).find(c => c.invitedContactKeys.length === value.length && c.invitedContactKeys.every(k => value.find(c => c.publicKeyB64 === k)))
+      existingConversation = get(relayStore.conversations).find(c => c.invitedContactKeys.length === value.length && c.invitedContactKeys.every(k => value.find(c => c.publicKeyB64 === k)))
     } else {
-      existingConvesation = undefined
+      existingConversation = undefined
     }
   })
 
@@ -48,8 +50,8 @@
   }
 
   async function createConversation() {
-    if (existingConvesation) {
-      goto(`/conversations/${existingConvesation.id}`)
+    if (existingConversation) {
+      goto(`/conversations/${existingConversation.id}`)
       return
     }
 
@@ -68,11 +70,11 @@
 <Header>
   <button class='text-4xl mr-5 absolute' on:click={() => history.back()}><SvgIcon icon='caretLeft' color='white' size='10' /></button>
 
-  <h1 class="flex-1 text-center">Create</h1>
+  <h1 class="flex-1 text-center">{$t('create.page_title')}</h1>
 </Header>
 
 <div class="container mx-auto flex items-center flex-col flex-1 w-full p-5 text-secondary-500 relative">
-  <input type='text' class='w-full h-12 bg-surface-500 text-primary-700 text-md rounded-full px-4 my-5 border-0' placeholder='Search name or contact code' bind:value={search} />
+  <input type='text' class='w-full h-12 bg-surface-500 text-primary-700 text-md rounded-full px-4 my-5 border-0' placeholder={$t('create.search_placeholder')} bind:value={search} />
 
   <div class='mb-5 flex justify-between w-full gap-4'>
     <button
@@ -80,7 +82,7 @@
       on:click={() => goto('/conversations/join')}
     >
       <SvgIcon icon='ticket' size='32' color='red' moreClasses='flex-grow' />
-      <p class=''>Use Invite Code</p>
+      <p class=''>{$t("common.use_invite_code")}</p>
     </button>
 
     <button
@@ -88,7 +90,7 @@
       on:click={() => goto('/contacts/new')}
     >
       <SvgIcon icon='newPerson' size='32' color='red' moreClasses='flex-grow' />
-      <p>New Contact</p>
+      <p>{$t('common.new_contact')}</p>
     </button>
 
     <button
@@ -96,14 +98,14 @@
       on:click={() => goto('/conversations/new')}
     >
       <SvgIcon icon='people' size='32' color='red' moreClasses='flex-grow'/>
-      <p>New Group</p>
+      <p>{$t('common.new_group')}</p>
     </button>
   </div>
 
   {#if $contacts.length === 0}
     <img src='/clear-skies.png' alt='No contacts' class='w-32 h-32 mb-4 mt-10' />
-    <h2 class='text-lg text-primary-200'>You haven't added any contacts</h2>
-    <p class='text-xs text-center'>There's nobody to chat with yet! Add your trusted friends and family by requesting their Relay contact code, found in their personal profile inside the Relay app.</p>
+    <h2 class='text-lg text-primary-200'>{$t('create.no_contacts_header')}</h2>
+    <p class='text-xs text-center'>{$t('create.no_contacts_text')}</p>
   {:else}
     <div class='w-full font-light'>
       {#each $contacts as contact, i}
@@ -120,7 +122,7 @@
               on:click={() => goto('/contacts/' + contact.publicKeyB64)}
             >
               <SvgIcon icon='person' size='12' color='#999' moreClasses='mb-0.5' />
-              <span class='ml-1 mr-2 text-xs'>View</span>
+              <span class='ml-1 mr-2 text-xs'>{$t('create.view')}</span>
               <span class='w-5 h-5 rounded-full bg-tertiary-400'><span>
             </button>
           {:else}
@@ -140,7 +142,7 @@
           {$selectedContacts.length}
         </span>
         <div class='overflow-hidden text-ellipsis nowrap'>
-          <div class='text-md text-start'>{#if existingConvesation}Open{:else}Create{/if} conversation</div>
+          <div class='text-md text-start'>{$tAny('create.open_conversation', { existingConversation: !!existingConversation })}</div>
           <div class='text-xs font-light text-start pb-1'>with {$selectedContacts.map(c => c.firstName).join(', ')}</div>
         </div>
       </button>
