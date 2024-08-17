@@ -1,6 +1,6 @@
 {
   "name": "relay",
-  "version": "dev",
+  "version": "0.5.1-beta",
   "private": true,
   "workspaces": [
     "ui"

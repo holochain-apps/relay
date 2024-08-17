@@ -21,7 +21,6 @@ export default defineConfig({
   },
   define: {
     "process.env.IS_PREACT": JSON.stringify("false"),
-    "process.env.NODE_ENV": JSON.stringify("development"),
     '__APP_VERSION__': JSON.stringify(version)  // Define a global constant
   }
 });
