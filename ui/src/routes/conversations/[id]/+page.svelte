@@ -306,7 +306,7 @@
                     <span class='min-w-6 inline-block'></span>
                   {/if}
                 {/if}
-                <div class='ml-3 {fromMe && 'items-end text-end'}'>
+                <div class='ml-3 w-2/3 {fromMe && 'items-end text-end'}'>
                   {#if !message.hideDetails}
                     <span class='flex items-baseline {fromMe && 'flex-row-reverse opacity-80'}'>
                       <span class="font-bold">{fromMe ? "You" : message.author}</span>
@@ -330,7 +330,9 @@
                         {/if}
                       {/each}
                   {/if}
-                  <div class="font-light {fromMe && 'text-end'}">{message.content}</div>
+                  <div class="font-light break-words w-full {fromMe && 'text-end'}">
+                    {message.content}
+                  </div>
                 </div>
               </li>
             {/each}
