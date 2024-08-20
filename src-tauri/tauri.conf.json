@@ -15,8 +15,10 @@
     "windows": [
       {
         "width": 360,
-        "height": 800,
-        "decorations": true,
+        "height": 720,
+        "decorations": false,
+        "resizable": true,
+        "center": true,
         "url": "splashscreen.html",
         "label": "splashscreen"
       }
