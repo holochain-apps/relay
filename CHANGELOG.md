@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.5.2-beta] - 2024-08-20
+
+### Added
+- Light mode and dark mode themes, which respect the OS theme setting
+
+### Changed
+- Lots of little UI tweaks and improvements
+
+### Fixed
+- Wrapping of long words in messages
+- Removed scrollbar on splashscreen
+
 ## [0.5.1-beta] - 2024-08-17
 
 ### Added
