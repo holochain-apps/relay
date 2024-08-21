@@ -17,8 +17,6 @@ h1, .h1, h2, .h2, h3, .h3, strong, b, .font-bold {
 }
 
 * {
-  --scrollbar-color-thumb: #DDD;
-  --scrollbar-color-track: #444;
   --scrollbar-width: thin;
   --scrollbar-width-legacy: 9px;
 }
@@ -26,37 +24,51 @@ h1, .h1, h2, .h2, h3, .h3, strong, b, .font-bold {
 /* Modern browsers with `scrollbar-*` support */
 @supports (scrollbar-width: auto) {
   * {
-    scrollbar-color: var(--scrollbar-color-thumb) var(--scrollbar-color-track);
+    scrollbar-color: #aaa #ddd;
     scrollbar-width: var(--scrollbar-width);
+  }
+
+  .dark * {
+    scrollbar-color: #aaa #444;
   }
 }
 
 /* Legacy browsers with `::-webkit-scrollbar-*` support */
 @supports selector(::-webkit-scrollbar) {
-  .dark ::-webkit-scrollbar-thumb {
-    background: var(--scrollbar-color-thumb) !important;
+  ::-webkit-scrollbar-track {
+    background: #ddd !important
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #aaa !important;;
   }
 
   .dark ::-webkit-scrollbar-track {
-    background: var(--scrollbar-color-track) !important;
+    background: #444 !important;
   }
 
-  .dark ::-webkit-scrollbar {
+  .dark ::-webkit-scrollbar-thumb {
+    background: #aaa !important;
+  }
+
+  ::-webkit-scrollbar {
     max-width: var(--scrollbar-width-legacy) !important;
     max-height: var(--scrollbar-width-legacy) !important;
   }
 }
 
 input {
-  background: rgba(var(--color-surface-400));
+  background: transparent !important;
 }
 
 ::placeholder {
-  color: rgba(var(--color-secondary-500)) !important;
+  color: rgba(var(--color-secondary-300)) !important;
   opacity: 1;
 }
 
 input:focus {
-  border-color: rgba(var(--color-secondary-500));
+  border-color: rgba(var(--color-secondary-500)) !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 

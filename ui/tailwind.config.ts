@@ -5,7 +5,7 @@ import forms from '@tailwindcss/forms';
 import { vollaTheme } from './volla-theme'
 
 export default {
-	darkMode: 'class',
+	darkMode: 'media',
 	content: [
 		'./src/**/*.{html,js,svelte,ts}',
 		join(require.resolve('@skeletonlabs/skeleton'), '../**/*.{html,js,svelte,ts}')

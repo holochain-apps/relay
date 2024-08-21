@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { modeCurrent } from '@skeletonlabs/skeleton';
   import Header from '$lib/Header.svelte';
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from '$lib/translations';
@@ -6,7 +7,7 @@
 </script>
 
 <Header>
-  <button class='text-4xl mr-5 absolute' on:click={() => history.back()}><SvgIcon icon='caretLeft' color='white' size='10' /></button>
+  <button class='text-4xl mr-5 absolute' on:click={() => history.back()}><SvgIcon icon='caretLeft' color={$modeCurrent ? '%232e2e2e' : 'white'} size='10' /></button>
   <h1 class="flex-1 text-center">{$t('contacts.create_new_contact')}</h1>
 </Header>
 

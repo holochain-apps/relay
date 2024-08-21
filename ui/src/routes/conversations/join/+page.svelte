@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { decode } from '@msgpack/msgpack';
   import { Base64 } from 'js-base64';
+  import { modeCurrent } from '@skeletonlabs/skeleton';
   import { getContext } from 'svelte';
   import { goto } from '$app/navigation';
   import Button from "$lib/Button.svelte";
@@ -37,7 +38,7 @@
 </script>
 
 <Header>
-  <button class='text-4xl mr-5 absolute' on:click={() => history.back()}><SvgIcon icon='caretLeft' color='white' size='10' /></button>
+  <button class='text-4xl mr-5 absolute' on:click={() => history.back()}><SvgIcon icon='caretLeft' color={$modeCurrent ? '%232e2e2e' : 'white'} size='10' /></button>
   <h1 class="flex-1 text-center">{$t('conversations.join_conversation')}</h1>
 </Header>
 
@@ -54,7 +55,7 @@
   </div>
 
   <footer>
-    <Button disabled={!inviteCode || joining}>
+    <Button disabled={!inviteCode || joining} moreClasses='variant-filled-tertiary'>
       {#if joining}<SvgIcon icon='spinner' size='20' />{:else}<SvgIcon icon='newConversation' size='20' />{/if}
       <strong class='ml-2'>{$t('conversations.join_conversation')}</strong>
     </Button>

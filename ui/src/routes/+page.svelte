@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { getContext } from 'svelte';
-	import { goto } from '$app/navigation';
 	import { ProfilesStore } from '@holochain-open-dev/profiles';
   import "@holochain-open-dev/profiles/dist/elements/create-profile.js";
+	import { modeCurrent } from '@skeletonlabs/skeleton';
+	import { getContext } from 'svelte';
+	import { goto } from '$app/navigation';
 	import Header from '$lib/Header.svelte';
 	import SvgIcon from '$lib/SvgIcon.svelte';
 	import { t } from '$lib/translations';
@@ -45,12 +46,12 @@
 			<p class="text-2xl">{$t("common.profile_error")}: {$prof.error}</p>
 		</div>
 	{:else}
-		<a class='bg-primary-50 text-surface-900 rounded-full flex items-center px-5 py-2 mb-8' href="/register">
-			<SvgIcon icon='lock' size='24' /> <span class='ml-2'>{$t('common.create_an_account')}</span>
+		<a class='variant-filled-primary dark:variant-filled-tertiary rounded-full flex items-center px-5 py-2 mb-8' href="/register">
+			<SvgIcon icon='lock' size='24' color={$modeCurrent ? 'white' : '%23fd3524'} /> <span class='ml-2'>{$t('common.create_an_account')}</span>
 		</a>
 	{/if}
 	<div class="flex flex-col items-center justify-center pb-10">
-		<p class='text-surface-300 text-xs'>{$t('common.secured_by')}</p>
+		<p class='text-xs mb-2'>{$t('common.secured_by')}</p>
 		<img src='/holochain.png' alt="holochain" />
 	</div>
 {/if}

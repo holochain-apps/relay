@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+  import { modeCurrent } from '@skeletonlabs/skeleton';
+  import { goto } from '$app/navigation';
   import Button from "$lib/Button.svelte";
   import Header from '$lib/Header.svelte';
   import SvgIcon from "$lib/SvgIcon.svelte";
@@ -31,7 +32,7 @@
 </script>
 
 <Header>
-  <img src="/logo.png" alt="Logo" width='16' />
+  <img src="/icon.png" alt="Logo" width='16' />
 </Header>
 
 <form on:submit|preventDefault={saveName} class='contents'>
@@ -39,7 +40,7 @@
     <h1 class='h1'>{$t('common.what_is_your_name')}</h1>
     <input
       autofocus
-      class='mt-2 bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
+      class='mt-2 bg-surface-500 dark:bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
       type='text'
       placeholder={$t('common.first_name') + ' *'}
       name='firstName'
@@ -47,7 +48,7 @@
       minlength={MIN_FIRST_NAME_LENGTH}
     />
     <input
-      class='mt-2 bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
+      class='mt-2 bg-surface-500 dark:bg-surface-900  border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
       type='text'
       placeholder={$t('common.last_name')}
       name='lastName'
@@ -57,7 +58,7 @@
 
   <div class='items-right w-full flex justify-end pr-4'>
     <Button on:click={saveName} disabled={firstName.trim().length < MIN_FIRST_NAME_LENGTH}>
-      {@html $t('common.next_avatar')} <SvgIcon icon='arrowRight' size='42' />
+      {@html $t('common.next_avatar')} <SvgIcon icon='arrowRight' size='42' color={$modeCurrent ? 'white' : '%23FD3524'} />
     </Button>
   </div>
 </form>

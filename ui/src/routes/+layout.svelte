@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { AppWebsocket, AdminWebsocket, type AppWebsocketConnectionOptions } from '@holochain/client';
 	import { ProfilesClient, ProfilesStore } from '@holochain-open-dev/profiles';
+	import { setModeCurrent } from '@skeletonlabs/skeleton';
 	import { onMount, setContext } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { t } from '$lib/translations';
@@ -55,6 +56,20 @@
 		}
 
 		initHolochain()
+
+		// To change from light mode to dark mode based on system settings
+		// XXX: not using the built in skeleton autoModeWatcher() because it doesn't set modeCurrent in JS which we use
+		const mql = window.matchMedia('(prefers-color-scheme: light)');
+		function setMode(value: boolean) {
+			const elemHtmlClasses = document.documentElement.classList;
+			const classDark = `dark`;
+			value === true ? elemHtmlClasses.remove(classDark) : elemHtmlClasses.add(classDark);
+			setModeCurrent(value)
+		}
+		setMode(mql.matches);
+		mql.onchange = () => {
+			setMode(mql.matches)
+		}
 
 		// Prevent internal links from opening in the browser when using Tauri
 		const handleLinkClick = (event: MouseEvent) => {
@@ -111,7 +126,7 @@
 			<p class="text-2xl mb-8">{$t('common.connecting_to_holochain')}</p>
 		</div>
 		<div class="flex flex-col items-center justify-center pb-10">
-			<p class='text-surface-300 text-xs'>{$t('common.secured_by')}</p>
+			<p class='text-xs mb-2'>{$t('common.secured_by')}</p>
 			<img src='/holochain.png' alt="holochain" />
 		</div>
 	{:else}

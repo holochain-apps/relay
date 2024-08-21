@@ -1,4 +1,5 @@
 {
+  "admin": "Admin",
   "add_members": "Add Members",
   "add_people": "Add people to {{public; true:group; false:conversation;}}",
   "add_to_conversation": "Add to conversation",
@@ -8,7 +9,6 @@
   "copy_invite": "Copy Invite",
   "create_group": "Create group",
   "created": "Created: {{date:date;}}",
-  "creator": "Creator",
   "enter_invite_code": "Enter invite code",
   "enter_name_here": "Enter name here",
   "group_details": "Group Details",
@@ -24,5 +24,6 @@
   "share_personal_invitations": "Nobody else is here yet! Share personal invitations to start the conversation.",
   "share_with_people": "Share with people to begin chatting!",
   "unable_to_create_code": "Unable to create invitation code",
+  "unclaimed_invitations": "Unclaimed Invitations",
   "you": "You"
 }

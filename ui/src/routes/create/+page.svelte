@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { getContext } from 'svelte';
+  import { modeCurrent } from '@skeletonlabs/skeleton';
+  import { getContext } from 'svelte';
   import { derived, get, writable } from "svelte/store";
   import "@holochain-open-dev/elements/dist/elements/holo-identicon.js";
   import { goto } from '$app/navigation';
@@ -68,65 +69,73 @@
 </script>
 
 <Header>
-  <button class='text-4xl mr-5 absolute' on:click={() => history.back()}><SvgIcon icon='caretLeft' color='white' size='10' /></button>
+  <button class='text-4xl mr-5 absolute' on:click={() => history.back()}>
+    <SvgIcon icon='caretLeft' color={$modeCurrent ? '%232e2e2e' : 'white'} size='10' />
+  </button>
 
   <h1 class="flex-1 text-center">{$t('create.page_title')}</h1>
 </Header>
 
 <div class="container mx-auto flex items-center flex-col flex-1 w-full p-5 text-secondary-500 relative">
-  <input type='text' class='w-full h-12 bg-surface-500 text-primary-700 text-md rounded-full px-4 my-5 border-0' placeholder={$t('create.search_placeholder')} bind:value={search} />
+  <div class='w-full relative my-5 '>
+    <input
+      type='text'
+      class='w-full h-12 !bg-tertiary-500 dark:!bg-secondary-500 dark:text-tertiary-500 text-md rounded-full pr-4 pl-10 border-0'
+      placeholder={$t('create.search_placeholder')}
+      bind:value={search}
+    />
+    <SvgIcon icon='search' size='24' color={$modeCurrent ? '%232e2e2e' : '%23ccc'} moreClasses='absolute top-3 left-3' />
+  </div>
 
   <div class='mb-5 flex justify-between w-full gap-4'>
     <button
-      class='w-28 h-24 bg-surface-500 text-xs text-primary-700 rounded-2xl py-2 flex flex-col items-center disabled:opacity-50'
+      class='w-28 h-24 text-xs bg-tertiary-500 dark:bg-secondary-500 dark:text-tertiary-400 rounded-2xl py-2 flex flex-col items-center disabled:opacity-50'
       on:click={() => goto('/conversations/join')}
     >
-      <SvgIcon icon='ticket' size='32' color='red' moreClasses='flex-grow' />
+      <SvgIcon icon='ticket' size='32' color={$modeCurrent ? '%232e2e2e' : 'white'} moreClasses='flex-grow' />
       <p class=''>{$t("common.use_invite_code")}</p>
     </button>
 
     <button
-      class='w-28 h-24 bg-surface-500 text-xs text-primary-700 rounded-2xl py-2 flex flex-col items-center disabled:opacity-50'
+      class='w-28 h-24 text-xs bg-tertiary-500 dark:bg-secondary-500 dark:text-tertiary-400 rounded-2xl py-2 flex flex-col items-center disabled:opacity-50'
       on:click={() => goto('/contacts/new')}
     >
-      <SvgIcon icon='newPerson' size='32' color='red' moreClasses='flex-grow' />
+      <SvgIcon icon='newPerson' size='32' color={$modeCurrent ? '%232e2e2e' : 'white'} moreClasses='flex-grow' />
       <p>{$t('common.new_contact')}</p>
     </button>
 
     <button
-      class='w-28 h-24 bg-surface-500 text-xs text-primary-700 rounded-2xl py-2 flex flex-col items-center disabled:opacity-50'
+      class='w-28 h-24 text-xs bg-tertiary-500 dark:bg-secondary-500 dark:text-tertiary-400 rounded-2xl py-2 flex flex-col items-center disabled:opacity-50'
       on:click={() => goto('/conversations/new')}
     >
-      <SvgIcon icon='people' size='32' color='red' moreClasses='flex-grow'/>
+      <SvgIcon icon='people' size='32' color={$modeCurrent ? '%232e2e2e' : 'white'} moreClasses='flex-grow'/>
       <p>{$t('common.new_group')}</p>
     </button>
   </div>
 
   {#if $contacts.length === 0}
-    <img src='/clear-skies.png' alt='No contacts' class='w-32 h-32 mb-4 mt-10' />
-    <h2 class='text-lg text-primary-200'>{$t('create.no_contacts_header')}</h2>
-    <p class='text-xs text-center'>{$t('create.no_contacts_text')}</p>
+    <img src={$modeCurrent ? '/clear-skies-gray.png' : '/clear-skies-white.png'} alt='No contacts' class='w-32 h-32 mb-4 mt-10' />
+    <h2 class='text-lg text-secondary-500 dark:text-tertiary-500 font-bold mb-1'>{$t('create.no_contacts_header')}</h2>
+    <p class='text-xs text-center text-secondary-400 dark:text-tertiary-700'>{$t('create.no_contacts_text')}</p>
   {:else}
-    <div class='w-full font-light'>
+    <div class='w-full'>
       {#each $contacts as contact, i}
         {#if i === 0 || contact.firstName.charAt(0).toUpperCase() !== $contacts[i - 1].firstName.charAt(0).toUpperCase()}
-          <p class='mt-2 mb-1 pl-0'>{contact.firstName[0].toUpperCase()}</p>
+          <p class='mt-2 mb-1 pl-0 text-secondary-300'>{contact.firstName[0].toUpperCase()}</p>
         {/if}
         {@const selected = $selectedContacts.find(c => c.publicKeyB64 === contact.data.publicKeyB64)}
-        <button class='flex items-center justify-between w-full rounded-2xl p-2 -ml-2 mb-2 {selected && 'bg-surface-400'}' on:click={() => selectContact(contact.data.publicKeyB64)}>
-            <Avatar size={38} image={contact.avatar} agentPubKey={contact.publicKeyB64} moreClasses='mr-3' />
-          <p class='text-primary-200 font-normal flex-1 text-start'>{contact.firstName} {contact.lastName}</p>
+        <button class='flex items-center justify-between w-full rounded-3xl pl-1 pr-2 py-1 -ml-1 mb-2 {selected && 'bg-tertiary-500 dark:bg-secondary-500'}' on:click={() => selectContact(contact.data.publicKeyB64)}>
+          <Avatar size={38} image={contact.avatar} agentPubKey={contact.publicKeyB64} moreClasses='mr-3' />
+          <p class='dark:text-tertiary-100 font-normal flex-1 text-start'>{contact.firstName} {contact.lastName}</p>
           {#if selected}
             <button
-              class='h-8 pl-4 pr-2 bg-white text-secondary-700 rounded-full flex items-center justify-center'
+              class='h-8 px-2 bg-white text-secondary-700 rounded-full flex items-center justify-center font-bold'
               on:click={() => goto('/contacts/' + contact.publicKeyB64)}
             >
-              <SvgIcon icon='person' size='12' color='#999' moreClasses='mb-0.5' />
-              <span class='ml-1 mr-2 text-xs'>{$t('create.view')}</span>
-              <span class='w-5 h-5 rounded-full bg-tertiary-400'><span>
+              <span class='mx-2 text-xs'>{$t('create.view')}</span>
             </button>
           {:else}
-            <span class='text-lg text-tertiary-600 font-extrabold'>+</span>
+            <span class='text-lg text-primary-500 font-extrabold'>+</span>
           {/if}
         </button>
       {/each}
@@ -134,11 +143,11 @@
 
     {#if $selectedContacts.length > 0}
       <button
-        class='fixed right-5 bottom-5 bg-tertiary-500 text-white rounded-full py-1 pl-2 pr-4 border-0 flex items-center justify-center max-w-1/2'
+        class='fixed right-5 bottom-5 bg-primary-500 text-white rounded-full py-1 pl-2 pr-4 border-0 flex items-center justify-center max-w-2/3'
         on:click={() => createConversation()}
       >
-        <span class='rounded-full w-9 h-9 bg-primary-100 text-tertiary-500 text-sm flex items-center justify-center mr-2 font-extrabold'>
-          <SvgIcon icon='person' size='12' color='red' moreClasses='mr-1' />
+        <span class='rounded-full w-9 h-9 bg-surface-500 text-primary-500 text-sm flex items-center justify-center mr-2 font-extrabold'>
+          <SvgIcon icon='person' size='12' color='%23FD3524' moreClasses='mr-1' />
           {$selectedContacts.length}
         </span>
         <div class='overflow-hidden text-ellipsis nowrap'>

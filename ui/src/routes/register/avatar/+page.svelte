@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { modeCurrent } from '@skeletonlabs/skeleton';
   import { getContext } from 'svelte';
   import { writable } from 'svelte/store';
   import { goto } from '$app/navigation';
@@ -34,7 +35,7 @@
 </script>
 
 <Header>
-  <img src="/logo.png" alt="Logo" width='16' />
+  <img src="/icon.png" alt="Logo" width='16' />
 </Header>
 
 <div class='flex justify-center items-center flex-col grow'>
@@ -52,7 +53,7 @@
   />
 
   <!-- Label styled as a big clickable icon -->
-  <label for="avatarInput" class="file-icon-label cursor-pointer bg-surface-400 hover:bg-surface-300 w-32 h-32 rounded-full flex items-center justify-center overflow-hidden">
+  <label for="avatarInput" class="file-icon-label cursor-pointer bg-secondary-300 hover:bg-secondary-400 w-32 h-32 rounded-full flex items-center justify-center overflow-hidden">
     {#if $avatarDataUrl}
       <img src={$avatarDataUrl} alt='Avatar' class='rounded-full w-32 h-32 object-cover' />
     {:else}
@@ -63,6 +64,6 @@
 
 <div class='items-right w-full flex justify-end pr-4'>
   <Button onClick={createAccount}>
-    <SvgIcon icon='hand' size='20' /> <strong class='ml-2'>{$t('common.jump_in')}</strong>
+    <SvgIcon icon='hand' size='20' color={$modeCurrent ? 'white' : '%23FD3524'} /> <strong class='ml-2'>{$t('common.jump_in')}</strong>
   </Button>
 </div>

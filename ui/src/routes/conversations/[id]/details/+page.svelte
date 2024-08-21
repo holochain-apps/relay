@@ -1,8 +1,8 @@
 <script lang="ts">
   import { Base64 } from 'js-base64';
   import { encode } from '@msgpack/msgpack';
+  import { modeCurrent } from '@skeletonlabs/skeleton';
   import { getContext } from 'svelte';
-  import Time from 'svelte-time/Time.svelte';
   import { decodeHashFromBase64, encodeHashToBase64 } from '@holochain/client';
   import { page } from '$app/stores';
   import Avatar from '$lib/Avatar.svelte';
@@ -73,10 +73,10 @@
 </script>
 
 <Header>
-  <a class='absolute' href={`/conversations/${conversationId}`}><SvgIcon icon='caretLeft' color='white' size='10' /></a>
+  <a class='absolute' href={`/conversations/${conversationId}`}><SvgIcon icon='caretLeft' color={$modeCurrent ? '%232e2e2e' : 'white'} size='10' /></a>
   {#if conversation}
     <h1 class="flex-1 grow text-center">{#if conversation.data.privacy === Privacy.Public}{$t('conversations.group_details')}{:else}{conversation.title}{/if}</h1>
-    {#if conversation.data.privacy === Privacy.Public || encodeHashToBase64(conversation.data.progenitor) === relayStore.client.myPubKeyB64}
+    {#if conversation.data.privacy === Privacy.Private && encodeHashToBase64(conversation.data.progenitor) === relayStore.client.myPubKeyB64}
       <a class='absolute right-5' href="/conversations/{conversation.data.id}/invite"><SvgIcon icon='addPerson' color='white' /></a>
     {/if}
   {/if}
@@ -94,8 +94,8 @@
           {/if}
         {/each}
         {#if conversation.allMembers.length > 2}
-          <div class='w-10 h-10 min-h-10 mb-5 rounded-full bg-surface-400 flex items-center justify-center'>
-            <span class='text-primary-400 text-xl'>+{(conversation.allMembers.length - 2)}</span>
+          <div class='w-10 h-10 min-h-10 mb-5 rounded-full variant-filled-tertiary flex items-center justify-center'>
+            <span class='text-xl'>+{(conversation.allMembers.length - 2)}</span>
           </div>
         {/if}
       </div>
@@ -112,16 +112,16 @@
         <div style="position:relative">
           <img src={image} alt='Group' class='w-32 h-32 min-h-32 mb-5 rounded-full object-cover' />
           <label for="avatarInput"
-            class='rounded-full w-12 h-12 pl-1 bottom-5 right-0 bg-surface-500 absolute flex items-center justify-center cursor-pointer'
+            class='rounded-full w-12 h-12 pl-1 bottom-5 right-0 bg-secondary-200 hover:bg-secondary-300 dark:bg-secondary-500 dark:hover:bg-secondary-400 absolute flex items-center justify-center cursor-pointer'
           >
-            <img src='/image-placeholder.png' alt='Group Image Uploader' />
+            <SvgIcon icon='image' color={$modeCurrent ? '%232e2e2e' : 'white'} />
           </label>
         </div>
       {:else}
         <label for="avatarInput"
-          class='rounded-full w-32 h-32 rounded-full bg-surface-400 flex items-center justify-center cursor-pointer'
+          class='rounded-full w-32 h-32 rounded-full bg-secondary-200 hover:bg-secondary-300 dark:bg-secondary-500 dark:hover:bg-secondary-400 flex items-center justify-center cursor-pointer'
         >
-          <img src='/image-placeholder.png' alt='Group Image Uploader' />
+          <SvgIcon icon='image' size='44' color={$modeCurrent ? '%232e2e2e' : 'white'} />
         </label>
       {/if}
     {/if}
@@ -145,7 +145,7 @@
             moreClasses="h-6 w-6 rounded-md py-0 !px-0 mb-0 mr-2 bg-primary-100 flex items-center justify-center"
             onClick={() => saveTitle()}
           >
-            <SvgIcon icon='checkMark' color='red' size='12' />
+            <SvgIcon icon='checkMark' color='%23FD3524' size='12' />
           </Button>
           <Button
             moreClasses="h-6 w-6 !px-0 py-0 mb-0 rounded-md bg-surface-400 flex items-center justify-center"
@@ -166,52 +166,54 @@
         {/if}
       </div>
     {/if}
-    <p class='text-sm text-surface-300'>{$tAny('conversations.created', { date: conversation.created })}</p>
-    <p class='text-sm text-surface-300'>{$tAny('conversations.num_members', { count: numMembers })}</p>
+    <p class='text-sm'>{$tAny('conversations.created', { date: conversation.created })}</p>
+    <p class='text-sm'>{$tAny('conversations.num_members', { count: numMembers })}</p>
 
     <div class="container mx-auto flex flex-col px-4">
       <ul class="flex-1 mt-10">
         {#if conversation.privacy === Privacy.Public}
-          <li class='text-xl flex flex-row mb-4 items-center'>
-            <span class='rounded-full bg-primary-100 w-10 h-10 inline-block flex items-center justify-center'><SvgIcon icon='addPerson' size='24' color='red'/></span>
-            <span class='ml-4 text-md flex-1'>{$t('conversations.add_members')}</span>
-            <button class='rounded-lg bg-primary-100 text-surface-800 font-bold text-sm p-2 flex items-center justify-center' on:click={() => copyToClipboard(conversation.publicInviteCode)}>
-              <SvgIcon icon='copy' size='18' color='red' moreClasses='mr-2' />
+          <li class='text-xl flex flex-row mb-2 items-center rounded-full variant-filled-primary p-2'>
+            <span class='rounded-full bg-surface-500 w-10 h-10 inline-block flex items-center justify-center'>
+              <SvgIcon icon='addPerson' size='24' color='%23FD3524'/>
+            </span>
+            <span class='ml-4 text-sm font-bold flex-1'>{$t('conversations.add_members')}</span>
+            <button class='rounded-full bg-surface-500 text-secondary-500 font-bold text-xs py-2 px-2 mr-1 flex items-center justify-center' on:click={() => copyToClipboard(conversation.publicInviteCode)}>
+              <SvgIcon icon='copy' size='14' color='%23FD3524' moreClasses='mr-2' />
               {$t('conversations.copy_invite')}
             </button>
           </li>
         {/if}
         {#if conversation.invitedUnjoined.length > 0}
-          <h3 class='text-lg mb-2 text-surface-200 font-light'>Invited</h3>
+          <h3 class='text-md mb-2 text-secondary-300 font-light'>{$t('conversations.unclaimed_invitations')}</h3>
           {#each conversation.invitedUnjoined as contact}
-            <li class='text-xl flex flex-row mb-4 items-center'>
+            <li class='text-xl flex flex-row mb-4 px-2 items-center'>
               <Avatar image={contact.avatar} agentPubKey={contact.publicKeyB64} size='38' moreClasses='-ml-30'/>
-              <span class='ml-4 text-md flex-1'>{contact.firstName + ' ' + contact.lastName}</span>
-              <button class='rounded-lg bg-primary-100 text-surface-800 font-bold text-sm p-2 flex items-center justify-center' on:click={() => createInviteCode(contact.publicKeyB64)}>
-                <SvgIcon icon='copy' size='18' color='red' moreClasses='mr-2' />
+              <span class='ml-4 text-sm flex-1'>{contact.firstName + ' ' + contact.lastName}</span>
+              <button class='rounded-2xl variant-filled-tertiary font-bold text-sm p-2 px-3 flex items-center justify-center' on:click={() => createInviteCode(contact.publicKeyB64)}>
+                <SvgIcon icon='copy' size='18' color='%23FD3524' moreClasses='mr-2' />
                 {$t('conversations.copy_invite')}
               </button>
             </li>
           {/each}
         {/if}
 
-        <h3 class='text-lg mt-4 mb-2 text-surface-200 font-light'>{$t('conversations.members')}</h3>
-        <li class='text-xl flex flex-row mb-4 items-center'>
+        {#if conversation.privacy === Privacy.Private}
+          <h3 class='text-md mt-4 mb-2 text-secondary-300 font-light'>{$t('conversations.members')}</h3>
+        {/if}
+        <li class='text-xl flex flex-row mb-4 px-2 items-center'>
           <Avatar agentPubKey={myPublicKey64} size='38' moreClasses='-ml-30'/>
-          <span class='ml-4 text-md'>{$t('conversations.you')}</span>
+          <span class='ml-4 text-sm font-bold flex-1'>{$t('conversations.you')}</span>
           {#if myPublicKey64 === encodeHashToBase64(conversation.data.progenitor)}
-            <span class='text-xs text-primary-100 font-bold ml-2'>({$t('conversations.creator')})</span>
+            <span class='text-xs text-secondary-300 ml-2'>{$t('conversations.admin')}</span>
           {/if}
         </li>
         {#each conversation.memberList() as contact}
-          <li class='text-xl flex flex-row mb-4 items-center'>
+          <li class='text-xl flex flex-row mb-4 px-2 items-center'>
             <Avatar image={contact.avatar} agentPubKey={contact.publicKeyB64} size='38' moreClasses='-ml-30'/>
-            <span class='ml-4 text-md'>
-              {contact.firstName + ' ' + contact.lastName}
-              {#if contact.publicKeyB64 === encodeHashToBase64(conversation.data.progenitor)}
-                <span class='text-xs text-primary-100 font-bold ml-2'>({$t('conversations.creator')})</span>
-              {/if}
-            </span>
+            <span class='ml-4 text-sm font-bold flex-1'>{contact.firstName + ' ' + contact.lastName}</span>
+            {#if contact.publicKeyB64 === encodeHashToBase64(conversation.data.progenitor)}
+              <span class='text-xs text-secondary-300 ml-2'>{$t('conversations.admin')}</span>
+            {/if}
           </li>
         {/each}
       </ul>

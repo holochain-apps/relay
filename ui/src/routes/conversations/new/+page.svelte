@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { getContext } from 'svelte';
+	import { modeCurrent } from '@skeletonlabs/skeleton';
+  import { getContext } from 'svelte';
   import { writable, get } from 'svelte/store';
   import { goto } from '$app/navigation';
   import Button from "$lib/Button.svelte";
@@ -30,7 +31,7 @@
 </script>
 
 <Header>
-  <button class='text-4xl mr-5 absolute' on:click={() => history.back()}><SvgIcon icon='caretLeft' color='white' size='10' /></button>
+  <button class='text-4xl mr-5 absolute' on:click={() => history.back()}><SvgIcon icon='caretLeft' color={$modeCurrent ? '%232e2e2e' : 'white'} size='10' /></button>
   <h1 class="flex-1 text-center">{$t('common.new_group')}</h1>
 </Header>
 
@@ -39,20 +40,20 @@
   <input type="file" id="avatarInput" accept="image/jpeg, image/png, image/gif" class='hidden' on:change={(event)=>handleFileChange(event,(imageData)=>imageUrl.set(imageData))} />
 
   <!-- Label styled as a big clickable icon -->
-  <label for="avatarInput" class="file-icon-label cursor-pointer bg-surface-400 hover:bg-surface-300 w-32 h-32 rounded-full flex items-center justify-center overflow-hidden">
+  <label for="avatarInput" class="file-icon-label cursor-pointer bg-tertiary-500 hover:bg-tertiary-600 dark:bg-secondary-500 dark:hover:bg-secondary-400 w-32 h-32 rounded-full flex items-center justify-center overflow-hidden">
     {#if $imageUrl}
       <img src={$imageUrl} alt='Avatar' class='rounded-full w-32 h-32 object-cover' />
     {:else}
-      <img src='/image-placeholder.png' alt='Conversation Uploader' class='rounded-full w-16 h-16' />
+      <SvgIcon icon='image' size='44' color={$modeCurrent ? '%232e2e2e' : 'white'} />
     {/if}
   </label>
 </div>
 
-<div class='flex flex-col justify-start grow'>
+<div class='flex flex-col justify-start grow min-w-[66%]'>
   <h1 class='h1'>{$t('conversations.group_name')}</h1>
   <input
     autofocus
-    class='mt-2 bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
+    class='mt-2 w-full border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
     type='text'
     placeholder={$t('conversations.enter_name_here')}
     name='title'
@@ -62,7 +63,7 @@
 </div>
 
 <footer>
-  <Button moreClasses='w-72 justify-center' onClick={(e) => { createConversation(e, Privacy.Public)}} disabled={!valid || pendingCreate}>
+  <Button moreClasses='w-72 justify-center variant-filled-tertiary' onClick={(e) => { createConversation(e, Privacy.Public)}} disabled={!valid || pendingCreate}>
     <strong class='ml-2'>{$t('conversations.create_group')}</strong>
   </Button>
 </footer>

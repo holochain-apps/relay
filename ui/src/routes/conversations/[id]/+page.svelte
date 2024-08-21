@@ -2,6 +2,7 @@
 	import { debounce } from 'lodash-es';
   import { type AgentPubKeyB64, decodeHashFromBase64, encodeHashToBase64 } from '@holochain/client';
   import { type Profile } from '@holochain-open-dev/profiles';
+  import { modeCurrent } from '@skeletonlabs/skeleton';
   import { getContext, onDestroy, onMount } from 'svelte';
   import { type Unsubscriber, derived, writable, type Writable } from "svelte/store";
   import Time from "svelte-time";
@@ -238,11 +239,13 @@
 </script>
 
 <Header>
-  <a class='absolute' href="/conversations"><SvgIcon icon='caretLeft' color='white' size='10' /></a>
+  <a class='absolute' href="/conversations"><SvgIcon icon='caretLeft' color={$modeCurrent ? '%232e2e2e' : 'white'} size='10' /></a>
   {#if conversation}
     <h1 class="flex-1 grow text-center"><a href={`/conversations/${conversationId}/details`}>{conversation.title}</a></h1>
     {#if conversation.data.privacy === Privacy.Public || encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64}
-      <a class='absolute right-5' href="/conversations/{conversation.data.id}/invite"><SvgIcon icon='addPerson' color='white' /></a>
+      <a class='absolute right-5' href={`/conversations/${conversation.data.id}/${conversation.data.privacy === Privacy.Public ? 'details' : 'invite'}`}>
+        <SvgIcon icon='addPerson' size='24' color={$modeCurrent ? '%232e2e2e' : 'white'} />
+      </a>
     {/if}
   {/if}
 </Header>
@@ -258,8 +261,8 @@
             {/if}
           {/each}
           {#if conversation.allMembers.length > 2}
-            <div class='w-10 h-10 min-h-10 mb-5 rounded-full bg-surface-400 flex items-center justify-center'>
-              <span class='text-primary-400 text-xl'>+{(conversation.allMembers.length - 2)}</span>
+            <div class='w-10 h-10 min-h-10 mb-5 variant-filled-tertiary rounded-full flex items-center justify-center'>
+              <span class='text-xl'>+{(conversation.allMembers.length - 2)}</span>
             </div>
           {/if}
         </div>
@@ -268,22 +271,22 @@
       {/if}
       <h1 class='text-3xl flex-shrink-0 mb-1 text-nowrap text-ellipsis overflow-hidden'>{conversation.title}</h1>
       <!-- if joining a conversation created by someone else, say still syncing here until there are at least 2 members -->
-      <a href={`/conversations/${conversationId}/details`} class='text-surface-300 text-sm'>
+      <a href={`/conversations/${conversationId}/details`} class='text-sm'>
         {$tAny('conversations.num_members', { count: numMembers })}
       </a>
       {#if $processedMessages.length === 0 && encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64}
         <div class='flex flex-col items-center justify-center h-full w-full'>
-          <img src='/clear-skies.png' alt='No contacts' class='w-32 h-32 mb-4 mt-4' />
+          <img src={$modeCurrent ? '/clear-skies-gray.png' : '/clear-skies-white.png'} alt='No contacts' class='w-32 h-32 mb-4 mt-4' />
           {#if conversation.data.privacy === Privacy.Private}
-            <p class='text-xs text-center text-secondary-500 mx-10 mb-8'>{$t('conversations.share_personal_invitations')}</p>
+            <p class='text-xs text-center text-secondary-500 dark:text-tertiary-500 mx-10 mb-8'>{$t('conversations.share_personal_invitations')}</p>
             <Button onClick={() => goto(`/conversations/${conversation.data.id}/details`)} moreClasses='w-72 justify-center'>
-              <SvgIcon icon='invite' size='24' color='red' />
+              <SvgIcon icon='invite' size='24' color='%23FD3524' />
               <strong class='ml-2'>{$t('conversations.send_invitations')}</strong>
             </Button>
           {:else}
-            <p class='text-xs text-center text-secondary-500 mx-10 mb-8'>{$t('conversations.share_invitation_code')}</p>
-            <Button onClick={() => copyToClipboard(conversation.publicInviteCode)} moreClasses='w-64 justify-center'>
-              <SvgIcon icon='copy' size='18' color='red' />
+            <p class='text-xs text-center text-secondary-500 dark:text-tertiary-700 mx-10 mb-8'>{$t('conversations.share_invitation_code')}</p>
+            <Button onClick={() => copyToClipboard(conversation.publicInviteCode)} moreClasses='w-64 justify-center variant-filled-tertiary'>
+              <SvgIcon icon='copy' size='18' color='%23FD3524' />
               <strong class='ml-2 text-sm'>{$t('conversations.copy_invitation_code')}</strong>
             </Button>
           {/if}
@@ -295,7 +298,7 @@
               {@const fromMe = message.authorKey === myPubKeyB64}
               {#if message.header}
                 <li class='mt-auto mb-3'>
-                  <div class="text-center text-xs text-secondary-500">{message.header}</div>
+                  <div class="text-center text-xs text-secondary-400 dark:text-secondary-300">{message.header}</div>
                 </li>
               {/if}
               <li class='mt-auto {!message.hideDetails && 'mt-3'} flex {fromMe ? 'justify-end' : 'justify-start'}'>
@@ -310,7 +313,7 @@
                   {#if !message.hideDetails}
                     <span class='flex items-baseline {fromMe && 'flex-row-reverse opacity-80'}'>
                       <span class="font-bold">{fromMe ? "You" : message.author}</span>
-                      <span class="text-surface-200 mx-2 text-xxs"><Time timestamp={message.timestamp} format="h:mma" /></span>
+                      <span class="mx-2 text-xxs"><Time timestamp={message.timestamp} format="h:mma" /></span>
                     </span>
                   {/if}
                   {#if message.images && message.images.length > 0}
@@ -324,7 +327,7 @@
                             {/if}
                           </div>
                         {:else}
-                          <div class='w-20 h-20 bg-surface-400 mb-2 flex items-center justify-center'>
+                          <div class='w-20 h-20 bg-tertiary-500 mb-2 flex items-center justify-center'>
                             <SvgIcon icon='spinner' color='white' size='10' />
                           </div>
                         {/if}
@@ -341,11 +344,11 @@
       {/if}
     </div>
   </div>
-  <div class="w-full p-2 bg-surface-500 flex-shrink-0">
+  <div class="w-full p-2 bg-tertiary-500 dark:bg-secondary-500 flex-shrink-0">
     <form class="flex" method='POST' on:submit={sendMessage} >
       <input type="file" accept="image/jpeg, image/png, image/gif" multiple id="images" class='hidden' on:change={handleImagesSelected} />
       <label for="images" class='cursor-pointer flex'>
-        <SvgIcon icon='image' color='white' size='26' moreClasses='ml-3' />
+        <SvgIcon icon='image' color={$modeCurrent ? '%232e2e2e' : 'white'} size='26' moreClasses='ml-3' />
       </label>
       <div class='flex flex-col w-full'>
         <!-- svelte-ignore a11y-autofocus -->
@@ -354,13 +357,13 @@
           type="text"
           bind:this={newMessageInput}
           bind:value={newMessageText}
-          class="w-full bg-surface-500 placeholder:text-sm placeholder:text-gray-400 focus:border-gray-500 focus:ring-0 border-0"
+          class="w-full bg-tertiary-500 placeholder:text-sm placeholder:text-gray-400 focus:border-gray-500 focus:ring-0 border-0"
           placeholder={$t('conversations.message_placeholder')}
         />
         <div class='flex flex-row px-4'>
           {#each $newMessageImages as image, i}
             {#if image.status === 'loading'}
-              <div class='w-10 h-10 bg-surface-400 mr-2 flex items-center justify-center'>
+              <div class='w-10 h-10 bg-tertiary-500 mr-2 flex items-center justify-center'>
                 <SvgIcon icon='spinner' color='white' size='10' />
               </div>
             {:else}
@@ -370,7 +373,9 @@
           {/each}
         </div>
       </div>
-      <button class='pr-2'><SvgIcon icon='caretRight' color='white' size='10' /></button>
+      <button class='pr-2'>
+        <SvgIcon icon='caretRight' color={$modeCurrent ? '#2e2e2e' : 'white'} size='10' />
+      </button>
     </form>
   </div>
 {/if}

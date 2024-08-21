@@ -1,4 +1,5 @@
 {
+  "cant_add_yourself": "You can't add yourself as a contact",
   "contact_already_exist": "Contact already exists",
   "contact_code": "Contact code",
   "create_new_contact": "Create New Contact",

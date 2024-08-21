@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { isEmpty } from 'lodash-es';
+  import { modeCurrent } from '@skeletonlabs/skeleton';
   import { getContext } from 'svelte';
   import { writable, get } from 'svelte/store';
   import { decodeHashFromBase64, type HoloHash } from "@holochain/client";
   import { goto } from '$app/navigation';
   import Button from "$lib/Button.svelte";
+  import SvgIcon from '$lib/SvgIcon.svelte';
   import { t } from '$lib/translations';
   import { handleFileChange } from '$lib/utils';
   import { RelayStore } from '$store/RelayStore';
@@ -40,6 +42,9 @@
     } else if (!editContactId && $contacts.find(c => c.data.publicKeyB64 === publicKeyB64)) {
       valid = false
       error.set($t('contacts.contact_already_exist'))
+    } else if (relayStore.client.myPubKeyB64 === publicKeyB64) {
+      valid = false
+      error.set($t('contacts.cant_add_yourself'))
     } else {
       valid = true
       error.set('')
@@ -73,19 +78,19 @@
 
   <!-- Label styled as a big clickable icon -->
   {#if $imageUrl}
-    <div style="position:relative">
+    <div class='relative'>
       <img src={$imageUrl} alt='Avatar' class='rounded-full w-32 h-32 object-cover' />
       <label for="avatarInput"
-        class='rounded-full w-12 h-12 pl-1 bottom-0 right-0 bg-surface-500 absolute flex items-center justify-center cursor-pointer'
+        class='rounded-full w-12 h-12 pl-1 bottom-0 right-0 bg-tertiary-500 hover:bg-tertiary-600 dark:bg-secondary-500 dark:hover:bg-secondary-400 absolute flex items-center justify-center cursor-pointer'
       >
-        <img src='/image-placeholder.png' alt='Group Image Uploader' />
+        <SvgIcon icon='image' color={$modeCurrent ? '%232e2e2e' : 'white'} />
       </label>
     </div>
   {:else}
     <label for="avatarInput"
-      class='rounded-full w-32 h-32 rounded-full bg-surface-400 flex items-center justify-center cursor-pointer'
+      class='rounded-full w-32 h-32 rounded-full bg-tertiary-500 hover:bg-tertiary-600 dark:bg-secondary-500 dark:hover:bg-secondary-400 flex items-center justify-center cursor-pointer'
     >
-      <img src='/image-placeholder.png' alt='Contact Avatar Uploader' class='rounded-full w-16 h-16' />
+      <SvgIcon icon='image' size='44' color={$modeCurrent ? '%232e2e2e' : 'white'} />
     </label>
   {/if}
 </div>
@@ -124,13 +129,13 @@
     <p class='text-xs text-error-500 mt-1 ml-1'>{$error}</p>
   {/if}
   {#if !editContactId}
-    <p class='text-xs text-secondary-600 mt-4 mb-4'>{$t('contacts.request_contact_code')}</p>
+    <p class='text-xs text-secondary-600 dark:text-tertiary-700 mt-4 mb-4'>{$t('contacts.request_contact_code')}</p>
   {/if}
 </div>
 
 <footer>
   <Button
-    moreClasses='w-72 justify-center disabled:bg-surface-900 disabled:border disabled:border-surface-400 disabled:text-primary-100 disabled:opacity-100'
+    moreClasses='w-72 justify-center variant-filled-tertiary disabled:border disabled:border-tertiary-700 disabled:bg-surface-500 disabled:text-tertiary-700 disabled:!opacity-100 dark:disabled:!bg-secondary-900 dark:disabled:!text-tertiary-700'
     onClick={(e) => { saveContact(e)}}
     disabled={!valid || pendingSave}
   >
