@@ -4,19 +4,16 @@ use std::time::UNIX_EPOCH;
 use std::{collections::HashMap, time::SystemTime};
 use std::path::PathBuf;
 use tauri::AppHandle;
-use tauri_plugin_holochain::{HolochainExt, HolochainPluginConfig};
-use url2::Url2;
+use tauri_plugin_holochain::{HolochainExt, HolochainPluginConfig, WANNetworkConfig};
+
 
 const APP_ID: &'static str = "relay";
-const PRODUCTION_SIGNAL_URL: &'static str = "wss://signal.holo.host";
-const PRODUCTION_BOOTSTRAP_URL: &'static str = "https://bootstrap.holo.host";
+const SIGNAL_URL: &'static str = "wss://signal.holo.host";
+const BOOTSTRAP_URL: &'static str = "https://bootstrap.holo.host";
 
 pub fn happ_bundle() -> anyhow::Result<AppBundle> {
     let bytes = include_bytes!("../../workdir/relay.happ");
-    let original_bundle = AppBundle::decode(bytes)?;
-    let mut manifest = original_bundle.manifest().to_owned();
-    manifest.set_network_seed(format!("{}", SystemTime::now().duration_since(UNIX_EPOCH)?.as_micros()));
-    let bundle = AppBundle::from(original_bundle.into_inner().update_manifest(manifest)?);
+    let bundle = AppBundle::decode(bytes)?;
     Ok(bundle)
 }
 
@@ -45,47 +42,41 @@ async fn close_splashscreen(window: Window) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(
             tauri_plugin_log::Builder::default()
                 .level(log::LevelFilter::Warn)
                 .build(),
         )
-        .plugin(tauri_plugin_holochain::async_init(
+        .plugin(tauri_plugin_holochain::init(
             vec_to_locked(vec![]).expect("Can't build passphrase"),
             HolochainPluginConfig {
-                signal_url: signal_url(),
-                bootstrap_url: bootstrap_url(),
+                wan_network_config: wan_network_config(),
                 holochain_dir: holochain_dir(),
             },
         ))
         .setup(|app| {
             let handle = app.handle().clone();
+            let result: anyhow::Result<()> = tauri::async_runtime::block_on(async move {
+                setup(handle).await?;
 
-            app.handle()
-                .listen("holochain-setup-completed", move |_event| {
-                    let handle = handle.clone();
-                    tauri::async_runtime::spawn(async move {
-                        println!("Initializing...");
-                        if let Err(err) = setup(handle.clone()).await {
-                            println!("Error setting up the app: {err:?}");
-                        }
-                        println!("Done initializing.");
+                // After set up we can be sure our app is installed and up to date, so we can just open it
+                app.holochain()?
+                    .main_window_builder(String::from("main"), false, Some(String::from("relay")), None).await?
+                    .build()?;
 
-                        #[cfg(desktop)]
-                        {
-                                                    // After it's done, close the splashscreen and display the main window
-                        let splashscreen_window =
-                            handle.get_webview_window("splashscreen").unwrap();
-                        splashscreen_window.close().unwrap();
-                        }
-                    });
-                });
+                Ok(())
+            });
+
+            result?;
+
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![close_splashscreen])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
 
 // Very simple setup for now:
 // - On app start, list installed apps:
@@ -104,9 +95,11 @@ async fn setup(handle: AppHandle) -> anyhow::Result<()> {
         .map_err(|err| tauri_plugin_holochain::Error::ConductorApiError(err))?;
 
     if installed_apps.len() == 0 {
+        // we do this because we don't want to join everybody into the same dht!
+        let random_seed = format!("{}", SystemTime::now().duration_since(UNIX_EPOCH)?.as_micros());
         handle
             .holochain()?
-            .install_app(String::from(APP_ID), happ_bundle()?, HashMap::new(), None)
+            .install_app(String::from(APP_ID), happ_bundle()?, HashMap::new(), None, Some(random_seed))
             .await?;
     } else {
         handle
@@ -115,16 +108,16 @@ async fn setup(handle: AppHandle) -> anyhow::Result<()> {
             .await?;
     }
     // After set up we can be sure our app is installed and up to date, so we can just open it
-    handle
-        .holochain()?
-        .main_window_builder(
-            String::from("main"),
-            false,
-            Some(String::from("relay")),
-            None,
-        )
-        .await?
-        .build()?;
+    // handle
+    //     .holochain()?
+    //     .main_window_builder(
+    //         String::from("main"),
+    //         false,
+    //         Some(String::from("relay")),
+    //         None,
+    //     )
+    //     .await?
+    //     .build()?;
 
     // Alternatively, you could just send an event that the splashscreen window listens to,
     // and then show a button that invokes the "close_splashcreen"
@@ -134,44 +127,40 @@ async fn setup(handle: AppHandle) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn internal_ip() -> String {
-    std::option_env!("INTERNAL_IP")
-        .expect("Environment variable INTERNAL_IP was not set")
-        .to_string()
-}
-
-fn bootstrap_url() -> Url2 {
+fn wan_network_config() -> Option<WANNetworkConfig> {
     // Resolved at compile time to be able to point to local services
     if tauri::is_dev() {
-        let internal_ip = internal_ip();
-        let port = std::option_env!("BOOTSTRAP_PORT")
-            .expect("Environment variable BOOTSTRAP_PORT was not set");
-        url2::url2!("http://{internal_ip}:{port}")
+        None
     } else {
-        url2::url2!("{}", PRODUCTION_BOOTSTRAP_URL)
-    }
-}
-
-fn signal_url() -> Url2 {
-    // Resolved at compile time to be able to point to local services
-    if tauri::is_dev() {
-        let internal_ip = internal_ip();
-        let signal_port =
-            std::option_env!("SIGNAL_PORT").expect("Environment variable INTERNAL_IP was not set");
-        url2::url2!("ws://{internal_ip}:{signal_port}")
-    } else {
-        url2::url2!("{}", PRODUCTION_SIGNAL_URL)
+        Some(WANNetworkConfig {
+            signal_url: url2::url2!("{}", SIGNAL_URL),
+            bootstrap_url: url2::url2!("{}", BOOTSTRAP_URL)
+        })
     }
 }
 
 fn holochain_dir() -> PathBuf {
     if tauri::is_dev() {
-        let tmp_dir = tempdir::TempDir::new("relay").expect("Could not create temporary directory");
+        #[cfg(target_os = "android")]
+        {
+            app_dirs2::app_root(
+                app_dirs2::AppDataType::UserCache,
+                &app_dirs2::AppInfo {
+                    name: "{{app_name}}",
+                    author: std::env!("CARGO_PKG_AUTHORS"),
+                },
+            ).expect("Could not get the UserCache directory")
+        }
+        #[cfg(not(target_os = "android"))]
+        {
+            let tmp_dir =
+                tempdir::TempDir::new("relay").expect("Could not create temporary directory");
 
-        // Convert `tmp_dir` into a `Path`, destroying the `TempDir`
-        // without deleting the directory.
-        let tmp_path = tmp_dir.into_path();
-        tmp_path
+            // Convert `tmp_dir` into a `Path`, destroying the `TempDir`
+            // without deleting the directory.
+            let tmp_path = tmp_dir.into_path();
+            tmp_path
+        }
     } else {
         app_dirs2::app_root(
             app_dirs2::AppDataType::UserData,

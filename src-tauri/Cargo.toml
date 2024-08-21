@@ -15,18 +15,20 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "2.0.0-beta.17", default-features = false , features = [] }
+tauri-build = { version = "2.0.0-rc", default-features = false , features = [] }
 
 [dependencies]
-tauri = { version = "2.0.0-beta.22", features = [] }
-tauri-plugin-holochain = { git = "https://github.com/darksoil-studio/p2p-shipyard", branch = "default-gossip-arc-clamping" }
+tauri = { version = "2.0.0-rc", features = [] }
+tauri-plugin-holochain = { git = "https://github.com/darksoil-studio/p2p-shipyard"}
 holochain_types = { version = "0.3.1-rc" }
 lair_keystore = { version = "0.4.0" }
 
-holochain_client = { version = "0.5.0-rc" }
+holochain_client = { version = "0.5.0" }
 
 log = "0.4"
-tauri-plugin-log = "2.0.0-beta"
+tauri-plugin-log = "2.0.0-rc"
+tauri-plugin-notification = "2.0.0-rc"
+tauri-plugin-clipboard-manager = "2.0.0-rc"
 url2 = "0.0.6"
 app_dirs2 = "2.5.5"
 tempdir = "0.3.7"

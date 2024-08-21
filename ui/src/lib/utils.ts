@@ -1,4 +1,4 @@
-//import { writeText } from '@tauri-apps/api/clipboard';
+import { writeText, readText, writeHtml, clear } from "@tauri-apps/plugin-clipboard-manager";
 
 export const MIN_TITLE_LENGTH = 3;
 
@@ -6,7 +6,8 @@ export function copyToClipboard(text: string) {
   console.log("Copying to clipboard", text, window.__TAURI__);
   // @ts-ignore
   //if (window.__TAURI__) return writeText(text);
-  return navigator.clipboard.writeText(text);
+  //return navigator.clipboard.writeText(text);
+  return writeText(text)
 }
 
 // Crop avatar image and return a base64 bytes string of its content
@@ -63,4 +64,20 @@ export function handleFileChange(event: Event, callback: (imageData:string)=> vo
 
     reader.readAsDataURL(file);
   }
+}
+
+import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
+
+async function checkPermission() {
+  if (!(await isPermissionGranted())) {
+    return (await requestPermission()) === 'granted';
+  }
+  return true;
+}
+
+export async function enqueueNotification(title:string, body:string) {
+  if (!(await checkPermission())) {
+    return;
+  }
+  sendNotification({ title, body });
 }
