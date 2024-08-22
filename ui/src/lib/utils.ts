@@ -3,11 +3,11 @@ import { writeText, readText, writeHtml, clear } from "@tauri-apps/plugin-clipbo
 export const MIN_TITLE_LENGTH = 3;
 
 export function copyToClipboard(text: string) {
+  // @ts-ignore
   console.log("Copying to clipboard", text, window.__TAURI__);
   // @ts-ignore
-  //if (window.__TAURI__) return writeText(text);
-  //return navigator.clipboard.writeText(text);
-  return writeText(text)
+  if (window.__TAURI__) return writeText(text);
+  return navigator.clipboard.writeText(text);
 }
 
 // Crop avatar image and return a base64 bytes string of its content
@@ -75,7 +75,7 @@ async function checkPermission() {
   return true;
 }
 
-export async function enqueueNotification(title:string, body:string) {
+export async function enqueueNotification(title: string, body: string) {
   if (!(await checkPermission())) {
     return;
   }
