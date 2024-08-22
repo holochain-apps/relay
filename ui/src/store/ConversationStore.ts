@@ -1,7 +1,8 @@
 import { isEmpty, uniq } from 'lodash-es';
 import { encode } from '@msgpack/msgpack';
 import { Base64 } from 'js-base64';
-import { type AgentPubKey, type DnaHash, decodeHashFromBase64, encodeHashToBase64, type ActionHashB64, type ActionHash } from "@holochain/client";
+import { type AgentPubKey, type CellId, type DnaHash, decodeHashFromBase64, encodeHashToBase64, type ActionHashB64, type ActionHash } from "@holochain/client";
+import { FileStorageClient } from "@holochain-open-dev/file-storage";
 import { derived, get, writable, type Writable } from 'svelte/store';
 import { v4 as uuidv4 } from 'uuid';
 import LocalStorageStore from '$store/LocalStorageStore'
@@ -20,11 +21,12 @@ export class ConversationStore {
   public lastMessage: Writable<Message | null>
   public status
   private client
+  private fileStorageClient: FileStorageClient
 
   constructor(
     public relayStore: RelayStore,
     public id: string,
-    public cellDnaHash: DnaHash,
+    public cellId: CellId,
     public config: Config,
     public created: number,
     public privacy: Privacy,
@@ -33,13 +35,14 @@ export class ConversationStore {
     const messages: Messages = {}
 
     const currentBucket = this.currentBucket()
-    this.history = new MsgHistory(currentBucket, this.cellDnaHash)
+    this.history = new MsgHistory(currentBucket, this.cellId[0])
 
-    this.conversation = writable({ id, cellDnaHash, config, privacy, progenitor, agentProfiles: {}, messages });
+    this.conversation = writable({ id, cellId, config, privacy, progenitor, agentProfiles: {}, messages });
     this.invitedContactKeysStore = LocalStorageStore(`conversation_${this.data.id}`, '[]')
     this.lastMessage = writable(null)
     this.status = LocalStorageStore<string>(`conversation_${this.id}_status`, 'closed')
     this.client = relayStore.client
+    this.fileStorageClient = new FileStorageClient(this.client.client, 'relay', 'file_storage', cellId)
   }
 
   async initialize() {
@@ -300,7 +303,18 @@ export class ConversationStore {
     const id = uuidv4()
     const oldMessage: Message = { authorKey, content, hash: id, status: 'pending', timestamp: now, bucket, images}
     this.addMessage(oldMessage)
-    const newMessageEntry = await this.client.sendMessage(this.data.id, content, bucket, images, Object.keys(this.data.agentProfiles).map(k => decodeHashFromBase64(k)))
+    // TODO: upload these images asynchonously and then add to the message when done
+    const imageStructs = await Promise.all(images.filter(i => !!i.file).map(async (image) => {
+      const hash = await this.fileStorageClient.uploadFile(image.file!)
+      return {
+        last_modified: image.file!.lastModified,
+        name: image.file!.name,
+        size: image.file!.size,
+        storage_entry_hash: hash,
+        file_type: image.file!.type
+      }
+    }))
+    const newMessageEntry = await this.client.sendMessage(this.data.id, content, bucket, imageStructs, Object.keys(this.data.agentProfiles).map(k => decodeHashFromBase64(k)))
     const newMessage: Message = {
       ...oldMessage,
       hash: encodeHashToBase64(newMessageEntry.actionHash),
@@ -360,7 +374,7 @@ export class ConversationStore {
       try {
         if (image.status === 'loaded' || !image.storageEntryHash) return resolve(image)
 
-        const file = await this.client.fileStorageClient.downloadFile(image.storageEntryHash)
+        const file = await this.fileStorageClient.downloadFile(image.storageEntryHash)
 
         // read the dataUrl from the image file
         const reader = new FileReader()

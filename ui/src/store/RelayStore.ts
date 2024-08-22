@@ -39,7 +39,6 @@ export class RelayStore {
       const payload: RelaySignal = signal.payload as RelaySignal
 
       if (payload.type == "Message") {
-
         const conversation = this.getConversationByCellDnaHash(signal.cell_id[0])
 
         const from: AgentPubKey = payload.from
@@ -91,7 +90,7 @@ export class RelayStore {
     const progenitor = decodeHashFromBase64(properties.progenitor);
     const privacy = properties.privacy
     const seed = convoCellAndConfig.cell.dna_modifiers.network_seed
-    const newConversation = new ConversationStore(this, seed, convoCellAndConfig.cell.cell_id[0], convoCellAndConfig.config, properties.created, privacy, progenitor )
+    const newConversation = new ConversationStore(this, seed, convoCellAndConfig.cell.cell_id, convoCellAndConfig.config, properties.created, privacy, progenitor )
     const unsub = newConversation.lastMessage.subscribe(() => {
       // Trigger update to conversations store whenever lastMessage changes
       this.conversations.update((convs) => {
@@ -143,7 +142,7 @@ export class RelayStore {
   getConversationByCellDnaHash(cellDnaHash: DnaHash): ConversationStore | undefined {
     let foundConversation
     this.conversations.subscribe(conversations => {
-      foundConversation = conversations.find(conversation => isEqual(conversation.data.cellDnaHash, cellDnaHash));
+      foundConversation = conversations.find(conversation => isEqual(conversation.data.cellId[0], cellDnaHash));
     })();
 
     return foundConversation;
