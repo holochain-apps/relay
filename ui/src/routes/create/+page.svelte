@@ -60,9 +60,8 @@
       : $selectedContacts.length == 2 ? $selectedContacts.map(c => c.firstName).join(' & ')
       : $selectedContacts.map(c => c.firstName).join(', ')
 
-    const conversation = await relayStore.createConversation(title, '', Privacy.Private)
+    const conversation = await relayStore.createConversation(title, '', Privacy.Private, $selectedContacts)
     if (conversation) {
-      localStorage.setItem(`conversation_${conversation.id}`, JSON.stringify($selectedContacts.map(c => c.publicKeyB64).join(',')))
       goto(`/conversations/${conversation.id}/details`)
     }
   }

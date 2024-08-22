@@ -36,7 +36,7 @@ export class ConversationStore {
     this.history = new MsgHistory(currentBucket, this.cellDnaHash)
 
     this.conversation = writable({ id, cellDnaHash, config, privacy, progenitor, agentProfiles: {}, messages });
-    this.invitedContactKeysStore = LocalStorageStore(`conversation_${this.data.id}`, '')
+    this.invitedContactKeysStore = LocalStorageStore(`conversation_${this.data.id}`, '[]')
     this.lastMessage = writable(null)
     this.status = LocalStorageStore<string>(`conversation_${this.id}_status`, 'closed')
     this.client = relayStore.client
@@ -107,10 +107,10 @@ export class ConversationStore {
     }
   }
 
-  get invitedContactKeys() {
+  get invitedContactKeys() : string[] {
     if (this.data.privacy === Privacy.Public) return []
-    const currentValue = get(this.invitedContactKeysStore)
-    return isEmpty(currentValue) ? [] : currentValue.split(',')
+    const currentValue = JSON.parse(get(this.invitedContactKeysStore))
+    return isEmpty(currentValue) ? [] : currentValue
   }
 
   get invitedContacts() {
@@ -398,6 +398,6 @@ export class ConversationStore {
 
   // Invite more contacts to this private conversation
   addContacts(invitedContacts: Contact[]) {
-    this.invitedContactKeysStore.set(get(this.invitedContactKeysStore).split(',').concat(invitedContacts.map(c => c.publicKeyB64)).join(','))
+    this.invitedContactKeysStore.set(JSON.stringify(JSON.parse(get(this.invitedContactKeysStore)).concat(invitedContacts.map(c => c.publicKeyB64))))
   }
 }

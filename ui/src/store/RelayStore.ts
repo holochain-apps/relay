@@ -104,10 +104,14 @@ export class RelayStore {
     return newConversation
   }
 
-  async createConversation(name: string, image: string, privacy: Privacy) {
+  async createConversation(name: string, image: string, privacy: Privacy, initialContacts: Contact[] = []) {
     if (!this.client) return;
     const convoCellAndConfig = await this.client.createConversation(name, image, privacy)
-    return await this._addConversation(convoCellAndConfig)
+    const conversationStore = await this._addConversation(convoCellAndConfig)
+    if (conversationStore && initialContacts.length > 0) {
+      conversationStore.addContacts(initialContacts)
+    }
+    return conversationStore
   }
 
   async joinConversation(invitation: Invitation) {
