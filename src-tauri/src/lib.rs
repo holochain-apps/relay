@@ -3,9 +3,8 @@ use lair_keystore::dependencies::sodoken::{BufRead, BufWrite};
 use std::time::UNIX_EPOCH;
 use std::{collections::HashMap, time::SystemTime};
 use std::path::PathBuf;
-use tauri::AppHandle;
+use tauri::{AppHandle, Listener};
 use tauri_plugin_holochain::{HolochainExt, HolochainPluginConfig, WANNetworkConfig};
-
 
 const APP_ID: &'static str = "relay";
 const SIGNAL_URL: &'static str = "wss://signal.holo.host";
@@ -49,7 +48,7 @@ pub fn run() {
                 .level(log::LevelFilter::Warn)
                 .build(),
         )
-        .plugin(tauri_plugin_holochain::init(
+        .plugin(tauri_plugin_holochain::async_init(
             vec_to_locked(vec![]).expect("Can't build passphrase"),
             HolochainPluginConfig {
                 wan_network_config: wan_network_config(),
@@ -58,18 +57,27 @@ pub fn run() {
         ))
         .setup(|app| {
             let handle = app.handle().clone();
-            let result: anyhow::Result<()> = tauri::async_runtime::block_on(async move {
-                setup(handle).await?;
+            app.handle().listen("holochain://setup-completed", move |_event| {
+                let handle = handle.clone();
+                tauri::async_runtime::spawn(async move {
+                    setup(handle.clone()).await.expect("Failed to setup");
 
-                // After set up we can be sure our app is installed and up to date, so we can just open it
-                app.holochain()?
-                    .main_window_builder(String::from("main"), false, Some(String::from("relay")), None).await?
-                    .build()?;
-
-                Ok(())
+                    handle
+                        .holochain()
+                        .expect("Failed to get holochain")
+                        .main_window_builder(String::from("main"), false, Some(APP_ID.into()), None).await
+                        .expect("Failed to build window")
+                        .build()
+                        .expect("Failed to open main window");
+                    #[cfg(desktop)]
+                    {
+                         // After it's done, close the splashscreen and display the main window
+                        let splashscreen_window =
+                            handle.get_webview_window("splashscreen").unwrap();
+                        splashscreen_window.close().unwrap();
+                    }
+                });
             });
-
-            result?;
 
             Ok(())
         })

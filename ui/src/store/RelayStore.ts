@@ -6,6 +6,7 @@ import { ContactStore } from './ContactStore';
 import { ConversationStore } from './ConversationStore';
 import { RelayClient } from '$store/RelayClient'
 import type { Contact, Image, ConversationCellAndConfig, Invitation, Message, Privacy, Properties, RelaySignal } from '../types';
+import { enqueueNotification } from '$lib/utils';
 
 export class RelayStore {
   public contacts: Writable<ContactStore[]>;
@@ -54,6 +55,8 @@ export class RelayStore {
         }
 
         if (conversation /*&& message.authorKey !== this.client.myPubKeyB64*/) {
+          const sender = conversation.allMembers.find(m=>m.publicKeyB64 == message.authorKey)
+          enqueueNotification(`Message from: ${sender ? sender.firstName+" "+ sender.lastName : message.authorKey}`, message.content.length>50 ? message.content.slice(0,50)+"...":  message.content)
           conversation.addMessage(message)
           conversation.loadImagesForMessage(message) // async load images
         }
