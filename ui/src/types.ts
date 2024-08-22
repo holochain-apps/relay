@@ -1,7 +1,7 @@
 import type {
   ActionHash,
   AgentPubKeyB64,
-  DnaHash,
+  CellId,
   EntryHash,
   SignedActionHashed,
   AgentPubKey,
@@ -78,7 +78,7 @@ export type Messages = { [key: string]: Message }
 
 export interface Conversation {
   id: string; // the network seed
-  cellDnaHash: DnaHash;
+  cellId: CellId;
   config: Config;
   description?: string;
   privacy: Privacy;
@@ -102,7 +102,15 @@ export interface Invitation {
   proof?: MembraneProof;
 }
 
-// TODO: Separate interface for the holochain Image struct
+// Holochain Type
+export interface ImageStruct {
+  last_modified: number;
+  name: string;
+  size: number;
+  storage_entry_hash: EntryHash;
+  file_type: string;
+}
+
 export interface Image {
   dataURL?: string;
   fileType: string;

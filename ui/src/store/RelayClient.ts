@@ -16,10 +16,9 @@ import {
 } from '@holochain/client';
 import { decode } from '@msgpack/msgpack';
 import { EntryRecord } from '@holochain-open-dev/utils';
-import { FileStorageClient } from "@holochain-open-dev/file-storage";
 import type { Profile, ProfilesStore } from '@holochain-open-dev/profiles'
 import { get } from 'svelte/store';
-import type { Config, Contact, ConversationCellAndConfig, Image, Invitation, MembraneProofData, Message, MessageRecord, Privacy, Properties } from '../types';
+import type { Config, Contact, ConversationCellAndConfig, ImageStruct, Invitation, MembraneProofData, Message, MessageRecord, Privacy, Properties } from '../types';
 
 const ZOME_NAME = 'relay'
 
@@ -28,11 +27,9 @@ export class RelayClient {
   conversations: {[key: string]: ConversationCellAndConfig} = {}
   zomeName = ZOME_NAME
   myPubKeyB64: AgentPubKeyB64
-  fileStorageClient: FileStorageClient
 
   constructor(public client: AppClient, public roleName: RoleName, public profilesStore: ProfilesStore) {
     this.myPubKeyB64 = encodeHashToBase64(this.client.myPubKey)
-    this.fileStorageClient = new FileStorageClient(client, 'relay')
   }
 
   get myPubKey() : AgentPubKey {
@@ -202,25 +199,11 @@ export class RelayClient {
     return config ? new EntryRecord(config) : undefined
   }
 
-  public async sendMessage(conversationId: string, content: string, bucket: number, images: Image[], agents: AgentPubKey[]): Promise<EntryRecord<Message>> {
-    // TODO: upload these asynchonously and then add to the message when done
-    const imageStructs = await Promise.all(images.map(async (image) => {
-      if (image.file) {
-        const hash = await this.fileStorageClient.uploadFile(image.file)
-        return {
-          last_modified: image.file.lastModified,
-          name: image.file.name,
-          size: image.file.size,
-          storage_entry_hash: hash,
-          file_type: image.file.type
-        }
-      }
-    }))
-
+  public async sendMessage(conversationId: string, content: string, bucket: number, images: ImageStruct[], agents: AgentPubKey[]): Promise<EntryRecord<Message>> {
     const message = await this.callZomeForCell(
       'create_message',
       {
-        message: { content, bucket, images: await Promise.all(imageStructs) },
+        message: { content, bucket, images },
         agents
       },
       this.conversations[conversationId].cell.cell_id
