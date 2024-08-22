@@ -53,9 +53,9 @@ export class RelayStore {
           timestamp: new Date(payload.action.hashed.content.timestamp / 1000)
         }
 
-        if (conversation /*&& message.authorKey !== this.client.myPubKeyB64*/) {
-          const sender = conversation.allMembers.find(m=>m.publicKeyB64 == message.authorKey)
-          enqueueNotification(`Message from: ${sender ? sender.firstName+" "+ sender.lastName : message.authorKey}`, message.content.length>50 ? message.content.slice(0,50)+"...":  message.content)
+        if (conversation && message.authorKey !== this.client.myPubKeyB64) {
+          const sender = conversation.allMembers.find(m => m.publicKeyB64 == message.authorKey)
+          enqueueNotification(`Message from ${sender ? sender.firstName+" "+ sender.lastName : message.authorKey}`, message.content.length > 50 ? message.content.slice(0,50)+"...":  message.content)
           conversation.addMessage(message)
           conversation.loadImagesForMessage(message) // async load images
         }
