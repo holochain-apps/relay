@@ -280,7 +280,7 @@
           {#if conversation.data.privacy === Privacy.Private}
             <p class='text-xs text-center text-secondary-500 dark:text-tertiary-500 mx-10 mb-8'>{$t('conversations.share_personal_invitations')}</p>
             <Button onClick={() => goto(`/conversations/${conversation.data.id}/details`)} moreClasses='w-72 justify-center'>
-              <SvgIcon icon='invite' size='24' color='%23FD3524' />
+              <SvgIcon icon='invite' size='24' color={$modeCurrent ? 'white' : '%23FD3524'} />
               <strong class='ml-2'>{$t('conversations.send_invitations')}</strong>
             </Button>
           {:else}
