@@ -8,7 +8,7 @@
   import Button from "$lib/Button.svelte";
   import SvgIcon from '$lib/SvgIcon.svelte';
   import { t } from '$lib/translations';
-  import { handleFileChange } from '$lib/utils';
+  import { copyToClipboard, handleFileChange } from '$lib/utils';
   import { RelayStore } from '$store/RelayStore';
 
   // Silly thing to get around typescript issues with sveltekit-i18n
@@ -18,13 +18,14 @@
 	let relayStore = relayStoreContext.getStore()
 
   export let editContactId : string | null = null
-  const contact = editContactId ? relayStore.getContact(editContactId) : null
+  let contact = editContactId ? relayStore.getContact(editContactId) : null
 
   let firstName = contact?.data.firstName || ''
   let lastName = contact?.data.lastName || ''
   let publicKeyB64 = editContactId || ''
   let imageUrl = writable(contact?.data.avatar || '')
 
+  let editing = !editContactId
   let pendingSave = false
   let valid = false
   let error = writable('')
@@ -61,8 +62,14 @@
       const newContactData = { avatar: get(imageUrl), firstName, lastName, publicKeyB64 }
       const newContact = editContactId ? await relayStore.updateContact({...contact, ...newContactData }) : await relayStore.createContact(newContactData)
       if (newContact) {
-        history.length > 0 ? history.back() : goto('/create')
+        if (!editContactId) {
+          goto(`/contacts/${newContact.publicKeyB64}`)
+        }
+        editContactId = newContact.publicKeyB64
+        contact = newContact
       }
+      pendingSave = false
+      editing = false
     } catch (e) {
       console.error(e)
       error.set($tAny('contacts.error_saving', { updating: !!editContactId }))
@@ -70,11 +77,19 @@
     }
   }
 
+  function cancel(e: Event) {
+    e.preventDefault()
+    if (!editContactId) {
+      history.back()
+    }
+    editing = false
+  }
+
 </script>
 
-<div class='flex justify-center items-center flex-col my-10'>
+<div class='flex justify-center items-center flex-col mt-10 mb-5'>
   <!-- Hidden file input -->
-  <input type="file" id="avatarInput" accept="image/jpeg, image/png, image/gif" class='hidden' on:change={(event)=>handleFileChange(event, (imageData) => imageUrl.set(imageData))} />
+  <input type="file" id="avatarInput" accept="image/jpeg, image/png, image/gif" class='hidden' on:change={(event) => { editing = true; handleFileChange(event, (imageData) => imageUrl.set(imageData))}} />
 
   <!-- Label styled as a big clickable icon -->
   {#if $imageUrl}
@@ -95,50 +110,76 @@
   {/if}
 </div>
 
-<div class='flex flex-col justify-start grow px-8 w-full'>
-  <h3 class='h3'>{$t('common.first_name')} *</h3>
-  <input
-    autofocus
-    class='bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
-    type='text'
-    placeholder={$t('contacts.enter_first_name')}
-    name='name'
-    bind:value={firstName}
-    minlength={1}
-  />
+{#if editing}
+  <div class='flex flex-col justify-start grow px-8 w-full'>
+    <h3 class='h3'>{$t('common.first_name')} *</h3>
+    <input
+      autofocus
+      class='bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
+      type='text'
+      placeholder={$t('contacts.enter_first_name')}
+      name='name'
+      bind:value={firstName}
+      minlength={1}
+    />
 
-  <h3 class='h3 mt-4'>{$t('common.last_name')}</h3>
-  <input
-    class='bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
-    type='text'
-    placeholder={$t('contacts.enter_last_name')}
-    name='name'
-    bind:value={lastName}
-  />
+    <h3 class='h3 mt-4'>{$t('common.last_name')}</h3>
+    <input
+      class='bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
+      type='text'
+      placeholder={$t('contacts.enter_last_name')}
+      name='name'
+      bind:value={lastName}
+    />
 
-  <h3 class='h3 mt-4'>{$t('contacts.contact_code')} *</h3>
-  <input
-    class='bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
-    type='text'
-    placeholder={$t('contacts.enter_contact_code')}
-    name='publicKey'
-    bind:value={publicKeyB64}
-    minlength={1}
-  />
-  {#if !isEmpty($error)}
-    <p class='text-xs text-error-500 mt-1 ml-1'>{$error}</p>
-  {/if}
-  {#if !editContactId}
-    <p class='text-xs text-secondary-600 dark:text-tertiary-700 mt-4 mb-4'>{$t('contacts.request_contact_code')}</p>
-  {/if}
-</div>
+    <h3 class='h3 mt-4'>{$t('contacts.contact_code')} *</h3>
+    <input
+      class='bg-surface-900 border-none outline-none focus:outline-none pl-0.5 focus:ring-0'
+      type='text'
+      placeholder={$t('contacts.enter_contact_code')}
+      name='publicKey'
+      bind:value={publicKeyB64}
+      minlength={1}
+    />
+    {#if !isEmpty($error)}
+      <p class='text-xs text-error-500 mt-1 ml-1'>{$error}</p>
+    {/if}
+    {#if !editContactId}
+      <p class='text-xs text-secondary-600 dark:text-tertiary-700 mt-4 mb-4'>{$t('contacts.request_contact_code')}</p>
+    {/if}
+  </div>
 
-<footer>
-  <Button
-    moreClasses='w-72 justify-center variant-filled-tertiary disabled:border disabled:border-tertiary-700 disabled:bg-surface-500 disabled:text-tertiary-700 disabled:!opacity-100 dark:disabled:!bg-secondary-900 dark:disabled:!text-tertiary-700'
-    onClick={(e) => { saveContact(e)}}
-    disabled={!valid || pendingSave}
-  >
-    <strong class='ml-2'>{#if editContactId}{$t('common.save')}{:else}{$t('common.done')}{/if}</strong>
-  </Button>
-</footer>
+  <footer class='flex justify-center'>
+    <Button
+      moreClasses='w-36 justify-center !variant-filled-tertiary dark:!variant-filled-secondary'
+      onClick={(e) => { cancel(e)}}
+    >
+      <strong class=''>{$t('common.cancel')}</strong>
+    </Button>
+    <Button
+      moreClasses='w-48 ml-4 justify-center !variant-filled-secondary dark:!variant-filled-tertiary disabled:border disabled:!border-tertiary-700 disabled:!bg-surface-500 disabled:!text-tertiary-700 disabled:!opacity-100 dark:disabled:!bg-secondary-900 dark:disabled:!text-tertiary-700'
+      onClick={(e) => { saveContact(e)}}
+      disabled={!valid || pendingSave}
+    >
+      <strong class=''>{#if editContactId}{$t('common.save')}{:else}{$t('common.done')}{/if}</strong>
+    </Button>
+  </footer>
+{:else}
+  <div class="flex row items-center justify-center">
+    <h1 class='text-3xl flex-shrink-0 mr-2'>{contact?.name}</h1>
+
+    <button on:click={() => editing = true}>
+      <SvgIcon icon='write' size='24' color='gray' moreClasses='cursor-pointer' />
+    </button>
+  </div>
+  <div class='flex'>
+    <span class='w-64 text-nowrap overflow-hidden text-ellipsis mt-4 text-secondary-400 dark:text-tertiary-700 mb-4 mr-1'>
+      {contact?.publicKeyB64}
+    </span>
+    <button on:click={() => contact?.publicKeyB64 && copyToClipboard(contact.publicKeyB64)}>
+      <SvgIcon icon='copy' size='20' color='%23999' />
+    </button>
+  </div>
+
+
+{/if}

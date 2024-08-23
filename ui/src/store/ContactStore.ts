@@ -15,7 +15,7 @@ export class ContactStore {
     public originalActionHash: ActionHash | undefined,
     public publicKeyB64: AgentPubKeyB64,
   ) {
-    this.contact = writable({ avatar, currentActionHash, firstName, lastName, originalActionHash, publicKeyB64 });
+    this.contact = writable({ avatar, confirmed: false, currentActionHash, firstName, lastName, originalActionHash, publicKeyB64 });
   }
 
   subscribe(run: any) {
@@ -28,6 +28,12 @@ export class ContactStore {
 
   get name() {
     return this.data.firstName + ' ' + this.data.lastName
+  }
+
+  update(newData: any) {
+    this.contact.update(c => {
+      return {...c, ...newData}
+    })
   }
 
   // async getContact() {
