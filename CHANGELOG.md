@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.5.3-beta] - 2024-08-23
+
+### Added
+- First version of on device notifications
+
+### Changed
+- Improved flow and UI of creating and editing contacts
+
+### Fixed
+- Syncing of images with messages
+- Make sure invited contacts appear after creating a private conversation
+
 ## [0.5.2-beta] - 2024-08-20
 
 ### Added
