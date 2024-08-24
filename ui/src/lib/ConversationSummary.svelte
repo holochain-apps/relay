@@ -1,8 +1,9 @@
 <script lang="ts">
-  import type { ConversationStore } from "$store/ConversationStore";
   import { modeCurrent } from '@skeletonlabs/skeleton';
   import Avatar from "./Avatar.svelte";
   import SvgIcon from "./SvgIcon.svelte";
+  import { linkify, sanitizeHTML } from "$lib/utils"
+  import type { ConversationStore } from "$store/ConversationStore";
   import { Privacy } from "../types";
 
   export let store: ConversationStore;
@@ -50,8 +51,8 @@
           <span class="bg-primary-500 rounded-full w-2 h-2 inline-block mr-2"></span>
         {/if}
         {#if $lastMessage}
-          {lastMessageAuthor || ""}:
-          {$lastMessage.content || ""}
+          {lastMessageAuthor || ""}:&nbsp;
+          {@html sanitizeHTML($lastMessage.content || "")}
         {/if}
       </span>
     </div>

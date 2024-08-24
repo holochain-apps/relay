@@ -13,7 +13,7 @@
   import Header from '$lib/Header.svelte';
   import SvgIcon from '$lib/SvgIcon.svelte';
   import { t } from '$lib/translations';
-  import { copyToClipboard } from '$lib/utils';
+  import { copyToClipboard, linkify, sanitizeHTML } from '$lib/utils';
   import { RelayStore } from '$store/RelayStore';
   import { Privacy, type Conversation, type Message, type Image } from '../../../types';
 
@@ -333,8 +333,8 @@
                         {/if}
                       {/each}
                   {/if}
-                  <div class="font-light break-words w-full {fromMe && 'text-end'}">
-                    {message.content}
+                  <div class="message font-light break-words w-full {fromMe && 'text-end'}">
+                    {@html sanitizeHTML(linkify(message.content))}
                   </div>
                 </div>
               </li>
@@ -379,3 +379,9 @@
     </form>
   </div>
 {/if}
+
+<style type='text/css'>
+  .message :global(a) {
+    color: rgba(var(--color-primary-400));
+  }
+</style>

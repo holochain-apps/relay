@@ -1,6 +1,17 @@
-import { writeText, readText, writeHtml, clear } from "@tauri-apps/plugin-clipboard-manager";
+import DOMPurify from 'dompurify';
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
 
 export const MIN_TITLE_LENGTH = 3;
+
+export function sanitizeHTML(html: string) {
+  return DOMPurify.sanitize(html);
+}
+
+export function linkify(text: string) {
+  const urlPattern = /(\b(https?):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gi;
+  return text.replace(urlPattern, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+}
 
 export function copyToClipboard(text: string) {
   // @ts-ignore
@@ -65,8 +76,6 @@ export function handleFileChange(event: Event, callback: (imageData:string)=> vo
     reader.readAsDataURL(file);
   }
 }
-
-import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
 
 async function checkPermission() {
   if (!(await isPermissionGranted())) {
