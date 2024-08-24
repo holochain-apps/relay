@@ -119,7 +119,7 @@
         </div>
       {:else}
         <label for="avatarInput"
-          class='rounded-full w-32 h-32 rounded-full bg-secondary-200 hover:bg-secondary-300 dark:bg-secondary-500 dark:hover:bg-secondary-400 flex items-center justify-center cursor-pointer'
+          class='rounded-full w-32 h-32 min-h-32 rounded-full bg-secondary-200 hover:bg-secondary-300 dark:bg-secondary-500 dark:hover:bg-secondary-400 flex items-center justify-center cursor-pointer'
         >
           <SvgIcon icon='image' size='44' color={$modeCurrent ? '%232e2e2e' : 'white'} />
         </label>
@@ -169,7 +169,7 @@
     <p class='text-sm'>{$tAny('conversations.created', { date: conversation.created })}</p>
     <p class='text-sm'>{$tAny('conversations.num_members', { count: numMembers })}</p>
 
-    <div class="container mx-auto flex flex-col px-4">
+    <div class="container mx-auto flex flex-col px-4 overflow-y-auto">
       <ul class="flex-1 mt-10">
         {#if conversation.privacy === Privacy.Public}
           <li class='text-xl flex flex-row mb-2 items-center rounded-full variant-filled-primary p-2'>
