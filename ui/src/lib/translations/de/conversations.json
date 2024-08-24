@@ -18,7 +18,7 @@
   "message_placeholder": "Type a message...",
   "num_members": "{{count}} {{count; 1:Member default:Members}}",
   "open_invite_code": "Open invite code",
-  "search_placeholder": "Search name or contact code",
+  "search_placeholder": "Search",
   "send_invitations": "Send invitations",
   "share_invitation_code": "Nobody else is here! Share your invitation code to start the conversation.",
   "share_personal_invitations": "Nobody else is here yet! Share personal invitations to start the conversation.",
