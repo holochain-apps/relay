@@ -23,7 +23,7 @@
 
   selectedContacts.subscribe(value => {
     if (value.length > 0) {
-      existingConversation = get(relayStore.conversations).find(c => c.invitedContactKeys.length === value.length && c.invitedContactKeys.every(k => value.find(c => c.publicKeyB64 === k)))
+      existingConversation = get(relayStore.conversations).find(c => c.allMembers.length === value.length && c.allMembers.every(k => value.find(c => c.publicKeyB64 === k.publicKeyB64)))
     } else {
       existingConversation = undefined
     }
@@ -125,7 +125,10 @@
         {@const selected = $selectedContacts.find(c => c.publicKeyB64 === contact.data.publicKeyB64)}
         <button class='flex items-center justify-between w-full rounded-3xl pl-1 pr-2 py-1 -ml-1 mb-2 {selected && 'bg-tertiary-500 dark:bg-secondary-500'}' on:click={() => selectContact(contact.data.publicKeyB64)}>
           <Avatar size={38} image={contact.avatar} agentPubKey={contact.publicKeyB64} moreClasses='mr-3' />
-          <p class='dark:text-tertiary-100 font-normal flex-1 text-start'>{contact.firstName} {contact.lastName}</p>
+          <p class='dark:text-tertiary-100 font-bold flex-1 text-start {contact.pendingConnection ? 'text-secondary-400 dark:!text-secondary-300' : ''}'>
+            {contact.firstName} {contact.lastName}
+            {#if contact.pendingConnection}<span class='text-xs text-secondary-400 ml-1'>{$t('create.unconfirmed')}</span>{/if}
+          </p>
           {#if selected}
             <button
               class='h-8 px-2 bg-white text-secondary-700 rounded-full flex items-center justify-center font-bold'

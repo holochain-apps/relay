@@ -5,6 +5,8 @@ import { type AgentPubKey, type CellId, type DnaHash, decodeHashFromBase64, enco
 import { FileStorageClient } from "@holochain-open-dev/file-storage";
 import { derived, get, writable, type Writable } from 'svelte/store';
 import { v4 as uuidv4 } from 'uuid';
+import { t } from '$lib/translations';
+import { copyToClipboard } from '$lib/utils';
 import LocalStorageStore from '$store/LocalStorageStore'
 import { RelayStore } from '$store/RelayStore'
 import { type Config, type Contact, type Conversation, type Image, type Invitation, type Message, type MessageRecord, Privacy, type Messages, } from '../types';
@@ -98,15 +100,39 @@ export class ConversationStore {
     if (this.data.privacy === Privacy.Public) {
       const invitation: Invitation = {
         created: this.created,
-        conversationName: this?.data?.config.title,
+        image: this?.data.config.image,
         networkSeed: this.data.id,
         privacy: this.data.privacy,
-        progenitor: this.data.progenitor
+        progenitor: this.data.progenitor,
+        title: this?.title,
       }
       const msgpck = encode(invitation);
       return Base64.fromUint8Array(msgpck);
     } else {
       return ''
+    }
+  }
+
+  async copyInviteCodeForAgent(publicKeyB64: string) {
+    if (this.data.privacy === Privacy.Public) {
+      return this.publicInviteCode
+    }
+    const proof = await this.relayStore.inviteAgentToConversation(this.data.id, decodeHashFromBase64(publicKeyB64))
+    if (proof !== undefined) {
+      const invitation: Invitation = {
+        created: this.created, // TODO: put in data
+        image: this.data?.config.title,
+        progenitor: this.data.progenitor,
+        privacy: this.data.privacy,
+        proof,
+        networkSeed: this.data.id,
+        title: this.title,
+      }
+      const msgpck = encode(invitation);
+      const inviteCode = Base64.fromUint8Array(msgpck);
+      copyToClipboard(inviteCode)
+    } else {
+      alert(get(t)('conversations.unable_to_create_code'))
     }
   }
 

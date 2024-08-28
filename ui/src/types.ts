@@ -64,6 +64,7 @@ export interface Contact {
   currentActionHash?: ActionHash;
   originalActionHash?: ActionHash;
   avatar: string;
+  privateConversationId?: string; // the network seed of the 1:1 conversation with this contact, either the one you created, or the one they created if you join that one first
   firstName: string;
   lastName: string;
   publicKeyB64: AgentPubKeyB64;
@@ -95,11 +96,12 @@ export interface MembraneProofData {
 
 export interface Invitation {
   created: number,
-  conversationName: string;
+  image: string;
   networkSeed: string;
   privacy: Privacy;
   progenitor: AgentPubKey;
   proof?: MembraneProof;
+  title: string;
 }
 
 // Holochain Type

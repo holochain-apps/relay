@@ -9,7 +9,6 @@
   import Header from '$lib/Header.svelte';
   import SvgIcon from '$lib/SvgIcon.svelte';
   import { t } from '$lib/translations';
-  import LocalStorageStore from '$store/LocalStorageStore';
   import { RelayStore } from '$store/RelayStore';
   import { copyToClipboard } from '$lib/utils';
   import { type Contact, Privacy } from '../../../../types'

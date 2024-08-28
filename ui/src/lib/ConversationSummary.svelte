@@ -2,7 +2,8 @@
   import { modeCurrent } from '@skeletonlabs/skeleton';
   import Avatar from "./Avatar.svelte";
   import SvgIcon from "./SvgIcon.svelte";
-  import { linkify, sanitizeHTML } from "$lib/utils"
+  import { t } from '$lib/translations';
+  import { sanitizeHTML } from "$lib/utils"
   import type { ConversationStore } from "$store/ConversationStore";
   import { Privacy } from "../types";
 
@@ -13,6 +14,8 @@
   $: lastMessage = store.lastMessage
   $: lastMessageAuthor = $lastMessage ? $conversation.agentProfiles[$lastMessage.authorKey].fields.firstName : null
   $: allMembers = store.allMembers
+  $: joinedMembers = store.memberList()
+
 </script>
 
 <li class="text-xl flex flex-row mb-5 items-start">
@@ -50,7 +53,9 @@
         {#if $status === 'unread'}
           <span class="bg-primary-500 rounded-full w-2 h-2 inline-block mr-2"></span>
         {/if}
-        {#if $lastMessage}
+        {#if $conversation.privacy === Privacy.Private && joinedMembers.length === 0}
+          <span class='text-secondary-400'>{$t('conversations.unconfirmed')}</span>
+        {:else if $lastMessage}
           {lastMessageAuthor || ""}:&nbsp;
           {@html sanitizeHTML($lastMessage.content || "")}
         {/if}
