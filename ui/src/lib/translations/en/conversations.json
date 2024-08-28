@@ -11,6 +11,7 @@
   "created": "Created: {{date:date;}}",
   "enter_invite_code": "Enter invite code",
   "enter_name_here": "Enter name here",
+  "error_joining": "Error joining conversation",
   "group_details": "Group Details",
   "group_name": "Group name",
   "join_conversation": "Join Conversation",
