@@ -1,8 +1,8 @@
 {
   "admin": "Admin",
   "add_members": "Tilføj medlemmer",
-  "add_people": "Add people to {{public; true:group; false:conversation;}}",
-  "add_to_conversation": "Add to conversation",
+  "add_people": "Tilføj personer til {{public; true:group; false:conversation;}}",
+  "add_to_conversation": "Invitér til konversation",
   "already_invited": "Allerede inviteret",
   "already_member": "Allerede medlem",
   "copy_invitation_code": "Kopiér kode",
@@ -20,9 +20,9 @@
   "open_invite_code": "Læs kode",
   "search_placeholder": "Søg",
   "send_invitations": "Send invitationer",
-  "share_invitation_code": "Ingen andre er her! Del din invitationskode for at starte samtalen.",
-  "share_personal_invitations": "Der er ingen andre her endnu! Del invitation for at starte samtalen.",
-  "share_with_people": "Del med andre for at starte samtalen!",
+  "share_invitation_code": "Ingen andre er her! Del din invitationskode for at starte konversation.",
+  "share_personal_invitations": "Der er ingen andre her endnu! Del invitation for at starte konversation.",
+  "share_with_people": "Del med andre for at starte konversation!",
   "unable_to_create_code": "Kan ikke oprette invitationskode",
   "unclaimed_invitations": "Uafhentet invitation",
   "you": "Du"
