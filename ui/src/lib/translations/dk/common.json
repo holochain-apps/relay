@@ -1,4 +1,4 @@
-{
+r{
   "cancel": "Afbryd",
   "connecting_to_holochain": "Forbinder til Holochain...",
   "copy": "KOPIÉR",
@@ -20,7 +20,7 @@
   "tagline": "P2P. Krypteret. Sikker.",
   "use_invite_code": "Indtast kode",
   "welcome": "Velkommen",
-  "welcome_text_1": "Relay deler data kun med de personer, du kommunikerer med.",
+  "welcome_text_1": "Relay deler data kun med de personer, du konverserer med.",
   "welcome_text_2": "Privat, krypteret og sikret med nøgler, som kun du kontrollerer.",
   "what_is_your_name": "Hvad hedder du?"
 }
