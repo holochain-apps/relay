@@ -1,0 +1,13 @@
+{
+  "cant_add_yourself": "Du kan inte lägga till dig själv som kontakt",
+  "contact_already_exist": "Befintlig kontakt",
+  "contact_code": "Kontaktens kod",
+  "create_new_contact": "Skapa ny kontakt",
+  "edit_contact": "Redigera kontakt",
+  "enter_contact_code": "Ange kode",
+  "enter_first_name": "Skriv förnamn",
+  "enter_last_name": "Skriv efternamn",
+  "error_saving": "Fel {{updating; true:updating; false:creating;}} kontakt",
+  "invalid_contact_code": "Ogiltig kod",
+  "request_contact_code": "En kontakts unika kod kan hittas genom att besöka deras personliga profil."
+}
