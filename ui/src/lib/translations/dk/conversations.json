@@ -13,7 +13,7 @@
   "enter_name_here": "Indtast navn her",
   "group_details": "Gruppeinformation",
   "group_name": "Gruppenavn",
-  "join_conversation": "Deltag i samtalen",
+  "join_conversation": "Deltag i konversation",
   "members": "Medlemmer",
   "message_placeholder": "Skriv besked...",
   "num_members": "{{count}} {{count; 1:Member; default:Members;}}",
