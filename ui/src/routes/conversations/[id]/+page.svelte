@@ -278,11 +278,25 @@
         <div class='flex flex-col items-center justify-center h-full w-full'>
           <img src={$modeCurrent ? '/clear-skies-gray.png' : '/clear-skies-white.png'} alt='No contacts' class='w-32 h-32 mb-4 mt-4' />
           {#if conversation.data.privacy === Privacy.Private}
-            <p class='text-xs text-center text-secondary-500 dark:text-tertiary-500 mx-10 mb-8'>{$t('conversations.share_personal_invitations')}</p>
-            <Button onClick={() => goto(`/conversations/${conversation.data.id}/details`)} moreClasses='w-72 justify-center'>
-              <SvgIcon icon='invite' size='24' color={$modeCurrent ? 'white' : '%23FD3524'} />
-              <strong class='ml-2'>{$t('conversations.send_invitations')}</strong>
-            </Button>
+            {#if conversation.allMembers.length === 1}
+              <div class='flex flex-col items-center bg-tertiary-500 dark:bg-secondary-500 rounded-xl p-4 mx-8'>
+                <SvgIcon icon='handshake' size='36' color={$modeCurrent ? '%23232323' : 'white'} />
+                <h1 class='text-secondary-500 dark:text-tertiary-100 text-xl font-bold mt-2'>{$t('contacts.pending_connection_header')}</h1>
+                <p class='text-sm text-center text-secondary-400 dark:text-tertiary-700 mt-4 mb-6'>{$tAny('contacts.pending_connection_description', { name: conversation.title })}</p>
+                <div class='flex justify-center'>
+                  <Button moreClasses='bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900' onClick={() => conversation.copyInviteCodeForAgent(conversation.allMembers[0]?.publicKeyB64) }>
+                    <SvgIcon icon='copy' size='20' color='%23FD3524' moreClasses='mr-2' />
+                    {$t('contacts.copy_invite_code')}
+                  </Button>
+                </div>
+              </div>
+            {:else}
+              <p class='text-xs text-center text-secondary-500 dark:text-tertiary-500 mx-10 mb-8'>{$t('conversations.share_personal_invitations')}</p>
+              <Button onClick={() => goto(`/conversations/${conversation.data.id}/details`)} moreClasses='w-72 justify-center'>
+                <SvgIcon icon='ticket' size='24' color={$modeCurrent ? 'white' : '%23FD3524'} />
+                <strong class='ml-2'>{$t('conversations.send_invitations')}</strong>
+              </Button>
+            {/if}
           {:else}
             <p class='text-xs text-center text-secondary-500 dark:text-tertiary-700 mx-10 mb-8'>{$t('conversations.share_invitation_code')}</p>
             <Button onClick={() => copyToClipboard(conversation.publicInviteCode)} moreClasses='w-64 justify-center variant-filled-tertiary'>

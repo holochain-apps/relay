@@ -12,7 +12,7 @@ const config = ({
     {
       locale: 'en',
       key: 'contacts',
-      routes: [/\/contacts(.*)/], // you can use regexes as well!
+      routes: [/\/contacts(.*)/, /^\/conversations(.*)/], // you can use regexes as well!
       loader: async () => (
         await import('./translations/en/contacts.json')
       ).default,
