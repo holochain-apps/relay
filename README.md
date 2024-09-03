@@ -32,7 +32,7 @@ Relay is a Holochain application deployed using [p2pShipyard](https://darksoil.s
 
 ## License
 
-[Volla Licence 1.0](/relay/blob/main/LICENSE.txt)
+[Volla Licence 1.0](https://github.com/holochain-apps/relay/blob/main/LICENSE.txt)
 
 Copyright (C) 2023, Holochain Foundation
 
