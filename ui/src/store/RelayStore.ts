@@ -167,7 +167,7 @@ export class RelayStore {
     const contactResult = await this.client.createContact(contact)
     if (contactResult) {
       // Immediately add a conversation with the new contact, unless you already have one with them
-      let conversation = this.conversationsData.find(c => c.allMembers.some(m => m.publicKeyB64 === contact.publicKeyB64))
+      let conversation = this.conversationsData.find(c => c.privacy === Privacy.Private && c.allMembers.every(m => m.publicKeyB64 === contact.publicKeyB64))
       if (!conversation) {
         conversation = await this.createConversation(contact.firstName + " " + contact.lastName, '', Privacy.Private, [contact])
       }

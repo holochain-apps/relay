@@ -18,12 +18,13 @@
   let selectedContacts = writable<Contact[]>([])
   let search = ''
   let existingConversation : ConversationStore | undefined = undefined
+  let pendingCreate = false
 
   const tAny = t as any
 
   selectedContacts.subscribe(value => {
     if (value.length > 0) {
-      existingConversation = get(relayStore.conversations).find(c => c.allMembers.length === value.length && c.allMembers.every(k => value.find(c => c.publicKeyB64 === k.publicKeyB64)))
+      existingConversation = get(relayStore.conversations).sort((a, b) => b.privacy === Privacy.Private ? 1 : a.privacy === Privacy.Private ? -1 : 0).find(c => c.allMembers.length === value.length && c.allMembers.every(k => value.find(c => c.publicKeyB64 === k.publicKeyB64)))
     } else {
       existingConversation = undefined
     }
@@ -56,6 +57,8 @@
       return
     }
 
+    pendingCreate = true
+
     const title = $selectedContacts.length == 1 ? $selectedContacts[0].firstName + ' ' + $selectedContacts[0].lastName
       : $selectedContacts.length == 2 ? $selectedContacts.map(c => c.firstName).join(' & ')
       : $selectedContacts.map(c => c.firstName).join(', ')
@@ -64,6 +67,7 @@
     if (conversation) {
       goto(`/conversations/${conversation.id}/details`)
     }
+    pendingCreate = false
   }
 </script>
 
@@ -146,10 +150,11 @@
     {#if $selectedContacts.length > 0}
       <button
         class='fixed right-5 bottom-5 bg-primary-500 text-white rounded-full py-1 pl-2 pr-4 border-0 flex items-center justify-center max-w-2/3'
+        disabled={pendingCreate}
         on:click={() => createConversation()}
       >
         <span class='rounded-full w-9 h-9 bg-surface-500 text-primary-500 text-sm flex items-center justify-center mr-2 font-extrabold'>
-          <SvgIcon icon='person' size='12' color='%23FD3524' moreClasses='mr-1' />
+          <SvgIcon icon={pendingCreate ? 'spinner' : 'person'} size='12' color='%23FD3524' moreClasses='mr-1' />
           {$selectedContacts.length}
         </span>
         <div class='overflow-hidden text-ellipsis nowrap'>

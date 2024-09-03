@@ -25,7 +25,12 @@
   >
     {#if $conversation.privacy === Privacy.Private}
       <div class='flex items-center justify-center relative'>
-        {#if allMembers.length == 1}
+        {#if allMembers.length == 0}
+          <!-- When you join a private conversation and it has not synced yet -->
+          <span class='w-10 h-10 flex items-center justify-center bg-secondary-300 dark:bg-secondary-400 rounded-full'>
+            <SvgIcon icon='group' size='20' color='#ccc' />
+          </span>
+        {:else if allMembers.length == 1}
           <Avatar image={allMembers[0]?.avatar} agentPubKey={allMembers[0]?.publicKeyB64} size={40} />
         {:else if allMembers.length == 2}
           <Avatar image={allMembers[0]?.avatar} agentPubKey={allMembers[0]?.publicKeyB64} size={22} moreClasses='' />
@@ -53,7 +58,7 @@
         {#if $status === 'unread'}
           <span class="bg-primary-500 rounded-full w-2 h-2 inline-block mr-2"></span>
         {/if}
-        {#if $conversation.privacy === Privacy.Private && joinedMembers.length === 0}
+        {#if $conversation.privacy === Privacy.Private && joinedMembers.length === 0 && allMembers.length === 1}
           <span class='text-secondary-400'>{$t('conversations.unconfirmed')}</span>
         {:else if $lastMessage}
           {lastMessageAuthor || ""}:&nbsp;

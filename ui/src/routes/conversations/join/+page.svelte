@@ -31,6 +31,7 @@
       const conversation = await relayStore.joinConversation(invitation)
       if (conversation) {
         goto(`/conversations/${conversation.data.id}`)
+        joining = false
       } else {
         console.error("Error joining conversation, couldn't create the conversation")
         error = true

@@ -274,12 +274,14 @@
       <a href={`/conversations/${conversationId}/details`} class='text-sm'>
         {$tAny('conversations.num_members', { count: numMembers })}
       </a>
-      {#if $processedMessages.length === 0 && encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64}
+      {#if $processedMessages.length === 0 && encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64 && conversation.memberList().length === 0}
+        <!-- No messages yet, no one has joined, and this is a conversation I created. Display a helpful message to invite others -->
         <div class='flex flex-col items-center justify-center h-full w-full'>
           <img src={$modeCurrent ? '/clear-skies-gray.png' : '/clear-skies-white.png'} alt='No contacts' class='w-32 h-32 mb-4 mt-4' />
           {#if conversation.data.privacy === Privacy.Private}
             {#if conversation.allMembers.length === 1}
-              <div class='flex flex-col items-center bg-tertiary-500 dark:bg-secondary-500 rounded-xl p-4 mx-8'>
+              <!-- A 1:1 conversation, so this is a pending connection -->
+              <div class='flex flex-col items-center bg-tertiary-500 dark:bg-secondary-500 rounded-xl p-4 mx-8 mb-3'>
                 <SvgIcon icon='handshake' size='36' color={$modeCurrent ? '%23232323' : 'white'} />
                 <h1 class='text-secondary-500 dark:text-tertiary-100 text-xl font-bold mt-2'>{$t('contacts.pending_connection_header')}</h1>
                 <p class='text-sm text-center text-secondary-400 dark:text-tertiary-700 mt-4 mb-6'>{$tAny('contacts.pending_connection_description', { name: conversation.title })}</p>
@@ -298,6 +300,7 @@
               </Button>
             {/if}
           {:else}
+            <!-- Public conversation, make it easy to copy invite code-->
             <p class='text-xs text-center text-secondary-500 dark:text-tertiary-700 mx-10 mb-8'>{$t('conversations.share_invitation_code')}</p>
             <Button onClick={() => copyToClipboard(conversation.publicInviteCode)} moreClasses='w-64 justify-center variant-filled-tertiary'>
               <SvgIcon icon='copy' size='18' color='%23FD3524' />

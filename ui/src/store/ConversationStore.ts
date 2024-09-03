@@ -100,11 +100,11 @@ export class ConversationStore {
     if (this.data.privacy === Privacy.Public) {
       const invitation: Invitation = {
         created: this.created,
-        image: this?.data.config.image,
+        image: this.data.config.image,
         networkSeed: this.data.id,
         privacy: this.data.privacy,
         progenitor: this.data.progenitor,
-        title: this?.title,
+        title: this.title,
       }
       const msgpck = encode(invitation);
       return Base64.fromUint8Array(msgpck);
@@ -193,12 +193,15 @@ export class ConversationStore {
 
   get title() {
     // TODO: when invited contacts is stored in HC this can go back to invitedContactKeys
-    const numInvited = this.allMembers.length // Object.keys(this.invitedContactKeys).length
+    const numInvited = this.allMembers.length
     if (this.data?.privacy === Privacy.Public) {
       return this.data?.config.title
     }
 
-    if (numInvited === 1) {
+    if (numInvited === 0) {
+      // When joining a private converstion that has not synced yet
+      return this.data?.config.title
+    } else if (numInvited === 1) {
       // Use full name of the one other person in the chat
       return this.allMembers[0] ? this.allMembers[0].firstName + " " + this.allMembers[0].lastName : this.data?.config.title
     } else if (numInvited === 2) {

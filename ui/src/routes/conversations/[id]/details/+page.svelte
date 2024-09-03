@@ -161,7 +161,7 @@
           </li>
         {/if}
         {#if conversation.invitedUnjoined.length > 0}
-          <h3 class='text-md mb-2 text-secondary-300 font-light'>{$t('conversations.unclaimed_invitations')}</h3>
+          <h3 class='text-md mb-2 text-secondary-300 font-light'>{$t('conversations.unconfirmed_invitations')}</h3>
           {#each conversation.invitedUnjoined as contact}
             <li class='text-xl flex flex-row mb-4 px-2 items-center'>
               <Avatar image={contact.avatar} agentPubKey={contact.publicKeyB64} size='38' moreClasses='-ml-30'/>
