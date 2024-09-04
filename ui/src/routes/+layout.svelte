@@ -3,6 +3,7 @@
 	import { ProfilesClient, ProfilesStore } from '@holochain-open-dev/profiles';
 	import { setModeCurrent } from '@skeletonlabs/skeleton';
 	import { onMount, setContext } from 'svelte';
+	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { t } from '$lib/translations';
 	import { RelayClient } from '$store/RelayClient';
@@ -22,6 +23,15 @@
 	let relayStore: RelayStore
 	let connected = false
 	let profilesStore : ProfilesStore|null = null
+
+	let appHeight: number;
+
+	function updateAppHeight() {
+		if (browser) {
+      appHeight = window.innerHeight;
+      document.documentElement.style.setProperty('--app-height', `${appHeight}px`);
+    }
+  }
 
 	document.addEventListener('DOMContentLoaded', () => {
 	// This will wait for the window to load, but you could
@@ -71,6 +81,11 @@
 			setMode(mql.matches)
 		}
 
+		if (browser) {
+      window.addEventListener('resize', updateAppHeight);
+      updateAppHeight();
+    }
+
 		// Prevent internal links from opening in the browser when using Tauri
 		const handleLinkClick = (event: MouseEvent) => {
 			const target = event.target as HTMLElement;
@@ -98,6 +113,7 @@
     document.addEventListener('click', handleLinkClick);
     return () => {
       document.removeEventListener('click', handleLinkClick);
+			window.removeEventListener('resize', updateAppHeight);
     };
 	})
 
@@ -140,10 +156,21 @@
 </div>
 
 <style>
+  /* Add this to ensure the page doesn't scroll */
+  :global(body) {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+
 	.wrapper {
 		max-width: 1000px;
 		margin: 0 auto;
+		height: var(--app-height);
+		overflow-y: auto;
 	}
+
 	.wrapper.full-screen {
 		padding: 0;
 	}
