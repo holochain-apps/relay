@@ -63,7 +63,12 @@
       const newContact = editContactId ? await relayStore.updateContact({...contact, ...newContactData }) : await relayStore.createContact(newContactData)
       if (newContact) {
         if (!editContactId) {
-          goto(`/contacts/${newContact.publicKeyB64}`)
+          if (newContact.privateConversation) {
+            return goto(`/conversations/${newContact.privateConversation?.id}`)
+          } else {
+            // XXX: this shouldn't happen, but is a backup if the private conversation doesn't get created for some reason
+            goto(`/contacts/${newContact.publicKeyB64}`)
+          }
         }
         editContactId = newContact.publicKeyB64
         contact = newContact
