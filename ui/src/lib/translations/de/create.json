@@ -4,5 +4,6 @@
   "open_conversation": "{{existingConversation; true:Open; false:Create;}} conversation",
   "page_title": "Create",
   "search_placeholder": "Search name or contact code",
-  "view": "View"
+  "view": "View",
+  "unconfirmed": "Not confirmed"
 }

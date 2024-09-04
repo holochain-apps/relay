@@ -184,7 +184,7 @@
   }
 
   async function sendMessage(e: SubmitEvent) {
-    if (conversation && newMessageText.trim()) {
+    if (conversation && (newMessageText.trim() || $newMessageImages.length > 0)) {
       conversation.sendMessage(myPubKeyB64, newMessageText, $newMessageImages)
       newMessageText = ''; // Clear input after sending
       newMessageImages.set([])
@@ -241,7 +241,14 @@
 <Header>
   <a class='absolute' href="/conversations"><SvgIcon icon='caretLeft' color={$modeCurrent ? '%232e2e2e' : 'white'} size='10' /></a>
   {#if conversation}
-    <h1 class="flex-1 grow text-center"><a href={`/conversations/${conversationId}/details`}>{conversation.title}</a></h1>
+    <h1 class="flex-1 grow text-center">
+      <a href={`/conversations/${conversationId}/details`} class='flex flex-row items-center justify-center'>
+        {conversation.title}
+        <button class='ml-2' on:click={() => goto(`/conversations/${conversationId}/details`)}>
+          <SvgIcon icon='gear' size='18' color={$modeCurrent ? '%232e2e2e' : 'white'} />
+        </button>
+      </a>
+    </h1>
     {#if conversation.data.privacy === Privacy.Public || encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64}
       <a class='absolute right-5' href={`/conversations/${conversation.data.id}/${conversation.data.privacy === Privacy.Public ? 'details' : 'invite'}`}>
         <SvgIcon icon='addPerson' size='24' color={$modeCurrent ? '%232e2e2e' : 'white'} />
@@ -274,16 +281,33 @@
       <a href={`/conversations/${conversationId}/details`} class='text-sm'>
         {$tAny('conversations.num_members', { count: numMembers })}
       </a>
-      {#if $processedMessages.length === 0 && encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64}
+      {#if $processedMessages.length === 0 && encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64 && conversation.memberList().length === 0}
+        <!-- No messages yet, no one has joined, and this is a conversation I created. Display a helpful message to invite others -->
         <div class='flex flex-col items-center justify-center h-full w-full'>
           <img src={$modeCurrent ? '/clear-skies-gray.png' : '/clear-skies-white.png'} alt='No contacts' class='w-32 h-32 mb-4 mt-4' />
           {#if conversation.data.privacy === Privacy.Private}
-            <p class='text-xs text-center text-secondary-500 dark:text-tertiary-500 mx-10 mb-8'>{$t('conversations.share_personal_invitations')}</p>
-            <Button onClick={() => goto(`/conversations/${conversation.data.id}/details`)} moreClasses='w-72 justify-center'>
-              <SvgIcon icon='invite' size='24' color={$modeCurrent ? 'white' : '%23FD3524'} />
-              <strong class='ml-2'>{$t('conversations.send_invitations')}</strong>
-            </Button>
+            {#if conversation.allMembers.length === 1}
+              <!-- A 1:1 conversation, so this is a pending connection -->
+              <div class='flex flex-col items-center bg-tertiary-500 dark:bg-secondary-500 rounded-xl p-4 mx-8 mb-3'>
+                <SvgIcon icon='handshake' size='36' color={$modeCurrent ? '%23232323' : 'white'} />
+                <h1 class='text-secondary-500 dark:text-tertiary-100 text-xl font-bold mt-2'>{$t('contacts.pending_connection_header')}</h1>
+                <p class='text-sm text-center text-secondary-400 dark:text-tertiary-700 mt-4 mb-6'>{$tAny('contacts.pending_connection_description', { name: conversation.title })}</p>
+                <div class='flex justify-center'>
+                  <Button moreClasses='bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900' onClick={() => { copyToClipboard(conversation.inviteCodeForAgent(conversation.allMembers[0]?.publicKeyB64))}}>
+                    <SvgIcon icon='copy' size='20' color='%23FD3524' moreClasses='mr-2' />
+                    {$t('contacts.copy_invite_code')}
+                  </Button>
+                </div>
+              </div>
+            {:else}
+              <p class='text-xs text-center text-secondary-500 dark:text-tertiary-500 mx-10 mb-8'>{$t('conversations.share_personal_invitations')}</p>
+              <Button onClick={() => goto(`/conversations/${conversation.data.id}/details`)} moreClasses='w-72 justify-center'>
+                <SvgIcon icon='ticket' size='24' color={$modeCurrent ? 'white' : '%23FD3524'} />
+                <strong class='ml-2'>{$t('conversations.send_invitations')}</strong>
+              </Button>
+            {/if}
           {:else}
+            <!-- Public conversation, make it easy to copy invite code-->
             <p class='text-xs text-center text-secondary-500 dark:text-tertiary-700 mx-10 mb-8'>{$t('conversations.share_invitation_code')}</p>
             <Button onClick={() => copyToClipboard(conversation.publicInviteCode)} moreClasses='w-64 justify-center variant-filled-tertiary'>
               <SvgIcon icon='copy' size='18' color='%23FD3524' />
@@ -373,7 +397,7 @@
           {/each}
         </div>
       </div>
-      <button class='pr-2'>
+      <button disabled={newMessageText.trim() === '' && $newMessageImages.length === 0} class='pr-2 disabled:opacity-50'>
         <SvgIcon icon='caretRight' color={$modeCurrent ? '#2e2e2e' : 'white'} size='10' />
       </button>
     </form>
@@ -382,6 +406,6 @@
 
 <style type='text/css'>
   .message :global(a) {
-    color: rgba(var(--color-primary-400));
+    color: rgba(var(--color-primary-500));
   }
 </style>

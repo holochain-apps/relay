@@ -5,7 +5,8 @@ import { type AgentPubKey, type AgentPubKeyB64, type DnaHash, decodeHashFromBase
 import { ContactStore } from './ContactStore';
 import { ConversationStore } from './ConversationStore';
 import { RelayClient } from '$store/RelayClient'
-import type { Contact, Image, ConversationCellAndConfig, Invitation, Message, Privacy, Properties, RelaySignal } from '../types';
+import type { Contact, Image, ConversationCellAndConfig, Invitation, Message, Properties, RelaySignal } from '../types';
+import { Privacy } from '../types';
 import { enqueueNotification } from '$lib/utils';
 
 export class RelayStore {
@@ -156,7 +157,7 @@ export class RelayStore {
     const contactRecords = await this.client.getAllContacts()
     this.contacts.set(contactRecords.map((contactRecord: any) => {
       const contact = contactRecord.contact
-      return new ContactStore(this.client, contact.avatar, contactRecord.signed_action.hashed.hash, contact.first_name, contact.last_name, contactRecord.original_action, encodeHashToBase64(contact.public_key))
+      return new ContactStore(this, contact.avatar, contactRecord.signed_action.hashed.hash, contact.first_name, contact.last_name, contactRecord.original_action, encodeHashToBase64(contact.public_key))
     }))
   }
 
@@ -165,7 +166,12 @@ export class RelayStore {
     // TODO: if adding contact fails we should remove it from the store
     const contactResult = await this.client.createContact(contact)
     if (contactResult) {
-      const contactStore = new ContactStore(this.client, contact.avatar, contactResult.signed_action.hashed.hash, contact.firstName, contact.lastName, contactResult.signed_action.hashed.hash, contact.publicKeyB64)
+      // Immediately add a conversation with the new contact, unless you already have one with them
+      let conversation = this.conversationsData.find(c => c.privacy === Privacy.Private && c.allMembers.every(m => m.publicKeyB64 === contact.publicKeyB64))
+      if (!conversation) {
+        conversation = await this.createConversation(contact.firstName + " " + contact.lastName, '', Privacy.Private, [contact])
+      }
+      const contactStore = new ContactStore(this, contact.avatar, contactResult.signed_action.hashed.hash, contact.firstName, contact.lastName, contactResult.signed_action.hashed.hash, contact.publicKeyB64, conversation?.id)
       this.contacts.update(contacts => [...contacts, contactStore])
       return contactStore
     }
@@ -176,7 +182,7 @@ export class RelayStore {
     if (!this.client) return false
     const contactResult = await this.client.updateContact(contact)
     if (contactResult) {
-      const contactStore = new ContactStore(this.client, contact.avatar, contactResult.signed_action.hashed.hash, contact.firstName, contact.lastName, contact.originalActionHash, contact.publicKeyB64)
+      const contactStore = new ContactStore(this, contact.avatar, contactResult.signed_action.hashed.hash, contact.firstName, contact.lastName, contact.originalActionHash, contact.publicKeyB64)
       this.contacts.update(contacts => [...contacts.filter(c => c.publicKeyB64 !== contact.publicKeyB64), contactStore])
       return contactStore
     }

@@ -2,6 +2,7 @@
   "cant_add_yourself": "You can't add yourself as a contact",
   "contact_already_exist": "Contact already exists",
   "contact_code": "Contact code",
+  "copy_invite_code": "Copy invite code",
   "create_new_contact": "Create New Contact",
   "edit_contact": "Edit Contact",
   "enter_contact_code": "Enter contact code",
@@ -9,5 +10,8 @@
   "enter_last_name": "Enter last name",
   "error_saving": "Error {{updating; true:updating; false:creating;}} contact",
   "invalid_contact_code": "Invalid contact code",
-  "request_contact_code": "Request your contact's unique Relay contact code, which is found by visiting their personal profile in the Relay App."
+  "pending_connection_description": "{{name}} needs to enter your invite code to establish a connection.",
+  "pending_connection_header": "Contact needs to confirm",
+  "request_contact_code": "Request your contact's unique Relay contact code, which is found by visiting their personal profile in the Relay App.",
+  "send_message": "Send message"
 }

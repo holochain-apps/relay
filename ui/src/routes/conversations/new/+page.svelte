@@ -24,6 +24,7 @@
     const conversation = await relayStore.createConversation(title, get(imageUrl), privacy);
     if (conversation) {
       goto(`/conversations/${conversation.data.id}`)
+      pendingCreate = false
     }
   }
 

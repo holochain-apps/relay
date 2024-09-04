@@ -3,6 +3,7 @@
 	import { ProfilesClient, ProfilesStore } from '@holochain-open-dev/profiles';
 	import { setModeCurrent } from '@skeletonlabs/skeleton';
 	import { onMount, setContext } from 'svelte';
+	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { t } from '$lib/translations';
 	import { RelayClient } from '$store/RelayClient';
@@ -22,6 +23,15 @@
 	let relayStore: RelayStore
 	let connected = false
 	let profilesStore : ProfilesStore|null = null
+
+	let appHeight: number;
+
+	function updateAppHeight() {
+		if (browser) {
+      appHeight = window.innerHeight;
+      document.documentElement.style.setProperty('--app-height', `${appHeight}px`);
+    }
+  }
 
 	document.addEventListener('DOMContentLoaded', () => {
 	// This will wait for the window to load, but you could
@@ -71,21 +81,31 @@
 			setMode(mql.matches)
 		}
 
+		if (browser) {
+      window.addEventListener('resize', updateAppHeight);
+      updateAppHeight();
+    }
+
 		// Prevent internal links from opening in the browser when using Tauri
 		const handleLinkClick = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
+			const target = event.target as HTMLElement;
 			// Ensure the clicked element is an anchor and has a href attribute
 			if (target.closest('a[href]')) {
+				// Prevent default action
+				event.preventDefault();
+				event.stopPropagation();
+
         const anchor = target.closest('a') as HTMLAnchorElement;
-				// Prevent default action if it's an internal link
-				if (anchor && anchor.origin === window.location.origin) {
-					event.preventDefault();
-					event.stopPropagation();
-					goto(anchor.pathname); // Navigate internally using SvelteKit's goto
-				} else if (anchor) {
+				let link = anchor.getAttribute('href')
+				if (anchor && anchor.href.startsWith(window.location.origin) && !anchor.getAttribute('rel')?.includes('noopener')) {
+					return goto(anchor.pathname); // Navigate internally using SvelteKit's goto
+				} else if (anchor && link) {
 					// Handle external links using Tauri's API
-					event.preventDefault();
-					window.__TAURI__.shell.open(anchor.href);
+					if (!link.includes('://')) {
+						link = `https://${link}`
+					}
+					const { open } = window.__TAURI_PLUGIN_SHELL__
+					open(link)
 				}
       }
     };
@@ -93,6 +113,7 @@
     document.addEventListener('click', handleLinkClick);
     return () => {
       document.removeEventListener('click', handleLinkClick);
+			window.removeEventListener('resize', updateAppHeight);
     };
 	})
 
@@ -135,10 +156,21 @@
 </div>
 
 <style>
+  /* Add this to ensure the page doesn't scroll */
+  :global(body) {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+
 	.wrapper {
 		max-width: 1000px;
 		margin: 0 auto;
+		height: var(--app-height);
+		overflow-y: auto;
 	}
+
 	.wrapper.full-screen {
 		padding: 0;
 	}

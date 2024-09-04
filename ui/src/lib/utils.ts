@@ -9,16 +9,35 @@ export function sanitizeHTML(html: string) {
 }
 
 export function linkify(text: string) {
-  const urlPattern = /(\b(https?):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gi;
-  return text.replace(urlPattern, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+  const urlPattern = /(?:https?:(?:\/\/)?)?(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
+  return text.replace(urlPattern, (match) => {
+      // XXX: not quite sure why this is needed, but if i dont do this sveltekit navigates internally and externally at the same time
+    const href = match.includes('://') ? match : `https://${match}`
+    return `<a href="${href}" target="_blank" rel="noopener noreferrer">${match}</a>`
+  })
 }
 
-export function copyToClipboard(text: string) {
+export function copyToClipboard(text: string | Promise<string>) {
   // @ts-ignore
-  console.log("Copying to clipboard", text, window.__TAURI__);
-  // @ts-ignore
-  if (window.__TAURI__) return writeText(text);
-  return navigator.clipboard.writeText(text);
+  // if (window.__TAURI_PLUGIN_CLIPBOARD_MANAGER__) return window.__TAURI_PLUGIN_CLIPBOARD_MANAGER__.writeText(text);
+  // return writeText(text);
+  if (typeof text === 'string') {
+    if (text && text.trim().length > 0) {
+      console.log("Copying to clipboard", text);
+      return navigator.clipboard.writeText(text);
+    }
+  } else {
+    if (typeof ClipboardItem && navigator.clipboard.write) {
+      const item = new ClipboardItem({ "text/plain": text.then(t => {
+        console.log("Copying to clipboard", t)
+        return new Blob([t], { type: "text/plain" })
+      })})
+      return navigator.clipboard.write([item])
+    } else {
+      console.log("Copying to clipboard", text);
+      return text.then(t => navigator.clipboard.writeText(t));
+    }
+  }
 }
 
 // Crop avatar image and return a base64 bytes string of its content

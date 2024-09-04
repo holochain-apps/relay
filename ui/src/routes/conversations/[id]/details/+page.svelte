@@ -1,9 +1,7 @@
 <script lang="ts">
-  import { Base64 } from 'js-base64';
-  import { encode } from '@msgpack/msgpack';
   import { modeCurrent } from '@skeletonlabs/skeleton';
   import { getContext } from 'svelte';
-  import { decodeHashFromBase64, encodeHashToBase64 } from '@holochain/client';
+  import { encodeHashToBase64 } from '@holochain/client';
   import { page } from '$app/stores';
   import Avatar from '$lib/Avatar.svelte';
   import Header from '$lib/Header.svelte';
@@ -29,27 +27,6 @@
 
   let editingTitle = false
   let titleElem: HTMLInputElement
-
-  const createInviteCode = async (publicKeyB64: string) => {
-    if (!conversation) return
-    const proof = await relayStore.inviteAgentToConversation(conversationId, decodeHashFromBase64(publicKeyB64))
-    if (proof !== undefined) {
-      const invitation: Invitation = {
-        created: conversation.created, // TODO: put in data
-        conversationName: conversation.data?.config.title,
-        progenitor: conversation.data.progenitor,
-        privacy: conversation.data.privacy,
-        proof,
-        networkSeed: conversation.data.id
-      }
-      const msgpck = encode(invitation);
-      const inviteCode = Base64.fromUint8Array(msgpck);
-      copyToClipboard(inviteCode)
-    }
-    else {
-      alert($t('conversations.unable_to_create_code'))
-    }
-  }
 
   const saveTitle = async () => {
     if (conversation && titleElem.value) {
@@ -184,12 +161,12 @@
           </li>
         {/if}
         {#if conversation.invitedUnjoined.length > 0}
-          <h3 class='text-md mb-2 text-secondary-300 font-light'>{$t('conversations.unclaimed_invitations')}</h3>
+          <h3 class='text-md mb-2 text-secondary-300 font-light'>{$t('conversations.unconfirmed_invitations')}</h3>
           {#each conversation.invitedUnjoined as contact}
             <li class='text-xl flex flex-row mb-4 px-2 items-center'>
               <Avatar image={contact.avatar} agentPubKey={contact.publicKeyB64} size='38' moreClasses='-ml-30'/>
               <span class='ml-4 text-sm flex-1'>{contact.firstName + ' ' + contact.lastName}</span>
-              <button class='rounded-2xl variant-filled-tertiary font-bold text-sm p-2 px-3 flex items-center justify-center' on:click={() => createInviteCode(contact.publicKeyB64)}>
+              <button class='rounded-2xl variant-filled-tertiary font-bold text-sm p-2 px-3 flex items-center justify-center' on:click={() => copyToClipboard(conversation.inviteCodeForAgent(contact.publicKeyB64)) }>
                 <SvgIcon icon='copy' size='18' color='%23FD3524' moreClasses='mr-2' />
                 {$t('conversations.copy_invite')}
               </button>

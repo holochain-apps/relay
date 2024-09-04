@@ -18,12 +18,13 @@
   let selectedContacts = writable<Contact[]>([])
   let search = ''
   let existingConversation : ConversationStore | undefined = undefined
+  let pendingCreate = false
 
   const tAny = t as any
 
   selectedContacts.subscribe(value => {
     if (value.length > 0) {
-      existingConversation = get(relayStore.conversations).find(c => c.invitedContactKeys.length === value.length && c.invitedContactKeys.every(k => value.find(c => c.publicKeyB64 === k)))
+      existingConversation = get(relayStore.conversations).sort((a, b) => b.privacy === Privacy.Private ? 1 : a.privacy === Privacy.Private ? -1 : 0).find(c => c.allMembers.length === value.length && c.allMembers.every(k => value.find(c => c.publicKeyB64 === k.publicKeyB64)))
     } else {
       existingConversation = undefined
     }
@@ -56,6 +57,8 @@
       return
     }
 
+    pendingCreate = true
+
     const title = $selectedContacts.length == 1 ? $selectedContacts[0].firstName + ' ' + $selectedContacts[0].lastName
       : $selectedContacts.length == 2 ? $selectedContacts.map(c => c.firstName).join(' & ')
       : $selectedContacts.map(c => c.firstName).join(', ')
@@ -64,6 +67,7 @@
     if (conversation) {
       goto(`/conversations/${conversation.id}/details`)
     }
+    pendingCreate = false
   }
 </script>
 
@@ -125,7 +129,10 @@
         {@const selected = $selectedContacts.find(c => c.publicKeyB64 === contact.data.publicKeyB64)}
         <button class='flex items-center justify-between w-full rounded-3xl pl-1 pr-2 py-1 -ml-1 mb-2 {selected && 'bg-tertiary-500 dark:bg-secondary-500'}' on:click={() => selectContact(contact.data.publicKeyB64)}>
           <Avatar size={38} image={contact.avatar} agentPubKey={contact.publicKeyB64} moreClasses='mr-3' />
-          <p class='dark:text-tertiary-100 font-normal flex-1 text-start'>{contact.firstName} {contact.lastName}</p>
+          <p class='dark:text-tertiary-100 font-bold flex-1 text-start {contact.pendingConnection ? 'text-secondary-400 dark:!text-secondary-300' : ''}'>
+            {contact.firstName} {contact.lastName}
+            {#if contact.pendingConnection}<span class='text-xs text-secondary-400 ml-1'>{$t('create.unconfirmed')}</span>{/if}
+          </p>
           {#if selected}
             <button
               class='h-8 px-2 bg-white text-secondary-700 rounded-full flex items-center justify-center font-bold'
@@ -143,10 +150,11 @@
     {#if $selectedContacts.length > 0}
       <button
         class='fixed right-5 bottom-5 bg-primary-500 text-white rounded-full py-1 pl-2 pr-4 border-0 flex items-center justify-center max-w-2/3'
+        disabled={pendingCreate}
         on:click={() => createConversation()}
       >
         <span class='rounded-full w-9 h-9 bg-surface-500 text-primary-500 text-sm flex items-center justify-center mr-2 font-extrabold'>
-          <SvgIcon icon='person' size='12' color='%23FD3524' moreClasses='mr-1' />
+          <SvgIcon icon={pendingCreate ? 'spinner' : 'person'} size='12' color='%23FD3524' moreClasses='mr-1' />
           {$selectedContacts.length}
         </span>
         <div class='overflow-hidden text-ellipsis nowrap'>

@@ -1,8 +1,8 @@
 use holochain_types::prelude::AppBundle;
 use lair_keystore::dependencies::sodoken::{BufRead, BufWrite};
+use std::path::PathBuf;
 use std::time::UNIX_EPOCH;
 use std::{collections::HashMap, time::SystemTime};
-use std::path::PathBuf;
 use tauri::{AppHandle, Listener};
 use tauri_plugin_holochain::{HolochainExt, HolochainPluginConfig, WANNetworkConfig};
 
@@ -23,24 +23,25 @@ use tauri::{Manager, Window};
 async fn close_splashscreen(window: Window) {
     #[cfg(desktop)]
     {
-    // Close splashscreen
-    window
-        .get_webview_window("splashscreen")
-        .expect("no window labeled 'splashscreen' found")
-        .close()
-        .unwrap();
-    // Show main window
-    window
-        .get_webview_window("main")
-        .expect("no window labeled 'main' found")
-        .show()
-        .unwrap();
+        // Close splashscreen
+        window
+            .get_webview_window("splashscreen")
+            .expect("no window labeled 'splashscreen' found")
+            .close()
+            .unwrap();
+        // Show main window
+        window
+            .get_webview_window("main")
+            .expect("no window labeled 'main' found")
+            .show()
+            .unwrap();
     }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(
@@ -57,34 +58,40 @@ pub fn run() {
         ))
         .setup(|app| {
             let handle = app.handle().clone();
-            app.handle().listen("holochain://setup-completed", move |_event| {
-                let handle = handle.clone();
-                tauri::async_runtime::spawn(async move {
-                    setup(handle.clone()).await.expect("Failed to setup");
+            app.handle()
+                .listen("holochain://setup-completed", move |_event| {
+                    let handle = handle.clone();
+                    tauri::async_runtime::spawn(async move {
+                        setup(handle.clone()).await.expect("Failed to setup");
 
-                    handle
-                        .holochain()
-                        .expect("Failed to get holochain")
-                        .main_window_builder(String::from("main"), false, Some(APP_ID.into()), None).await
-                        .expect("Failed to build window")
-                        .build()
-                        .expect("Failed to open main window");
-                    #[cfg(desktop)]
-                    {
-                         // After it's done, close the splashscreen and display the main window
-                        let splashscreen_window =
-                            handle.get_webview_window("splashscreen").unwrap();
-                        splashscreen_window.close().unwrap();
-                    }
+                        handle
+                            .holochain()
+                            .expect("Failed to get holochain")
+                            .main_window_builder(
+                                String::from("main"),
+                                false,
+                                Some(APP_ID.into()),
+                                None,
+                            )
+                            .await
+                            .expect("Failed to build window")
+                            .build()
+                            .expect("Failed to open main window");
+                        #[cfg(desktop)]
+                        {
+                            // After it's done, close the splashscreen and display the main window
+                            let splashscreen_window =
+                                handle.get_webview_window("splashscreen").unwrap();
+                            splashscreen_window.close().unwrap();
+                        }
+                    });
                 });
-            });
 
             Ok(())
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
-
 
 // Very simple setup for now:
 // - On app start, list installed apps:
@@ -104,10 +111,19 @@ async fn setup(handle: AppHandle) -> anyhow::Result<()> {
 
     if installed_apps.len() == 0 {
         // we do this because we don't want to join everybody into the same dht!
-        let random_seed = format!("{}", SystemTime::now().duration_since(UNIX_EPOCH)?.as_micros());
+        let random_seed = format!(
+            "{}",
+            SystemTime::now().duration_since(UNIX_EPOCH)?.as_micros()
+        );
         handle
             .holochain()?
-            .install_app(String::from(APP_ID), happ_bundle()?, HashMap::new(), None, Some(random_seed))
+            .install_app(
+                String::from(APP_ID),
+                happ_bundle()?,
+                HashMap::new(),
+                None,
+                Some(random_seed),
+            )
             .await?;
     } else {
         handle
@@ -142,7 +158,7 @@ fn wan_network_config() -> Option<WANNetworkConfig> {
     } else {
         Some(WANNetworkConfig {
             signal_url: url2::url2!("{}", SIGNAL_URL),
-            bootstrap_url: url2::url2!("{}", BOOTSTRAP_URL)
+            bootstrap_url: url2::url2!("{}", BOOTSTRAP_URL),
         })
     }
 }
@@ -157,7 +173,8 @@ fn holochain_dir() -> PathBuf {
                     name: "{{app_name}}",
                     author: std::env!("CARGO_PKG_AUTHORS"),
                 },
-            ).expect("Could not get the UserCache directory")
+            )
+            .expect("Could not get the UserCache directory")
         }
         #[cfg(not(target_os = "android"))]
         {

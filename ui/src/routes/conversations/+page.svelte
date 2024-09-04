@@ -30,8 +30,8 @@
   </button>
 </Header>
 
-<div class="container h-full mx-auto flex flex-col px-4">
-  <div class='w-full relative my-5 '>
+<div class="container h-full mx-auto flex flex-col px-2">
+  <div class='w-full relative my-5 my-2'>
     <input
       type='text'
       class='w-full h-12 !bg-tertiary-500 dark:!bg-secondary-500 dark:text-tertiary-500 text-md rounded-full pr-4 pl-10 border-0'

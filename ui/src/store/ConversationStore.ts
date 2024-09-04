@@ -5,6 +5,8 @@ import { type AgentPubKey, type CellId, type DnaHash, decodeHashFromBase64, enco
 import { FileStorageClient } from "@holochain-open-dev/file-storage";
 import { derived, get, writable, type Writable } from 'svelte/store';
 import { v4 as uuidv4 } from 'uuid';
+import { t } from '$lib/translations';
+import { copyToClipboard } from '$lib/utils';
 import LocalStorageStore from '$store/LocalStorageStore'
 import { RelayStore } from '$store/RelayStore'
 import { type Config, type Contact, type Conversation, type Image, type Invitation, type Message, type MessageRecord, Privacy, type Messages, } from '../types';
@@ -98,15 +100,39 @@ export class ConversationStore {
     if (this.data.privacy === Privacy.Public) {
       const invitation: Invitation = {
         created: this.created,
-        conversationName: this?.data?.config.title,
+        image: this.data.config.image,
         networkSeed: this.data.id,
         privacy: this.data.privacy,
-        progenitor: this.data.progenitor
+        progenitor: this.data.progenitor,
+        title: this.title,
       }
       const msgpck = encode(invitation);
       return Base64.fromUint8Array(msgpck);
     } else {
       return ''
+    }
+  }
+
+  async inviteCodeForAgent(publicKeyB64: string) {
+    if (this.data.privacy === Privacy.Public) {
+      return this.publicInviteCode
+    }
+    const proof = await this.relayStore.inviteAgentToConversation(this.data.id, decodeHashFromBase64(publicKeyB64))
+    if (proof !== undefined) {
+      const invitation: Invitation = {
+        created: this.created, // TODO: put in data
+        image: this.data?.config.title,
+        progenitor: this.data.progenitor,
+        privacy: this.data.privacy,
+        proof,
+        networkSeed: this.data.id,
+        title: this.title // TODO: other people should have a title that includes the progenitor's name
+      }
+      const msgpck = encode(invitation);
+      return Base64.fromUint8Array(msgpck);
+    } else {
+      alert(get(t)('conversations.unable_to_create_code'))
+      return Promise.resolve('')
     }
   }
 
@@ -167,12 +193,15 @@ export class ConversationStore {
 
   get title() {
     // TODO: when invited contacts is stored in HC this can go back to invitedContactKeys
-    const numInvited = this.allMembers.length // Object.keys(this.invitedContactKeys).length
+    const numInvited = this.allMembers.length
     if (this.data?.privacy === Privacy.Public) {
       return this.data?.config.title
     }
 
-    if (numInvited === 1) {
+    if (numInvited === 0) {
+      // When joining a private converstion that has not synced yet
+      return this.data?.config.title
+    } else if (numInvited === 1) {
       // Use full name of the one other person in the chat
       return this.allMembers[0] ? this.allMembers[0].firstName + " " + this.allMembers[0].lastName : this.data?.config.title
     } else if (numInvited === 2) {

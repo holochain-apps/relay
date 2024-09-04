@@ -2,7 +2,8 @@
   import { modeCurrent } from '@skeletonlabs/skeleton';
   import Avatar from "./Avatar.svelte";
   import SvgIcon from "./SvgIcon.svelte";
-  import { linkify, sanitizeHTML } from "$lib/utils"
+  import { t } from '$lib/translations';
+  import { sanitizeHTML } from "$lib/utils"
   import type { ConversationStore } from "$store/ConversationStore";
   import { Privacy } from "../types";
 
@@ -13,16 +14,23 @@
   $: lastMessage = store.lastMessage
   $: lastMessageAuthor = $lastMessage ? $conversation.agentProfiles[$lastMessage.authorKey].fields.firstName : null
   $: allMembers = store.allMembers
+  $: joinedMembers = store.memberList()
+
 </script>
 
 <li class="text-xl flex flex-row mb-5 items-start">
   <a
     href="/conversations/{$conversation.id}"
-    class="flex-1 flex flex-row items-center min-w-0"
+    class="w-full rounded-lg flex flex-row items-center min-w-0 px-2 py-3 bg-surface-100 hover:bg-tertiary-400 dark:bg-surface-900 dark:hover:bg-secondary-500"
   >
     {#if $conversation.privacy === Privacy.Private}
       <div class='flex items-center justify-center relative'>
-        {#if allMembers.length == 1}
+        {#if allMembers.length == 0}
+          <!-- When you join a private conversation and it has not synced yet -->
+          <span class='w-10 h-10 flex items-center justify-center bg-secondary-300 dark:bg-secondary-400 rounded-full'>
+            <SvgIcon icon='group' size='20' color='#ccc' />
+          </span>
+        {:else if allMembers.length == 1}
           <Avatar image={allMembers[0]?.avatar} agentPubKey={allMembers[0]?.publicKeyB64} size={40} />
         {:else if allMembers.length == 2}
           <Avatar image={allMembers[0]?.avatar} agentPubKey={allMembers[0]?.publicKeyB64} size={22} moreClasses='' />
@@ -50,19 +58,21 @@
         {#if $status === 'unread'}
           <span class="bg-primary-500 rounded-full w-2 h-2 inline-block mr-2"></span>
         {/if}
-        {#if $lastMessage}
+        {#if $conversation.privacy === Privacy.Private && joinedMembers.length === 0 && allMembers.length === 1}
+          <span class='text-secondary-400'>{$t('conversations.unconfirmed')}</span>
+        {:else if $lastMessage}
           {lastMessageAuthor || ""}:&nbsp;
           {@html sanitizeHTML($lastMessage.content || "")}
         {/if}
       </span>
     </div>
+    <span
+      class="text-xs flex text-secondary-300 flex-row items-center relative"
+    >
+      <SvgIcon icon="person" size="8" color={$modeCurrent ? "#aaa" : "#ccc"} />
+      <span class="ml-2">{Object.values($conversation.agentProfiles).length}</span>
+    </span>
   </a>
-  <span
-    class="text-xs flex text-secondary-300 flex-row items-center top-1 relative"
-  >
-    <SvgIcon icon="person" size="8" color={$modeCurrent ? "#aaa" : "#ccc"} />
-    <span class="ml-2">{Object.values($conversation.agentProfiles).length}</span>
-  </span>
 </li>
 
 <style>

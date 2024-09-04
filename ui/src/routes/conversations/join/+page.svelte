@@ -20,19 +20,27 @@
 
   let inviteCode = ''
   let joining = false
+  let error = false
 
   async function joinConversation(e: SubmitEvent) {
     e.preventDefault();
     joining = true
-    const msgpack = Base64.toUint8Array(inviteCode)
     try {
+      const msgpack = Base64.toUint8Array(inviteCode)
       const invitation : Invitation = decode(msgpack) as Invitation;
       const conversation = await relayStore.joinConversation(invitation)
-      conversation && goto(`/conversations/${conversation.data.id}`)
+      if (conversation) {
+        goto(`/conversations/${conversation.data.id}`)
+        joining = false
+      } else {
+        console.error("Error joining conversation, couldn't create the conversation")
+        error = true
+        joining = false
+      }
     } catch(e) {
-      console.error("Error joining conversation", e)
-      alert($t('conversations.error_joining'))
+      error = true
       joining = false
+      console.error("Error joining conversation", e)
     }
   }
 </script>
@@ -52,6 +60,9 @@
       name='inviteCode'
       bind:value={inviteCode}
     />
+    {#if error}
+      <p class='text-error-500 text-sm mt-2'>{$t('conversations.error_joining')}</p>
+    {/if}
   </div>
 
   <footer>

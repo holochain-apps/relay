@@ -11,6 +11,7 @@
   "created": "Created: {{date:date;}}",
   "enter_invite_code": "Enter invite code",
   "enter_name_here": "Enter name here",
+  "error_joining": "Error joining conversation",
   "group_details": "Group Details",
   "group_name": "Group name",
   "join_conversation": "Join Conversation",
@@ -24,6 +25,7 @@
   "share_personal_invitations": "Nobody else is here yet! Share personal invitations to start the conversation.",
   "share_with_people": "Share with people to begin chatting!",
   "unable_to_create_code": "Unable to create invitation code",
-  "unclaimed_invitations": "Unclaimed Invitations",
+  "unconfirmed_invitations": "Unconfirmed Invitations",
+  "unconfirmed": "Not confirmed",
   "you": "You"
 }
