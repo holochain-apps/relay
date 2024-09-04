@@ -241,7 +241,14 @@
 <Header>
   <a class='absolute' href="/conversations"><SvgIcon icon='caretLeft' color={$modeCurrent ? '%232e2e2e' : 'white'} size='10' /></a>
   {#if conversation}
-    <h1 class="flex-1 grow text-center"><a href={`/conversations/${conversationId}/details`}>{conversation.title}</a></h1>
+    <h1 class="flex-1 grow text-center">
+      <a href={`/conversations/${conversationId}/details`} class='flex flex-row items-center justify-center'>
+        {conversation.title}
+        <button class='ml-2' on:click={() => goto(`/conversations/${conversationId}/details`)}>
+          <SvgIcon icon='gear' size='18' color={$modeCurrent ? '%232e2e2e' : 'white'} />
+        </button>
+      </a>
+    </h1>
     {#if conversation.data.privacy === Privacy.Public || encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64}
       <a class='absolute right-5' href={`/conversations/${conversation.data.id}/${conversation.data.privacy === Privacy.Public ? 'details' : 'invite'}`}>
         <SvgIcon icon='addPerson' size='24' color={$modeCurrent ? '%232e2e2e' : 'white'} />
