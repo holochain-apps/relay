@@ -18,28 +18,28 @@ jobs:
       # Checks out a copy of your repository on the ubuntu-latest machine
       - uses: actions/checkout@v3
 
-      - name: Extend space
-        uses: ./.github/actions/extend-space
-
       - name: Install nix
-        uses: cachix/install-nix-action@v18
+        uses: cachix/install-nix-action@v27
         with:
-          install_url: https://releases.nixos.org/nix/nix-2.13.3/install
-          extra_nix_config: |
-            experimental-features = flakes nix-command
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          nix_path: nixpkgs=channel:nixos-24.05
 
-      - uses: cachix/cachix-action@v12
+      - uses: cachix/cachix-action@v15
         with:
           name: holochain-ci
 
-      - uses: cachix/cachix-action@v12
+      - uses: cachix/cachix-action@v15
+        with:
+          name: holochain-open-dev
+
+      - uses: cachix/cachix-action@v15
         with:
           name: darksoil-studio
 
       - name: Install and test
         run: |
           nix-store --gc
-          nix develop --command bash -c "npm i && npm run build:happ"
+          nix develop --no-update-lock-file --accept-flake-config --command bash -c "npm install && npm run build:happ"
 
       - name: Retrieve version
         run: |
@@ -62,7 +62,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [windows-2019, macos-11, ubuntu-22.04]
+        include:
+          - platform: 'macos-latest' # for Arm based macs (M1 and above).
+            args: '--target aarch64-apple-darwin'
+          - platform: 'macos-latest' # for Intel based macs.
+            args: '--target x86_64-apple-darwin'
+          - platform: 'ubuntu-22.04' # for Tauri v1 you could replace this with ubuntu-20.04.
+            args: ''
+          - platform: 'windows-latest'
+            args: ''
     env:
       MACOSX_DEPLOYMENT_TARGET: 10.13
 
@@ -85,6 +93,10 @@ jobs:
         with:
           override: true
           toolchain: stable
+
+      - name: install x86_64 target
+        if: matrix.args == '--target x86_64-apple-darwin'
+        run: rustup target add x86_64-apple-darwin
 
       - name: install Go stable
         uses: actions/setup-go@v4
@@ -118,16 +130,14 @@ jobs:
         id: print-version
 
       - name: Download release of the .happ
-        id: release_data
-        uses: KevinRohn/github-full-release-data@v2
+        uses: robinraju/release-downloader@v1.10
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          repository: "holochain-apps/relay"
+        with: 
           token: ${{ secrets.GITHUB_TOKEN }}
-          version: v${{ needs.publish-happ.outputs.appVersion }}
-          asset-file: '*.happ'
-          asset-output: 'workdir/'
+          releaseId: ${{ needs.publish-happ.outputs.releaseId }}
+          fileName: 'relay.happ'
+          out-file-path: 'workdir/'
 
       - name: build the app
         uses: tauri-apps/tauri-action@v0
