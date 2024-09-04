@@ -66,13 +66,13 @@
         {/if}
       </span>
     </div>
+    <span
+      class="text-xs flex text-secondary-300 flex-row items-center relative"
+    >
+      <SvgIcon icon="person" size="8" color={$modeCurrent ? "#aaa" : "#ccc"} />
+      <span class="ml-2">{Object.values($conversation.agentProfiles).length}</span>
+    </span>
   </a>
-  <span
-    class="text-xs flex text-secondary-300 flex-row items-center top-1 relative"
-  >
-    <SvgIcon icon="person" size="8" color={$modeCurrent ? "#aaa" : "#ccc"} />
-    <span class="ml-2">{Object.values($conversation.agentProfiles).length}</span>
-  </span>
 </li>
 
 <style>
