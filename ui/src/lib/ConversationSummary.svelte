@@ -21,7 +21,7 @@
 <li class="text-xl flex flex-row mb-5 items-start">
   <a
     href="/conversations/{$conversation.id}"
-    class="flex-1 flex flex-row items-center min-w-0"
+    class="w-full rounded-lg flex flex-row items-center min-w-0 px-2 py-3 bg-surface-100 hover:bg-tertiary-400 dark:bg-surface-900 dark:hover:bg-secondary-500"
   >
     {#if $conversation.privacy === Privacy.Private}
       <div class='flex items-center justify-center relative'>
