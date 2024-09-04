@@ -239,7 +239,7 @@
 </script>
 
 <Header>
-  <a class='absolute' href="/conversations"><SvgIcon icon='caretLeft' color={$modeCurrent ? '%232e2e2e' : 'white'} size='10' /></a>
+  <a class='absolute pr-5' href="/conversations"><SvgIcon icon='caretLeft' color={$modeCurrent ? '%232e2e2e' : 'white'} size='10' /></a>
   {#if conversation}
     <h1 class="flex-1 grow text-center">
       <a href={`/conversations/${conversationId}/details`} class='flex flex-row items-center justify-center'>
