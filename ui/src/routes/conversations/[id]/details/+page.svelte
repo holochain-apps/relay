@@ -166,7 +166,7 @@
             <li class='text-xl flex flex-row mb-4 px-2 items-center'>
               <Avatar image={contact.avatar} agentPubKey={contact.publicKeyB64} size='38' moreClasses='-ml-30'/>
               <span class='ml-4 text-sm flex-1'>{contact.firstName + ' ' + contact.lastName}</span>
-              <button class='rounded-2xl variant-filled-tertiary font-bold text-sm p-2 px-3 flex items-center justify-center' on:click={() => conversation.copyInviteCodeForAgent(contact.publicKeyB64) }>
+              <button class='rounded-2xl variant-filled-tertiary font-bold text-sm p-2 px-3 flex items-center justify-center' on:click={() => copyToClipboard(conversation.inviteCodeForAgent(contact.publicKeyB64)) }>
                 <SvgIcon icon='copy' size='18' color='%23FD3524' moreClasses='mr-2' />
                 {$t('conversations.copy_invite')}
               </button>

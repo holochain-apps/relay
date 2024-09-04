@@ -113,7 +113,7 @@ export class ConversationStore {
     }
   }
 
-  async copyInviteCodeForAgent(publicKeyB64: string) {
+  async inviteCodeForAgent(publicKeyB64: string) {
     if (this.data.privacy === Privacy.Public) {
       return this.publicInviteCode
     }
@@ -126,13 +126,13 @@ export class ConversationStore {
         privacy: this.data.privacy,
         proof,
         networkSeed: this.data.id,
-        title: this.title,
+        title: this.title // TODO: other people should have a title that includes the progenitor's name
       }
       const msgpck = encode(invitation);
-      const inviteCode = Base64.fromUint8Array(msgpck);
-      copyToClipboard(inviteCode)
+      return Base64.fromUint8Array(msgpck);
     } else {
       alert(get(t)('conversations.unable_to_create_code'))
+      return Promise.resolve('')
     }
   }
 

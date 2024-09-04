@@ -17,13 +17,27 @@ export function linkify(text: string) {
   })
 }
 
-export function copyToClipboard(text: string) {
-  // @ts-ignore
-  console.log("Copying to clipboard", text);
+export function copyToClipboard(text: string | Promise<string>) {
   // @ts-ignore
   // if (window.__TAURI_PLUGIN_CLIPBOARD_MANAGER__) return window.__TAURI_PLUGIN_CLIPBOARD_MANAGER__.writeText(text);
   // return writeText(text);
-  return navigator.clipboard.writeText(text);
+  if (typeof text === 'string') {
+    if (text && text.trim().length > 0) {
+      console.log("Copying to clipboard", text);
+      return navigator.clipboard.writeText(text);
+    }
+  } else {
+    if (typeof ClipboardItem && navigator.clipboard.write) {
+      const item = new ClipboardItem({ "text/plain": text.then(t => {
+        console.log("Copying to clipboard", t)
+        return new Blob([t], { type: "text/plain" })
+      })})
+      return navigator.clipboard.write([item])
+    } else {
+      console.log("Copying to clipboard", text);
+      return text.then(t => navigator.clipboard.writeText(t));
+    }
+  }
 }
 
 // Crop avatar image and return a base64 bytes string of its content

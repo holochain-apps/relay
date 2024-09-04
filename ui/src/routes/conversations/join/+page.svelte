@@ -25,8 +25,8 @@
   async function joinConversation(e: SubmitEvent) {
     e.preventDefault();
     joining = true
-    const msgpack = Base64.toUint8Array(inviteCode)
     try {
+      const msgpack = Base64.toUint8Array(inviteCode)
       const invitation : Invitation = decode(msgpack) as Invitation;
       const conversation = await relayStore.joinConversation(invitation)
       if (conversation) {

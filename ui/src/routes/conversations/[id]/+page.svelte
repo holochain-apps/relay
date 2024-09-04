@@ -293,7 +293,7 @@
                 <h1 class='text-secondary-500 dark:text-tertiary-100 text-xl font-bold mt-2'>{$t('contacts.pending_connection_header')}</h1>
                 <p class='text-sm text-center text-secondary-400 dark:text-tertiary-700 mt-4 mb-6'>{$tAny('contacts.pending_connection_description', { name: conversation.title })}</p>
                 <div class='flex justify-center'>
-                  <Button moreClasses='bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900' onClick={() => conversation.copyInviteCodeForAgent(conversation.allMembers[0]?.publicKeyB64) }>
+                  <Button moreClasses='bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900' onClick={() => { copyToClipboard(conversation.inviteCodeForAgent(conversation.allMembers[0]?.publicKeyB64))}}>
                     <SvgIcon icon='copy' size='20' color='%23FD3524' moreClasses='mr-2' />
                     {$t('contacts.copy_invite_code')}
                   </Button>
