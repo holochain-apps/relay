@@ -73,19 +73,24 @@
 
 		// Prevent internal links from opening in the browser when using Tauri
 		const handleLinkClick = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
+			const target = event.target as HTMLElement;
 			// Ensure the clicked element is an anchor and has a href attribute
 			if (target.closest('a[href]')) {
+				// Prevent default action
+				event.preventDefault();
+				event.stopPropagation();
+
         const anchor = target.closest('a') as HTMLAnchorElement;
-				// Prevent default action if it's an internal link
-				if (anchor && anchor.origin === window.location.origin) {
-					event.preventDefault();
-					event.stopPropagation();
-					goto(anchor.pathname); // Navigate internally using SvelteKit's goto
-				} else if (anchor) {
+				let link = anchor.getAttribute('href')
+				if (anchor && anchor.href.startsWith(window.location.origin) && !anchor.getAttribute('rel')?.includes('noopener')) {
+					return goto(anchor.pathname); // Navigate internally using SvelteKit's goto
+				} else if (anchor && link) {
 					// Handle external links using Tauri's API
-					event.preventDefault();
-					window.__TAURI__.shell.open(anchor.href);
+					if (!link.includes('://')) {
+						link = `https://${link}`
+					}
+					const { open } = window.__TAURI_PLUGIN_SHELL__
+					open(link)
 				}
       }
     };

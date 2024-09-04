@@ -13,13 +13,16 @@ declare const __APP_VERSION__: string;
 // For tauri
 declare global {
   interface Window {
-    __TAURI__: {
-      shell: {
-        open: (url: string) => Promise<void>;
+    __TAURI_PLUGIN_SHELL__: {
+      Command: {
+        create: (command: string, url: string) => Promise<void>;
       };
-      clipboard: {
-        writeText: (text: string) => Promise<void>;
-      };
+      open: (url: string) => Promise<void>;
+    }
+    __TAURI_PLUGIN_CLIPBOARD_MANAGER__: {
+      writeText: (text: string) => Promise<void>;
     };
   }
 }
+
+export {};

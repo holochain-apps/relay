@@ -9,15 +9,20 @@ export function sanitizeHTML(html: string) {
 }
 
 export function linkify(text: string) {
-  const urlPattern = /(\b(https?):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gi;
-  return text.replace(urlPattern, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+  const urlPattern = /(?:https?:(?:\/\/)?)?(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
+  return text.replace(urlPattern, (match) => {
+      // XXX: not quite sure why this is needed, but if i dont do this sveltekit navigates internally and externally at the same time
+    const href = match.includes('://') ? match : `https://${match}`
+    return `<a href="${href}" target="_blank" rel="noopener noreferrer">${match}</a>`
+  })
 }
 
 export function copyToClipboard(text: string) {
   // @ts-ignore
-  console.log("Copying to clipboard", text, window.__TAURI__);
+  console.log("Copying to clipboard", text);
   // @ts-ignore
-  if (window.__TAURI__) return writeText(text);
+  // if (window.__TAURI_PLUGIN_CLIPBOARD_MANAGER__) return window.__TAURI_PLUGIN_CLIPBOARD_MANAGER__.writeText(text);
+  // return writeText(text);
   return navigator.clipboard.writeText(text);
 }
 

@@ -184,7 +184,7 @@
   }
 
   async function sendMessage(e: SubmitEvent) {
-    if (conversation && newMessageText.trim()) {
+    if (conversation && (newMessageText.trim() || $newMessageImages.length > 0)) {
       conversation.sendMessage(myPubKeyB64, newMessageText, $newMessageImages)
       newMessageText = ''; // Clear input after sending
       newMessageImages.set([])
@@ -390,7 +390,7 @@
           {/each}
         </div>
       </div>
-      <button class='pr-2'>
+      <button disabled={newMessageText.trim() === '' && $newMessageImages.length === 0} class='pr-2 disabled:opacity-50'>
         <SvgIcon icon='caretRight' color={$modeCurrent ? '#2e2e2e' : 'white'} size='10' />
       </button>
     </form>
@@ -399,6 +399,6 @@
 
 <style type='text/css'>
   .message :global(a) {
-    color: rgba(var(--color-primary-400));
+    color: rgba(var(--color-primary-500));
   }
 </style>
