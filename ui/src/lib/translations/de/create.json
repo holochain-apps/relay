@@ -1,9 +1,8 @@
 {
-  "no_contacts_header": "You haven't added any contacts",
-  "no_contacts_text": "There's nobody to chat with yet! Add your trusted friends and family by requesting their Relay contact code, found in their personal profile inside the Relay app.",
-  "open_conversation": "{{existingConversation; true:Open; false:Create;}} conversation",
-  "page_title": "Create",
-  "search_placeholder": "Search name or contact code",
-  "view": "View",
-  "unconfirmed": "Not confirmed"
+  "no_contacts_header": "Sie haben noch keine Kontakte hinzugefügt.",
+  "no_contacts_text": "Es gibt noch niemanden, mit dem Sie chatten können! Fügen Sie Ihre vertrauenswürdigen Freunde und Familienmitglieder hinzu, indem Sie ihren Relay-Kontaktcode anfordern, den Sie in ihrem persönlichen Profil in der Relay-App finden.",
+  "open_conversation": "{{existingConversation; true:Open; false:Create;}} Konversation",
+  "page_title": "Erstellen",
+  "search_placeholder": "Namen oder Kontakt-Code suchen",
+  "view": "Ansehen"
 }
