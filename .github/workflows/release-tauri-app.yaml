@@ -83,22 +83,26 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       # Checks out a copy of your repository on the ubuntu-latest machine
       - uses: actions/checkout@v2
-
+      
       - name: Install nix
+        if: matrix.platform != 'windows-latest'
         uses: cachix/install-nix-action@v27
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
           nix_path: nixpkgs=channel:nixos-24.05
 
       - uses: cachix/cachix-action@v15
+        if: matrix.platform != 'windows-latest'
         with:
           name: holochain-ci
 
       - uses: cachix/cachix-action@v15
+        if: matrix.platform != 'windows-latest'
         with:
           name: holochain-open-dev
 
       - uses: cachix/cachix-action@v15
+        if: matrix.platform != 'windows-latest'
         with:
           name: darksoil-studio
           
@@ -141,11 +145,6 @@ jobs:
       - name: Install and prepare
         run: |
           npm install
-
-      - name: build the app in nix to work around sysroot issue building tx5
-        if: matrix.platform == 'macos-latest'
-        run: |
-          nix develop --command bash -c "cargo build --bins --features tauri/custom-protocol,tauri/native-tls --release"
    
       - name: Print version
         run: |
@@ -162,6 +161,11 @@ jobs:
           fileName: 'relay.happ'
           out-file-path: 'workdir/'
 
+      - name: build the app in nix to work around sysroot issue building tx5
+        if: matrix.platform == 'macos-latest'
+        run: |
+          nix develop --command bash -c "npm run build -w ui && cargo build --bins --features tauri/custom-protocol,tauri/native-tls --release"
+          
       - name: build the app
         uses: tauri-apps/tauri-action@v0
         env:
