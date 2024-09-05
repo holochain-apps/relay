@@ -85,20 +85,24 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install nix
+        if: matrix.platform != 'windows-latest'
         uses: cachix/install-nix-action@v27
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
           nix_path: nixpkgs=channel:nixos-24.05
 
       - uses: cachix/cachix-action@v15
+        if: matrix.platform != 'windows-latest'
         with:
           name: holochain-ci
 
       - uses: cachix/cachix-action@v15
+        if: matrix.platform != 'windows-latest'
         with:
           name: holochain-open-dev
 
       - uses: cachix/cachix-action@v15
+        if: matrix.platform != 'windows-latest'
         with:
           name: darksoil-studio
           
