@@ -104,7 +104,7 @@ export class RelayClient {
 
   async joinConversation(invitation: Invitation) : Promise<ConversationCellAndConfig> {
     // we don't have the image at join time, it get's loaded later
-    return this._createConversation(invitation.created, invitation.conversationName, "", invitation.privacy, invitation.progenitor, invitation.proof, invitation.networkSeed)
+    return this._createConversation(invitation.created, invitation.title, "", invitation.privacy, invitation.progenitor, invitation.proof, invitation.networkSeed)
   }
 
   async _createConversation(created: number, title: string, image: string, privacy: Privacy, progenitor: AgentPubKey, membrane_proof: MembraneProof|undefined, networkSeed: string|undefined) : Promise<ConversationCellAndConfig> {

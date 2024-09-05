@@ -32,7 +32,7 @@
 </script>
 
 <Header>
-  <button class='text-4xl mr-5 absolute' on:click={() => history.back()}><SvgIcon icon='caretLeft' color={$modeCurrent ? '%232e2e2e' : 'white'} size='10' /></button>
+  <button class='text-4xl pr-5 absolute z-10' on:click={() => history.back()}><SvgIcon icon='caretLeft' color={$modeCurrent ? '%232e2e2e' : 'white'} size='10' /></button>
   <h1 class="flex-1 text-center">{$t('common.new_group')}</h1>
 </Header>
 
@@ -65,6 +65,9 @@
 
 <footer>
   <Button moreClasses='w-72 justify-center variant-filled-tertiary' onClick={(e) => { createConversation(e, Privacy.Public)}} disabled={!valid || pendingCreate}>
+    {#if pendingCreate}
+      <SvgIcon icon='spinner' size='18' color={$modeCurrent ? '%232e2e2e' : 'white'} />
+    {/if}
     <strong class='ml-2'>{$t('conversations.create_group')}</strong>
   </Button>
 </footer>

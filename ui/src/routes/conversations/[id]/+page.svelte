@@ -105,14 +105,11 @@
     }
   });
 
-  onDestroy(()=>{
+  // Cleanup
+  onDestroy(() => {
     if (conversation) {
       conversation.setStatus('closed')
     }
-  })
-
-  // Cleanup the subscription
-  onDestroy(() => {
     unsubscribe && unsubscribe();
     clearTimeout(agentTimeout);
     clearTimeout(configTimeout);
@@ -239,10 +236,10 @@
 </script>
 
 <Header>
-  <a class='absolute' href="/conversations"><SvgIcon icon='caretLeft' color={$modeCurrent ? '%232e2e2e' : 'white'} size='10' /></a>
+  <a class='pr-5' href="/conversations"><SvgIcon icon='caretLeft' color={$modeCurrent ? '%232e2e2e' : 'white'} size='10' /></a>
   {#if conversation}
     <h1 class="flex-1 grow text-center">
-      <a href={`/conversations/${conversationId}/details`} class='flex flex-row items-center justify-center'>
+      <a href={`/conversations/${conversationId}/details`} class='pl-5 flex flex-row items-center justify-center'>
         {conversation.title}
         <button class='ml-2' on:click={() => goto(`/conversations/${conversationId}/details`)}>
           <SvgIcon icon='gear' size='18' color={$modeCurrent ? '%232e2e2e' : 'white'} />
@@ -250,7 +247,7 @@
       </a>
     </h1>
     {#if conversation.data.privacy === Privacy.Public || encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64}
-      <a class='absolute right-5' href={`/conversations/${conversation.data.id}/${conversation.data.privacy === Privacy.Public ? 'details' : 'invite'}`}>
+      <a class='pl-5' href={`/conversations/${conversation.data.id}/${conversation.data.privacy === Privacy.Public ? 'details' : 'invite'}`}>
         <SvgIcon icon='addPerson' size='24' color={$modeCurrent ? '%232e2e2e' : 'white'} />
       </a>
     {/if}
@@ -262,6 +259,10 @@
     <div class='overflow-y-auto flex flex-col grow items-center w-full pt-10' bind:this={conversationContainer} id='message-container'>
       {#if conversation.privacy === Privacy.Private}
         <div class='flex gap-4 items-center justify-center'>
+          {#if encodeHashToBase64(conversation.data.progenitor) !== myPubKeyB64 && numMembers === 1}
+            <!-- When you join a private conversation and it has not synced yet -->
+            <SvgIcon icon='spinner' size='44' color={$modeCurrent ? '%232e2e2e' : 'white'} moreClasses='mb-5' />
+          {/if}
           {#each conversation.allMembers.slice(0, 2) as contact, i}
             {#if contact}
               <Avatar image={contact.avatar} agentPubKey={contact.publicKeyB64} size={120} moreClasses='mb-5' />
@@ -281,7 +282,7 @@
       <a href={`/conversations/${conversationId}/details`} class='text-sm'>
         {$tAny('conversations.num_members', { count: numMembers })}
       </a>
-      {#if $processedMessages.length === 0 && encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64 && conversation.memberList().length === 0}
+      {#if $processedMessages.length === 0 && encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64 && numMembers === 1}
         <!-- No messages yet, no one has joined, and this is a conversation I created. Display a helpful message to invite others -->
         <div class='flex flex-col items-center justify-center h-full w-full'>
           <img src={$modeCurrent ? '/clear-skies-gray.png' : '/clear-skies-white.png'} alt='No contacts' class='w-32 h-32 mb-4 mt-4' />

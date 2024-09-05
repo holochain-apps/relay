@@ -47,7 +47,7 @@
 </script>
 
 <Header>
-  <button class='text-4xl mr-5 absolute' on:click={() => history.back()}><SvgIcon icon='caretLeft' color={$modeCurrent ? '%232e2e2e' : 'white'} size='10' /></button>
+  <button class='text-4xl pr-5' on:click={() => history.back()}><SvgIcon icon='caretLeft' color={$modeCurrent ? '%232e2e2e' : 'white'} size='10' /></button>
 </Header>
 
 {#if $prof && $prof.status === 'complete' && $prof.value}

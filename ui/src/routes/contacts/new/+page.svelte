@@ -8,7 +8,7 @@
 </script>
 
 <Header>
-  <button class='text-4xl mr-5 absolute' on:click={() => goto('/create')}>
+  <button class='absolute z-10 text-4xl pr-5' on:click={() => goto('/create')}>
     <SvgIcon icon='caretLeft' color={$modeCurrent ? '%232e2e2e' : 'white'} size='10' />
   </button>
   <h1 class="flex-1 text-center">{$t('contacts.create_new_contact')}</h1>

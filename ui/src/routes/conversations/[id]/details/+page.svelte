@@ -50,7 +50,7 @@
 </script>
 
 <Header>
-  <a class='absolute' href={`/conversations/${conversationId}`}><SvgIcon icon='caretLeft' color={$modeCurrent ? '%232e2e2e' : 'white'} size='10' /></a>
+  <a class='absolute pr-5 z-10' href={`/conversations/${conversationId}`}><SvgIcon icon='caretLeft' color={$modeCurrent ? '%232e2e2e' : 'white'} size='10' /></a>
   {#if conversation}
     <h1 class="flex-1 grow text-center">{#if conversation.data.privacy === Privacy.Public}{$t('conversations.group_details')}{:else}{conversation.title}{/if}</h1>
     {#if conversation.data.privacy === Privacy.Private && encodeHashToBase64(conversation.data.progenitor) === relayStore.client.myPubKeyB64}

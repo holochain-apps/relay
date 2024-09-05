@@ -6,6 +6,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.6.0-beta] - 2024-09-04
+
+### Added
+- New confirmation flow when creating a contact. Immediately add a 1:1 conversation with the new contact and go straight there, with a notice that they need to "confirm" the connection, and a button to send them the invite link.
+- Ability to click on links in messages to open them in external browser
+- Add basic search to conversation list, only matches conversation titles right now
+- Translations for German, Spanish, French, Italian, Bulgarian, Norwegian, Romanian, Danish, Swedish, Slovak
+- Many more small UI improvements and fixes
+
+### Fixed
+- Copying and pasting invite codes in Tauri android
+- Make sure mobile keyboard never covers content
+- Allow for scrolling long member list for conversation
+- Correctly sanitize html in message content, allowing for safe tags
+
 ## [0.5.3-beta] - 2024-08-23
 
 ### Added
