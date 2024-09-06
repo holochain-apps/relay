@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Don't include images in group invitation codes because it makes them too long
 - Remove the hover toolips and click to copy on idneticons for users that don't have profile images
+- Show in inbox conversation summary how many images were attached to the latest message
 
 ## [0.6.0-beta] - 2024-09-04
 
