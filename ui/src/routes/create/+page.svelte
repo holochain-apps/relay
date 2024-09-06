@@ -2,7 +2,6 @@
   import { modeCurrent } from '@skeletonlabs/skeleton';
   import { getContext } from 'svelte';
   import { derived, get, writable } from "svelte/store";
-  import "@holochain-open-dev/elements/dist/elements/holo-identicon.js";
   import { goto } from '$app/navigation';
   import Avatar from '$lib/Avatar.svelte';
   import Header from '$lib/Header.svelte';
