@@ -1,6 +1,6 @@
 {
   "productName": "relay",
-  "version": "0.6.0-beta",
+  "version": "0.6.1-beta",
   "identifier": "org.holochain.relay",
   "build": {
     "beforeBuildCommand": "npm run build -w ui",

@@ -16,6 +16,7 @@
   $: allMembers = store.allMembers
   $: joinedMembers = store.memberList()
 
+  const tAny = t as any
 </script>
 
 <li class="text-xl flex flex-row mb-5 items-start">
@@ -63,6 +64,9 @@
         {:else if $lastMessage}
           {lastMessageAuthor || ""}:&nbsp;
           {@html sanitizeHTML($lastMessage.content || "")}
+          {#if $lastMessage.images.length > 0}
+            &nbsp;<span class="text-secondary-400 italic">({$tAny('conversations.images', { count: $lastMessage.images.length })})</span>
+          {/if}
         {/if}
       </span>
     </div>

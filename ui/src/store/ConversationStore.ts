@@ -100,7 +100,6 @@ export class ConversationStore {
     if (this.data.privacy === Privacy.Public) {
       const invitation: Invitation = {
         created: this.created,
-        image: this.data.config.image,
         networkSeed: this.data.id,
         privacy: this.data.privacy,
         progenitor: this.data.progenitor,

@@ -15,6 +15,7 @@
   "group_details": "Group Details",
   "group_name": "Group name",
   "join_conversation": "Join Conversation",
+  "images": "{{count}} {{count; 1:image; default:images;}}",
   "members": "Members",
   "message_placeholder": "Type a message...",
   "num_members": "{{count}} {{count; 1:Member; default:Members;}}",

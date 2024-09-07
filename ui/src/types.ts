@@ -96,7 +96,6 @@ export interface MembraneProofData {
 
 export interface Invitation {
   created: number,
-  image: string;
   networkSeed: string;
   privacy: Privacy;
   progenitor: AgentPubKey;

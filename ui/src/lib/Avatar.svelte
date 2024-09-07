@@ -25,7 +25,6 @@
       ? $profile.value.entry.fields.firstName + " " + $profile.value.entry.fields.lastName
       : agentPubKeyB64.slice(5, 9) + "...") : ""
 
-
 </script>
 
 <div class="avatar-{namePosition} {moreClasses}" title={showNickname ? "" : nickname}>
@@ -45,6 +44,8 @@
             hash={agentPubKeyHash}
             size={size}
             style={`width: ${size}px; height: ${size}px`}
+            disableTooltip={true}
+            disableCopy={true}
           ></holo-identicon>
         {/if}
       </div>
@@ -58,6 +59,8 @@
         hash={agentPubKeyHash}
         size={size}
         style={`width: ${size}px; height: ${size}px`}
+        disableTooltip={true}
+        disableCopy={true}
       ></holo-identicon>
     </div>
   {/if}

@@ -3,7 +3,6 @@
 	import { ProfilesClient, ProfilesStore } from '@holochain-open-dev/profiles';
 	import { setModeCurrent } from '@skeletonlabs/skeleton';
 	import { onMount, setContext } from 'svelte';
-	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { t } from '$lib/translations';
 	import { RelayClient } from '$store/RelayClient';
@@ -27,10 +26,8 @@
 	let appHeight: number;
 
 	function updateAppHeight() {
-		if (browser) {
-      appHeight = window.innerHeight;
-      document.documentElement.style.setProperty('--app-height', `${appHeight}px`);
-    }
+		appHeight = window.innerHeight;
+		document.documentElement.style.setProperty('--app-height', `${appHeight}px`);
   }
 
 	document.addEventListener('DOMContentLoaded', () => {
@@ -81,11 +78,6 @@
 			setMode(mql.matches)
 		}
 
-		if (browser) {
-      window.addEventListener('resize', updateAppHeight);
-      updateAppHeight();
-    }
-
 		// Prevent internal links from opening in the browser when using Tauri
 		const handleLinkClick = (event: MouseEvent) => {
 			const target = event.target as HTMLElement;
@@ -109,6 +101,9 @@
 				}
       }
     };
+
+		window.addEventListener('resize', updateAppHeight);
+		updateAppHeight();
 
     document.addEventListener('click', handleLinkClick);
     return () => {
