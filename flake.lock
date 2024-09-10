@@ -713,11 +713,11 @@
         "webkitgtknixpkgs": "webkitgtknixpkgs"
       },
       "locked": {
-        "lastModified": 1725901267,
-        "narHash": "sha256-Gqy5+ipjK37Q/MD1LBTz36aSUW5U22dDTbRVpmg2oow=",
+        "lastModified": 1725916346,
+        "narHash": "sha256-KVKgdIIJmjcQ2fZ1K7YoK9ZnUgiK3p85kaEWtevkWjc=",
         "owner": "darksoil-studio",
         "repo": "p2p-shipyard",
-        "rev": "87774e2e6198dfe45a01740810bec29abef18518",
+        "rev": "4031d247421c43d997e86ec1100ea774dcf8ea10",
         "type": "github"
       },
       "original": {
