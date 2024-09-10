@@ -75,6 +75,7 @@ pub fn run() {
                             )
                             .await
                             .expect("Failed to build window")
+                            .title(String::from("Relay"))
                             .build()
                             .expect("Failed to open main window");
                         #[cfg(desktop)]
