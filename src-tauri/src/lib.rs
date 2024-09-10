@@ -51,10 +51,7 @@ pub fn run() {
         )
         .plugin(tauri_plugin_holochain::async_init(
             vec_to_locked(vec![]).expect("Can't build passphrase"),
-            HolochainPluginConfig {
-                wan_network_config: wan_network_config(),
-                holochain_dir: holochain_dir(),
-            },
+            HolochainPluginConfig::new(wan_network_config(), holochain_dir())
         ))
         .setup(|app| {
             let handle = app.handle().clone();
