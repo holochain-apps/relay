@@ -59,14 +59,18 @@ jobs:
 
   release-tauri-app:
     needs: publish-happ
-    permissions: write-all
     strategy:
       fail-fast: false
       matrix:
         include:
           - platform: 'macos-latest' # for Arm based macs (M1 and above).
-          - platform: 'macos-13' # for Intel based macs.
-          # - platform: 'ubuntu-22.04' # for Tauri v1 you could replace this with ubuntu-20.04.
+            args: '--target aarch64-apple-darwin'
+          - platform: 'macos-latest' # for Intel based macs.
+            args: '--target x86_64-apple-darwin'
+          - platform: 'ubuntu-22.04' # for Tauri v1 you could replace this with ubuntu-20.04.
+            args: ''
+          - platform: 'windows-latest'
+            args: ''
     env:
       MACOSX_DEPLOYMENT_TARGET: 10.13
 
@@ -80,85 +84,6 @@ jobs:
       # Checks out a copy of your repository on the ubuntu-latest machine
       - uses: actions/checkout@v2
 
-      - name: Extend space
-        if: matrix.platform == 'ubuntu-22.04'
-        uses: ./.github/actions/extend-space
-
-      - name: Extend space macos
-        if: matrix.platform != 'ubuntu-22.04'
-        uses: ./.github/actions/extend-space-macos
-      
-      - name: Install nix
-        uses: cachix/install-nix-action@v27
-        with:
-          github_access_token: ${{ secrets.GITHUB_TOKEN }}
-          nix_path: nixpkgs=channel:nixos-24.05
-
-      - uses: cachix/cachix-action@v15
-        with:
-          name: holochain-ci
-
-      - uses: cachix/cachix-action@v15
-        with:
-          name: holochain-open-dev
-
-      - uses: cachix/cachix-action@v15
-        with:
-          name: darksoil-studio
-
-      - name: Install and prepare
-        run: |
-          nix develop --no-update-lock-file --command npm install
-      
-      - name: Download release of the .happ
-        uses: robinraju/release-downloader@v1.10
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with: 
-          token: ${{ secrets.GITHUB_TOKEN }}
-          releaseId: ${{ needs.publish-happ.outputs.releaseId }}
-          fileName: 'relay.happ'
-          out-file-path: 'workdir/'
-
-      - name: build the app
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tauriScript: nix develop --no-update-lock-file --command npm run tauri
-          releaseId: ${{ needs.publish-happ.outputs.releaseId }}
-          releaseDraft: true
-          prerelease: true
-
-      # - name: Build for android targets
-      #   if: matrix.platform == 'ubuntu-22.04'
-      #   run: |
-      #     nix develop --no-update-lock-file .#androidDev --command npm run tauri android build --apk --target 
-
-      # - name: Upload APKs
-      #   if: matrix.platform == 'ubuntu-22.04'
-      #   uses: xresloader/upload-to-github-release@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     file: "*.md"
-      #     release_id: ${{ needs.publish-happ.outputs.releaseId }}
-
-  release-tauri-app-ubuntu:
-    permissions: write-all
-    needs: publish-happ
-
-    runs-on: ubuntu-latest
-    steps:
-
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      # Checks out a copy of your repository on the ubuntu-latest machine
-      - uses: actions/checkout@v3
-
-      - name: Extend space
-        if: matrix.platform == 'ubuntu-22.04'
-        uses: ./.github/actions/extend-space
-
       - name: setup node
         uses: actions/setup-node@v1
         with:
@@ -168,80 +93,33 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           override: true
-          toolchain: 1.77.2
+          toolchain: stable
 
-      - name: install dependencies
+      - name: install x86_64 target
+        if: matrix.args == '--target x86_64-apple-darwin'
+        run: rustup target add x86_64-apple-darwin
+
+      - name: install Go stable
+        uses: actions/setup-go@v4
+        with:
+          go-version: "stable"
+
+      - name: install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04'
         run: |
-          sudo apt update
-          sudo apt install libwebkit2gtk-4.1-dev \
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.0-dev \
             build-essential \
             curl \
             wget \
             file \
-            libxdo-dev \
             libssl-dev \
+            libgtk-3-dev \
             libayatana-appindicator3-dev \
-            librsvg2-dev
-
-      - name: install Go stable
-        uses: actions/setup-go@v4
-        with:
-          go-version: "stable"
-
-      - name: Install and prepare
-        run: |
-          npm install
-   
-      - name: Print version
-        run: |
-          echo "The Version was: ${{ needs.publish-happ.outputs.appVersion }}"
-        id: print-version
-
-      - name: Download release of the .happ
-        uses: robinraju/release-downloader@v1.10
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with: 
-          token: ${{ secrets.GITHUB_TOKEN }}
-          releaseId: ${{ needs.publish-happ.outputs.releaseId }}
-          fileName: 'relay.happ'
-          out-file-path: 'workdir/'
-          
-      - name: build the app
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          releaseId: ${{ needs.publish-happ.outputs.releaseId }}
-          releaseDraft: true
-          prerelease: true
-
-  release-tauri-app-windows:
-    permissions: write-all
-    needs: publish-happ
-
-    runs-on: windows-latest
-    steps:
-
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      # Checks out a copy of your repository on the ubuntu-latest machine
-      - uses: actions/checkout@v3
-
-      - name: setup node
-        uses: actions/setup-node@v1
-        with:
-          node-version: 20
-
-      - name: install Rust stable
-        uses: actions-rs/toolchain@v1
-        with:
-          override: true
-          toolchain: 1.77.2
-
-      - name: install Go stable
-        uses: actions/setup-go@v4
-        with:
-          go-version: "stable"
+            librsvg2-dev \
+            javascriptcoregtk-4.1 \
+            libsoup-3.0 \
+            webkit2gtk-4.1
 
       - name: Install and prepare
         run: |
@@ -261,12 +139,10 @@ jobs:
           releaseId: ${{ needs.publish-happ.outputs.releaseId }}
           fileName: 'relay.happ'
           out-file-path: 'workdir/'
-          
+
       - name: build the app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           releaseId: ${{ needs.publish-happ.outputs.releaseId }}
-          releaseDraft: true
-          prerelease: true
