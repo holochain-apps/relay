@@ -41,7 +41,3 @@ path = "dnas/relay/zomes/integrity/relay"
 edition = "2021"
 rust-version = "1.74.0"
 version = "0.5.0-beta"
-
-[patch.crates-io]
-# Revert to crates.io once https://github.com/holochain/lair/issues/133 is fixed 
-lair_keystore = { git = "https://github.com/guillemcordoba/lair", branch = "fix-sqlformat" }
