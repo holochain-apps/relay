@@ -3197,6 +3197,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "hc_seed_bundle"
+version = "0.2.4"
+source = "git+https://github.com/guillemcordoba/lair?branch=fix-sqlformat#1061a2e89f800c3416044936a3782923ec2a64df"
+dependencies = [
+ "futures",
+ "one_err",
+ "rmp-serde",
+ "rmpv",
+ "serde",
+ "serde_bytes",
+ "sodoken",
+]
+
+[[package]]
 name = "hc_sleuth"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3474,7 +3488,7 @@ dependencies = [
  "kitsune_p2p_block",
  "kitsune_p2p_bootstrap",
  "kitsune_p2p_types",
- "lair_keystore",
+ "lair_keystore 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "mockall",
  "mr_bundle",
  "nanoid",
@@ -3562,7 +3576,7 @@ dependencies = [
  "holochain_websocket",
  "holochain_zome_types",
  "kitsune_p2p_types",
- "lair_keystore_api",
+ "lair_keystore_api 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "parking_lot 0.12.3",
  "rand 0.8.5",
  "serde",
@@ -3642,7 +3656,7 @@ dependencies = [
  "holochain_util",
  "holochain_zome_types",
  "kitsune_p2p_types",
- "lair_keystore",
+ "lair_keystore 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "must_future",
  "nanoid",
  "one_err",
@@ -5000,7 +5014,7 @@ dependencies = [
  "kitsune_p2p_dht",
  "kitsune_p2p_dht_arc",
  "kitsune_p2p_timestamp",
- "lair_keystore_api",
+ "lair_keystore_api 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "once_cell",
  "parking_lot 0.12.3",
  "paste",
@@ -5044,7 +5058,22 @@ version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f0da3e3e1bd2644dc2974ef622743cd83f2c661b3c6c67acb00cda4725646def"
 dependencies = [
- "lair_keystore_api",
+ "lair_keystore_api 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pretty_assertions",
+ "rpassword",
+ "rusqlite",
+ "sqlformat",
+ "structopt",
+ "sysinfo",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "lair_keystore"
+version = "0.4.5"
+source = "git+https://github.com/guillemcordoba/lair?branch=fix-sqlformat#1061a2e89f800c3416044936a3782923ec2a64df"
+dependencies = [
+ "lair_keystore_api 0.4.5 (git+https://github.com/guillemcordoba/lair?branch=fix-sqlformat)",
  "pretty_assertions",
  "rpassword",
  "rusqlite",
@@ -5062,7 +5091,32 @@ checksum = "9519a48df54d2041f8697bba7c3957263a5f2bb720ae6c4954004bad51693c61"
 dependencies = [
  "base64 0.22.1",
  "dunce",
- "hc_seed_bundle",
+ "hc_seed_bundle 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lru",
+ "nanoid",
+ "once_cell",
+ "parking_lot 0.12.3",
+ "rcgen",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "time",
+ "tokio",
+ "toml 0.8.19",
+ "tracing",
+ "url",
+ "winapi 0.3.9",
+ "zeroize",
+]
+
+[[package]]
+name = "lair_keystore_api"
+version = "0.4.5"
+source = "git+https://github.com/guillemcordoba/lair?branch=fix-sqlformat#1061a2e89f800c3416044936a3782923ec2a64df"
+dependencies = [
+ "base64 0.22.1",
+ "dunce",
+ "hc_seed_bundle 0.2.4 (git+https://github.com/guillemcordoba/lair?branch=fix-sqlformat)",
  "lru",
  "nanoid",
  "once_cell",
@@ -7381,7 +7435,7 @@ dependencies = [
  "app_dirs2",
  "holochain_client",
  "holochain_types",
- "lair_keystore",
+ "lair_keystore 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "log",
  "serde_json",
  "tauri",
@@ -9017,7 +9071,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-holochain"
 version = "0.0.0"
-source = "git+https://github.com/darksoil-studio/p2p-shipyard#0b3caf03cb575ccd93157b7cb0e09ac01f2b5d48"
+source = "git+https://github.com/darksoil-studio/p2p-shipyard?branch=develop#a1cb5533ce0ee8dcd772928af77b6f9dc27edddd"
 dependencies = [
  "anyhow",
  "async-std",
@@ -9026,7 +9080,7 @@ dependencies = [
  "bzip2",
  "either",
  "futures",
- "hc_seed_bundle",
+ "hc_seed_bundle 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "holochain",
  "holochain_client",
  "holochain_conductor_api",
@@ -9037,8 +9091,8 @@ dependencies = [
  "hyper-util",
  "kitsune_p2p_mdns",
  "kitsune_p2p_types",
- "lair_keystore",
- "lair_keystore_api",
+ "lair_keystore 0.4.5 (git+https://github.com/guillemcordoba/lair?branch=fix-sqlformat)",
+ "lair_keystore_api 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "local-ip-address",
  "log",
  "mime_guess",
@@ -9950,7 +10004,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3036e0df28f280990fd12c569244c25c7ab6e3b9f436ca617fbf5b1d3a6dc761"
 dependencies = [
  "futures",
- "lair_keystore_api",
+ "lair_keystore_api 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "once_cell",
  "parking_lot 0.12.3",
  "rand 0.8.5",
