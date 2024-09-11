@@ -40,7 +40,7 @@ async fn close_splashscreen(window: Window) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -55,8 +55,12 @@ pub fn run() {
                 wan_network_config: wan_network_config(),
                 holochain_dir: holochain_dir(),
             },
-        ))
-        .setup(|app| {
+        ));
+    #[cfg(mobile)]
+    {
+        builder = builder.plugin(tauri_plugin_sharesheet::init());
+    }
+    builder.setup(|app| {
             let handle = app.handle().clone();
             app.handle()
                 .listen("holochain://setup-completed", move |_event| {
@@ -64,7 +68,7 @@ pub fn run() {
                     tauri::async_runtime::spawn(async move {
                         setup(handle.clone()).await.expect("Failed to setup");
 
-                        handle
+                        let mut window = handle
                             .holochain()
                             .expect("Failed to get holochain")
                             .main_window_builder(
@@ -74,8 +78,14 @@ pub fn run() {
                                 None,
                             )
                             .await
-                            .expect("Failed to build window")
-                            .build()
+                            .expect("Failed to build window");
+                        #[cfg(desktop)]
+                        {
+                            window = window.title(String::from("Relay"))
+
+                        };
+
+                        window.build()
                             .expect("Failed to open main window");
                         #[cfg(desktop)]
                         {

@@ -6,7 +6,6 @@ import { FileStorageClient } from "@holochain-open-dev/file-storage";
 import { derived, get, writable, type Writable } from 'svelte/store';
 import { v4 as uuidv4 } from 'uuid';
 import { t } from '$lib/translations';
-import { copyToClipboard } from '$lib/utils';
 import LocalStorageStore from '$store/LocalStorageStore'
 import { RelayStore } from '$store/RelayStore'
 import {

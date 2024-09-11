@@ -7,7 +7,7 @@
   import Header from '$lib/Header.svelte';
   import SvgIcon from '$lib/SvgIcon.svelte';
   import { t } from '$lib/translations';
-  import { copyToClipboard, handleFileChange } from '$lib/utils';
+  import { copyToClipboard, handleFileChange, isMobile, shareText } from '$lib/utils';
   import { RelayClient } from '$store/RelayClient';
 	import { ProfilesStore } from '@holochain-open-dev/profiles';
 
@@ -52,6 +52,7 @@
 
 {#if $prof && $prof.status === 'complete' && $prof.value}
 <div class='flex flex-col grow items-center w-full pt-10' >
+
   <!-- Hidden file input -->
   <input type="file" id="avatarInput" accept="image/jpeg, image/png, image/gif" class='hidden'
     on:change={(event) => handleFileChange(event,
@@ -71,6 +72,7 @@
 
   {#if editingName}
     <div class="flex flex-row items-center justify-center">
+
       <input
         autofocus
         class='text-3xl max-w-40 text-start bg-surface-900 border-none outline-none focus:outline-none pl-0.5 pt-0 focus:ring-0'
@@ -127,5 +129,11 @@
     <SvgIcon icon='copy' size='22' color='%23FD3524' moreClasses='mr-3' />
     <strong>{$t('common.copy_your_contact_code')}</strong>
   </Button>
+  {#if isMobile()}
+    <Button onClick={() => shareText(agentPublicKey64)} moreClasses='w-64 text-sm variant-filled-tertiary dark:!bg-tertiary-200'>
+      <SvgIcon icon='share' size='22' color='%23FD3524' moreClasses='mr-3' />
+      <strong>{$t('common.share_your_contact_code')}</strong>
+    </Button>
+  {/if}
 </div>
 {/if}

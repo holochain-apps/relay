@@ -10,7 +10,7 @@
   import SvgIcon from '$lib/SvgIcon.svelte';
   import { t } from '$lib/translations';
   import { RelayStore } from '$store/RelayStore';
-  import { copyToClipboard } from '$lib/utils';
+  import { copyToClipboard, isMobile, shareText } from '$lib/utils';
   import { type Contact, Privacy } from '../../../../types'
 
   const tAny = t as any
@@ -76,6 +76,12 @@
         <p class='w-64 text-nowrap overflow-hidden text-ellipsis'>{conversation.publicInviteCode}</p>
         <img src="/copy.svg" alt="Copy Icon" width='16' />&nbsp;<span class='text-xs text-tertiary-500'>{$t('common.copy')}</span>
       </Button>
+      {#if isMobile()}
+        <Button onClick={() => shareText(conversation.publicInviteCode)} moreClasses='w-64'>
+          <p class='w-64 text-nowrap overflow-hidden text-ellipsis'>{conversation.publicInviteCode}</p>
+          <img src="/share.svg" alt="Share Icon" width='16' />&nbsp;<span class='text-xs text-tertiary-500'>{$t('common.share')}</span>
+        </Button>
+      {/if}
       <Button moreClasses='bg-surface-400 text-secondary-50 w-64 justify-center' onClick={() => goto(`/conversations/${conversationId}`)}>{$t('common.done')}</Button>
     </footer>
   {:else}
