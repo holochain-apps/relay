@@ -146,3 +146,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           releaseId: ${{ needs.publish-happ.outputs.releaseId }}
+          args: ${{ matrix.args }}
