@@ -7384,7 +7384,6 @@ dependencies = [
  "lair_keystore",
  "log",
  "serde_json",
- "sqlformat",
  "tauri",
  "tauri-build",
  "tauri-plugin-clipboard-manager",
@@ -9019,7 +9018,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-holochain"
 version = "0.0.0"
-source = "git+https://github.com/darksoil-studio/p2p-shipyard?branch=develop#9b0dcc29601ea7b5369a0c353fd7cc82b261dd72"
+source = "git+https://github.com/darksoil-studio/p2p-shipyard?branch=develop#0a7e3aadd3d1d9c44755c9420216ea15ef733c1a"
 dependencies = [
  "anyhow",
  "async-std",
@@ -9051,6 +9050,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha256",
+ "sqlformat",
  "symlink",
  "tauri",
  "tauri-plugin",
