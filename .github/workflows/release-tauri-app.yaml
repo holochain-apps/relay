@@ -218,8 +218,8 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FIX_SQL_FMT: 1
         with:
-          tauriScript: FIX_SQL_FMT=1 npm run tauri
           releaseId: ${{ needs.publish-happ.outputs.releaseId }}
           releaseDraft: true
           prerelease: true
@@ -281,8 +281,8 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FIX_SQL_FMT: 1
         with:
-          tauriScript: FIX_SQL_FMT=1 npm run tauri
           releaseId: ${{ needs.publish-happ.outputs.releaseId }}
           releaseDraft: true
           prerelease: true
