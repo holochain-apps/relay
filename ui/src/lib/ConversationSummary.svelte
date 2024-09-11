@@ -7,7 +7,7 @@
   import Avatar from "./Avatar.svelte";
   import SvgIcon from "./SvgIcon.svelte";
   import { t } from '$lib/translations';
-  import { sanitizeHTML } from "$lib/utils"
+  import { isMobile, sanitizeHTML } from "$lib/utils"
   import type { ConversationStore } from "$store/ConversationStore";
   import { Privacy } from "../types";
 
@@ -45,7 +45,7 @@
       isDragging = true;
 
       // Apply a resistance effect as the user drags further
-      let resistance = 0.5;
+      let resistance = 0.8;
       let resistedX = snapDistance + (currentX - snapDistance) * resistance;
 
       x.set(resistedX);
@@ -207,7 +207,7 @@
       <SvgIcon icon="person" size="8" color={$modeCurrent ? "#aaa" : "#ccc"} />
       <span class="ml-1">{Object.values($conversation.agentProfiles).length}</span>
     </span>
-    {#if isHovering && $x === 0}
+    {#if !isMobile() && isHovering && $x === 0}
       <button class='z-10' on:click={toggleMenu}>
         <SvgIcon icon="caretDown" size="24" color={$modeCurrent ? "#aaa" : "#ccc"} moreClasses='border-2 rounded-md ml-2 shadow-md' />
       </button>
