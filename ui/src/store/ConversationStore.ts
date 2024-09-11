@@ -9,7 +9,17 @@ import { t } from '$lib/translations';
 import { copyToClipboard } from '$lib/utils';
 import LocalStorageStore from '$store/LocalStorageStore'
 import { RelayStore } from '$store/RelayStore'
-import { type Config, type Contact, type Conversation, type Image, type Invitation, type Message, type MessageRecord, Privacy, type Messages, } from '../types';
+import {
+  type Config,
+  type Contact,
+  type Conversation,
+  type Image,
+  type Invitation,
+  type LocalConversationData,
+  type Message,
+  type MessageRecord,
+  Privacy,
+  type Messages } from '../types';
 import { MsgHistory } from './msgHistory';
 
 export const MINUTES_IN_BUCKET = 60 * 24 * 1  // 1 day for now
@@ -18,10 +28,9 @@ export const MIN_MESSAGES_LOAD = 20
 export class ConversationStore {
   public conversation: Writable<Conversation>
   public history: MsgHistory
-  public invitedContactKeysStore: Writable<string>
   public lastBucketLoaded: number = -1
   public lastMessage: Writable<Message | null>
-  public status
+  public localDataStore: Writable<LocalConversationData>
   private client
   private fileStorageClient: FileStorageClient
 
@@ -40,9 +49,8 @@ export class ConversationStore {
     this.history = new MsgHistory(currentBucket, this.cellId[0])
 
     this.conversation = writable({ id, cellId, config, privacy, progenitor, agentProfiles: {}, messages });
-    this.invitedContactKeysStore = LocalStorageStore(`conversation_${this.data.id}`, '[]')
+    this.localDataStore = LocalStorageStore<LocalConversationData>(`conversation_${this.data.id}`, { archived: false, invitedContactKeys: [], open: false, unread: false })
     this.lastMessage = writable(null)
-    this.status = LocalStorageStore<string>(`conversation_${this.id}_status`, 'closed')
     this.client = relayStore.client
     this.fileStorageClient = new FileStorageClient(this.client.client, 'relay', 'file_storage', cellId)
   }
@@ -120,7 +128,6 @@ export class ConversationStore {
     if (proof !== undefined) {
       const invitation: Invitation = {
         created: this.created, // TODO: put in data
-        image: this.data?.config.title,
         progenitor: this.data.progenitor,
         privacy: this.data.privacy,
         proof,
@@ -137,13 +144,25 @@ export class ConversationStore {
 
   get invitedContactKeys() : string[] {
     if (this.data.privacy === Privacy.Public) return []
-    const currentValue = JSON.parse(get(this.invitedContactKeysStore))
+    const currentValue = get(this.localDataStore).invitedContactKeys
     return isEmpty(currentValue) ? [] : currentValue
   }
 
   get invitedContacts() {
     const contacts = get(this.relayStore.contacts)
     return this.invitedContactKeys.map(contactKey => contacts.find(contact => contact.publicKeyB64 === contactKey))
+  }
+
+  get archived() {
+    return get(this.localDataStore).archived
+  }
+
+  get open() {
+    return get(this.localDataStore).open
+  }
+
+  get unread() {
+    return get(this.localDataStore).unread
   }
 
   get allMembers() {
@@ -233,8 +252,8 @@ export class ConversationStore {
       const messageHashesB64 = messageHashes.map(h => encodeHashToBase64(h))
       const missingHashes = bucket.missingHashes(messageHashesB64)
       if (missingHashes.length > 0) {
-        if (get(this.status) == 'closed') {
-          this.setStatus('unread')
+        if (this.open == false) {
+          this.localDataStore.update(data => ({ ...data, unread: true }))
         }
         bucket.add(missingHashes)
         this.history.saveBucket(b)
@@ -320,9 +339,6 @@ export class ConversationStore {
   }
 
   /***** Setters & actions ******/
-  setStatus(s: string) {
-    this.status.set(s)
-  }
 
   async sendMessage(authorKey: string, content: string, images: Image[]) {
     // Use temporary uuid as the hash until we get the real one back from the network
@@ -364,8 +380,8 @@ export class ConversationStore {
 
     if (message.hash.startsWith("uhCkk")) {  // don't add placeholder to bucket yet.
       this.history.add(message)
-      if (get(this.status) == 'closed' && message.authorKey !== this.client.myPubKeyB64) {
-        this.setStatus('unread')
+      if (!this.open && message.authorKey !== this.client.myPubKeyB64) {
+        this.localDataStore.update(data => ({ ...data, unread: true }))
       }
     }
   }
@@ -440,6 +456,17 @@ export class ConversationStore {
 
   // Invite more contacts to this private conversation
   addContacts(invitedContacts: Contact[]) {
-    this.invitedContactKeysStore.set(JSON.stringify(JSON.parse(get(this.invitedContactKeysStore)).concat(invitedContacts.map(c => c.publicKeyB64))))
+    this.localDataStore.update(data => ({
+      ...data,
+      invitedContactKeys: this.invitedContactKeys.concat(invitedContacts.map(c => c.publicKeyB64))
+    }))
+  }
+
+  setArchived(archived = true) {
+    this.localDataStore.update(data => ({ ...data, archived }))
+  }
+
+  setOpen(open: boolean) {
+    this.localDataStore.update(data => ({ ...data, open }))
   }
 }

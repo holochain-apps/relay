@@ -88,6 +88,13 @@ export interface Conversation {
   agentProfiles: { [key: AgentPubKeyB64]: Profile };
 }
 
+export interface LocalConversationData {
+  archived?: boolean;
+  invitedContactKeys: string[];
+  open?: boolean;
+  unread?: boolean;
+}
+
 export interface MembraneProofData {
   conversation_id: string;
   for_agent: AgentPubKey;

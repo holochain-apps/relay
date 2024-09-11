@@ -101,14 +101,14 @@
       conversationContainer.addEventListener('scroll', handleScroll);
       window.addEventListener('resize', debouncedHandleResize);
       newMessageInput.focus();
-      conversation.setStatus('opened')
+      conversation.setOpen(true)
     }
   });
 
   // Cleanup
   onDestroy(() => {
     if (conversation) {
-      conversation.setStatus('closed')
+      conversation.setOpen(false)
     }
     unsubscribe && unsubscribe();
     clearTimeout(agentTimeout);
@@ -236,7 +236,7 @@
 </script>
 
 <Header>
-  <a class='pr-5' href="/conversations"><SvgIcon icon='caretLeft' color={$modeCurrent ? '%232e2e2e' : 'white'} size='10' /></a>
+  <a class='pr-5' href={`/conversations${conversation?.archived ? '/archive' : ''}`}><SvgIcon icon='caretLeft' color={$modeCurrent ? '%232e2e2e' : 'white'} size='10' /></a>
   {#if conversation}
     <h1 class="flex-1 grow text-center">
       <a href={`/conversations/${conversationId}/details`} class='pl-5 flex flex-row items-center justify-center'>

@@ -54,6 +54,7 @@
     "@tauri-apps/plugin-shell": "^2.0.0-rc",
     "dompurify": "^3.1.6",
     "lodash-es": "^4.17.21",
+    "svelte-gestures": "^5.0.4",
     "svelte-qrcode-image": "^2.0.0-alpha.1",
     "uuid": "^9.0.1"
   }

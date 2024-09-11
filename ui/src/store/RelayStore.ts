@@ -56,9 +56,11 @@ export class RelayStore {
 
         if (conversation && message.authorKey !== this.client.myPubKeyB64) {
           const sender = conversation.allMembers.find(m => m.publicKeyB64 == message.authorKey)
-          enqueueNotification(`Message from ${sender ? sender.firstName+" "+ sender.lastName : message.authorKey}`, message.content.length > 50 ? message.content.slice(0,50)+"...":  message.content)
           conversation.addMessage(message)
-          conversation.loadImagesForMessage(message) // async load images
+          if (!conversation.archived) {
+            enqueueNotification(`Message from ${sender ? sender.firstName+" "+ sender.lastName : message.authorKey}`, message.content.length > 50 ? message.content.slice(0,50)+"...":  message.content)
+            conversation.loadImagesForMessage(message) // async load images
+          }
         }
         // let messageList = this.expectations.get(message.from)
         // if (messageList) {
@@ -95,6 +97,7 @@ export class RelayStore {
     const privacy = properties.privacy
     const seed = convoCellAndConfig.cell.dna_modifiers.network_seed
     const newConversation = new ConversationStore(this, seed, convoCellAndConfig.cell.cell_id, convoCellAndConfig.config, properties.created, privacy, progenitor )
+
     const unsub = newConversation.lastMessage.subscribe(() => {
       // Trigger update to conversations store whenever lastMessage changes
       this.conversations.update((convs) => {
@@ -102,7 +105,15 @@ export class RelayStore {
       });
     });
 
+    const unsub2 = newConversation.localDataStore.subscribe(() => {
+      // Trigger update to conversations store whenever localDataStore changes
+      this.conversations.update((convs) => {
+        return [...convs]; // Force reactivity by returning a new array reference
+      });
+    });
+
     this.conversations.update(conversations => [...conversations, newConversation])
+
     await newConversation.initialize()
     return newConversation
   }
