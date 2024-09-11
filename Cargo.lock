@@ -3488,7 +3488,7 @@ dependencies = [
  "kitsune_p2p_block",
  "kitsune_p2p_bootstrap",
  "kitsune_p2p_types",
- "lair_keystore 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lair_keystore",
  "mockall",
  "mr_bundle",
  "nanoid",
@@ -3656,7 +3656,7 @@ dependencies = [
  "holochain_util",
  "holochain_zome_types",
  "kitsune_p2p_types",
- "lair_keystore 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lair_keystore",
  "must_future",
  "nanoid",
  "one_err",
@@ -5050,22 +5050,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0de8b303297635ad57c9f5059fd9cee7a47f8e8daa09df0fcd07dd39fb22977f"
 dependencies = [
  "log",
-]
-
-[[package]]
-name = "lair_keystore"
-version = "0.4.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f0da3e3e1bd2644dc2974ef622743cd83f2c661b3c6c67acb00cda4725646def"
-dependencies = [
- "lair_keystore_api 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "pretty_assertions",
- "rpassword",
- "rusqlite",
- "sqlformat",
- "structopt",
- "sysinfo",
- "tracing-subscriber",
 ]
 
 [[package]]
@@ -7435,7 +7419,7 @@ dependencies = [
  "app_dirs2",
  "holochain_client",
  "holochain_types",
- "lair_keystore 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lair_keystore",
  "log",
  "serde_json",
  "tauri",
@@ -9071,7 +9055,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-holochain"
 version = "0.0.0"
-source = "git+https://github.com/darksoil-studio/p2p-shipyard?branch=develop#a1cb5533ce0ee8dcd772928af77b6f9dc27edddd"
+source = "git+https://github.com/darksoil-studio/p2p-shipyard?branch=develop#9b0dcc29601ea7b5369a0c353fd7cc82b261dd72"
 dependencies = [
  "anyhow",
  "async-std",
@@ -9091,7 +9075,7 @@ dependencies = [
  "hyper-util",
  "kitsune_p2p_mdns",
  "kitsune_p2p_types",
- "lair_keystore 0.4.5 (git+https://github.com/guillemcordoba/lair?branch=fix-sqlformat)",
+ "lair_keystore",
  "lair_keystore_api 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "local-ip-address",
  "log",
