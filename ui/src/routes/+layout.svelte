@@ -102,8 +102,8 @@
       }
     };
 
+		setTimeout(updateAppHeight, 300)
 		window.addEventListener('resize', updateAppHeight);
-		updateAppHeight();
 
     document.addEventListener('click', handleLinkClick);
     return () => {
