@@ -1,6 +1,7 @@
 import DOMPurify from 'dompurify';
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
+import { shareText as sharesheetShareText } from "@buildyourwebapp/tauri-plugin-sharesheet";
 
 export const MIN_TITLE_LENGTH = 3;
 
@@ -15,6 +16,16 @@ export function linkify(text: string) {
     const href = match.includes('://') ? match : `https://${match}`
     return `<a href="${href}" target="_blank" rel="noopener noreferrer">${match}</a>`
   })
+}
+
+export function shareText(text: string | Promise<string>) {
+  if (typeof text === 'string') {
+    if (text && text.trim().length > 0) {
+      return sharesheetShareText(text);
+    }
+  } else {
+    return text.then(t => sharesheetShareText(t));
+  }
 }
 
 export function copyToClipboard(text: string | Promise<string>) {
@@ -108,4 +119,31 @@ export async function enqueueNotification(title: string, body: string) {
     return;
   }
   sendNotification({ title, body });
+}
+
+export function isLinux(): boolean {
+  return navigator.appVersion.includes('Linux')
+}
+
+export function isWindows(): boolean {
+  return navigator.appVersion.includes('Win')
+}
+
+export function isMacOS(): boolean {
+  return navigator.appVersion.includes('Mac')
+}
+
+export function isDesktop() : boolean {
+  return isMacOS() || isLinux() || isWindows()
+}
+
+export function isAndroid() : boolean {
+  return navigator.appVersion.includes('Android')
+}
+export function isIOS() : boolean {
+  return navigator.appVersion.includes('IOS')
+}
+
+export function isMobile() : boolean {
+  return isAndroid() || isIOS()
 }

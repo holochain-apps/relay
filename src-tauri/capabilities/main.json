@@ -18,6 +18,7 @@
     "notification:default",
     "clipboard-manager:allow-write-text",
     "clipboard-manager:allow-read-text",
+    "sharesheet:allow-share-text",
     "shell:default"
   ]
 }

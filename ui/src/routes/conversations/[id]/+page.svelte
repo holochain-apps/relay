@@ -13,7 +13,7 @@
   import Header from '$lib/Header.svelte';
   import SvgIcon from '$lib/SvgIcon.svelte';
   import { t } from '$lib/translations';
-  import { copyToClipboard, linkify, sanitizeHTML } from '$lib/utils';
+  import { copyToClipboard, isMobile, linkify, sanitizeHTML, shareText } from '$lib/utils';
   import { RelayStore } from '$store/RelayStore';
   import { Privacy, type Conversation, type Message, type Image } from '../../../types';
 
@@ -298,6 +298,12 @@
                     <SvgIcon icon='copy' size='20' color='%23FD3524' moreClasses='mr-2' />
                     {$t('contacts.copy_invite_code')}
                   </Button>
+                  {#if isMobile()}
+                    <Button moreClasses='bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900' onClick={() => { shareText(conversation.inviteCodeForAgent(conversation.allMembers[0]?.publicKeyB64))}}>
+                      <SvgIcon icon='share' size='20' color='%23FD3524' moreClasses='mr-2' />
+                      {$t('contacts.share_invite_code')}
+                    </Button>
+                  {/if}
                 </div>
               </div>
             {:else}
@@ -309,11 +315,18 @@
             {/if}
           {:else}
             <!-- Public conversation, make it easy to copy invite code-->
-            <p class='text-xs text-center text-secondary-500 dark:text-tertiary-700 mx-10 mb-8'>{$t('conversations.share_invitation_code')}</p>
+            <p class='text-xs text-center text-secondary-500 dark:text-tertiary-700 mx-10 mb-8'>{$t('conversations.share_invitation_code_msg')}</p>
             <Button onClick={() => copyToClipboard(conversation.publicInviteCode)} moreClasses='w-64 justify-center variant-filled-tertiary'>
               <SvgIcon icon='copy' size='18' color='%23FD3524' />
-              <strong class='ml-2 text-sm'>{$t('conversations.copy_invitation_code')}</strong>
+              <strong class='ml-2 text-sm'>{$t('conversations.copy_invite_code')}</strong>
             </Button>
+            {#if isMobile()}
+            <Button onClick={() => shareText(conversation.publicInviteCode)} moreClasses='w-64 justify-center variant-filled-tertiary'>
+              <SvgIcon icon='share' size='18' color='%23FD3524' />
+                <strong class='ml-2 text-sm'>{$t('conversations.share_invite_code')}</strong>
+            </Button>
+            {/if}
+  
           {/if}
         </div>
       {:else}

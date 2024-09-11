@@ -7587,6 +7587,7 @@ dependencies = [
  "tauri-plugin-holochain",
  "tauri-plugin-log",
  "tauri-plugin-notification",
+ "tauri-plugin-sharesheet",
  "tauri-plugin-shell",
  "tempdir",
  "url2",
@@ -9279,6 +9280,20 @@ dependencies = [
  "thiserror",
  "time",
  "url",
+]
+
+[[package]]
+name = "tauri-plugin-sharesheet"
+version = "0.0.1"
+source = "git+https://github.com/buildyourwebapp/tauri-plugin-sharesheet#c11aa05040fd12197bc498cb4a5b6aa7f8ca1c75"
+dependencies = [
+ "log",
+ "serde",
+ "serde_json",
+ "serde_repr",
+ "tauri",
+ "tauri-plugin",
+ "thiserror",
 ]
 
 [[package]]

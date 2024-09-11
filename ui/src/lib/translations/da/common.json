@@ -1,7 +1,8 @@
-r{
+{
   "cancel": "Afbryd",
   "connecting_to_holochain": "Forbinder til Holochain...",
   "copy": "KOPIÉR",
+  "share": "DEL",
   "copy_your_contact_code": "Kopiér din kontaktkode",
   "create_an_account": "Opret konto",
   "done": "Klar",

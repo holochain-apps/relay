@@ -8,7 +8,7 @@
   import Button from "$lib/Button.svelte";
   import SvgIcon from '$lib/SvgIcon.svelte';
   import { t } from '$lib/translations';
-  import { copyToClipboard, handleFileChange } from '$lib/utils';
+  import { copyToClipboard, handleFileChange, isMobile, shareText } from '$lib/utils';
   import { RelayStore } from '$store/RelayStore';
 
   // Silly thing to get around typescript issues with sveltekit-i18n
@@ -186,6 +186,11 @@
         <button on:click={() => contact?.publicKeyB64 && copyToClipboard(contact.publicKeyB64)}>
           <SvgIcon icon='copy' size='20' color='%23999' />
         </button>
+        {#if isMobile()}
+          <button on:click={() => contact?.publicKeyB64 && shareText(contact.publicKeyB64)}>
+            <SvgIcon icon='share' size='20' color='%23999' />
+          </button>
+        {/if}
       </div>
     </div>
 
@@ -199,6 +204,13 @@
             <SvgIcon icon='copy' size='20' color='%23FD3524' moreClasses='mr-2' />
             {$t('contacts.copy_invite_code')}
           </Button>
+          {#if isMobile()}
+          <Button moreClasses='bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900' onClick={() => shareText(contact?.privateConversation?.inviteCodeForAgent(contact?.publicKeyB64) || '') }>
+            <SvgIcon icon='copy' size='20' color='%23FD3524' moreClasses='mr-2' />
+              <strong>{$t('contacts.share_invite_code')}</strong>
+          </Button>
+          {/if}
+      
         </div>
       </div>
     {:else}
