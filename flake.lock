@@ -205,11 +205,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1726055692,
-        "narHash": "sha256-95p6OUroGoAP5hzQgG1u1jIAtdI3vcV4nOELlEPIyws=",
+        "lastModified": 1726072991,
+        "narHash": "sha256-UfQ95ytcI9WQD25asOPfsaRxQL9fuC6blqFiXYPFEt8=",
         "owner": "holochain-open-dev",
         "repo": "infrastructure",
-        "rev": "9d86169a6c8569105fee23dbdf47b2da86e98300",
+        "rev": "f1658084a223dc8ef1cae52b92663cca34b785ba",
         "type": "github"
       },
       "original": {
@@ -607,11 +607,11 @@
         "webkitgtknixpkgs": "webkitgtknixpkgs"
       },
       "locked": {
-        "lastModified": 1726057162,
-        "narHash": "sha256-NAuovBEeWvIHsRpXrrtoxlPTwMLdVMo+HfVwqzSvCsU=",
+        "lastModified": 1726074888,
+        "narHash": "sha256-rcJpi7P1P1oVhptSzd+ess46WhzmlOtT5Y3Tql78p2Y=",
         "owner": "darksoil-studio",
         "repo": "p2p-shipyard",
-        "rev": "9ff3f5d78765873e8bef99e7673029798bdbe12f",
+        "rev": "b868050bceb63d41e427400cedfb6788c92e555c",
         "type": "github"
       },
       "original": {
