@@ -65,7 +65,7 @@ jobs:
       matrix:
         include:
           - platform: 'macos-latest' # for Arm based macs (M1 and above).
-          - platform: 'macos-13' # for Intel based macs.
+          # - platform: 'macos-13' # for Intel based macs.
           # - platform: 'ubuntu-22.04' 
 
     env:
@@ -195,6 +195,54 @@ jobs:
     needs: publish-happ
 
     runs-on: windows-latest
+    steps:
+
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      # Checks out a copy of your repository on the ubuntu-latest machine
+      - uses: actions/checkout@v3
+
+      - name: setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 20
+
+      - name: install Rust stable
+        uses: actions-rs/toolchain@v1
+        with:
+          override: true
+          toolchain: 1.77.2
+
+      - name: install Go stable
+        uses: actions/setup-go@v4
+        with:
+          go-version: "stable"
+
+      - name: Install and prepare
+        run: |
+          npm install
+
+      - name: Download release of the .happ
+        uses: robinraju/release-downloader@v1.10
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with: 
+          token: ${{ secrets.GITHUB_TOKEN }}
+          releaseId: ${{ needs.publish-happ.outputs.releaseId }}
+          fileName: 'relay.happ'
+          out-file-path: 'workdir/'
+
+      - name: build the app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          releaseId: ${{ needs.publish-happ.outputs.releaseId }}
+
+  release-tauri-app-macos-x86_64:
+    permissions: write-all
+    needs: publish-happ
+
+    runs-on: macos-13
     steps:
 
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
