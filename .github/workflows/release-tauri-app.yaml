@@ -193,7 +193,7 @@ jobs:
 
       - name: Build android APKs
         run: |
-          nix develop --no-update-lock-file --command bash -c "npm run tauri android build -- --split-per-abi"
+          nix develop .#androidDev --no-update-lock-file --command bash -c "npm run tauri android build -- --split-per-abi"
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
