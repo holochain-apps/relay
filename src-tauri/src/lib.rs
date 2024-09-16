@@ -167,8 +167,12 @@ fn wan_network_config() -> Option<WANNetworkConfig> {
         None
     } else {
         Some(WANNetworkConfig {
-            signal_url: url2::url2!("{}", SIGNAL_URL),
-            bootstrap_url: url2::url2!("{}", BOOTSTRAP_URL),
+            signal_url: url2::url2!("{SIGNAL_URL}"),
+            bootstrap_url: url2::url2!("{BOOTSTRAP_URL}"),
+            ice_servers_urls: vec![
+                url2::url2!("stun:stun-0.main.infra.holo.host:443"),
+                url2::url2!("stun:stun-1.main.infra.holo.host:443"),
+            ]
         })
     }
 }

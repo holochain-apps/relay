@@ -3,12 +3,12 @@
 
   inputs = {
     p2p-shipyard = {
-      url = "github:darksoil-studio/p2p-shipyard";
+      url = "github:darksoil-studio/p2p-shipyard?ref=next";
       inputs.holochain.follows = "holochain-flake";
       inputs.versions.follows = "holochain-nix-versions";
     };
     holochain-nix-versions.url =
-      "github:holochain/holochain/?dir=versions/0_3";
+      "github:holochain/holochain/?dir=versions/weekly";
     holochain-flake = {
       url = "github:holochain/holochain";
       inputs.versions.follows = "holochain-nix-versions";
