@@ -16,27 +16,27 @@ pub fn happ_bundle() -> anyhow::Result<AppBundle> {
     Ok(bundle)
 }
 
-use tauri::{Manager, Window};
-// Create the command:
-// This command must be async so that it doesn't run on the main thread.
-#[tauri::command]
-async fn close_splashscreen(window: Window) {
-    #[cfg(desktop)]
-    {
-        // Close splashscreen
-        window
-            .get_webview_window("splashscreen")
-            .expect("no window labeled 'splashscreen' found")
-            .close()
-            .unwrap();
-        // Show main window
-        window
-            .get_webview_window("main")
-            .expect("no window labeled 'main' found")
-            .show()
-            .unwrap();
-    }
-}
+// use tauri::{Manager, Window};
+// // Create the command:
+// // This command must be async so that it doesn't run on the main thread.
+// #[tauri::command]
+// async fn close_splashscreen(window: Window) {
+//     #[cfg(desktop)]
+//     {
+//         // Close splashscreen
+//         window
+//             .get_webview_window("splashscreen")
+//             .expect("no window labeled 'splashscreen' found")
+//             .close()
+//             .unwrap();
+//         // Show main window
+//         window
+//             .get_webview_window("main")
+//             .expect("no window labeled 'main' found")
+//             .show()
+//             .unwrap();
+//     }
+// }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -58,7 +58,12 @@ pub fn run() {
         builder = builder.plugin(tauri_plugin_sharesheet::init());
     }
     builder.setup(|app| {
-            let handle = app.handle().clone();
+        let handle: AppHandle = app.handle().clone();
+        let handle_fail: AppHandle = app.handle().clone();
+        app.handle()
+                .listen("holochain://setup-failed", move |_event| {
+                    handle_fail.exit(1);
+                });
             app.handle()
                 .listen("holochain://setup-completed", move |_event| {
                     let handle = handle.clone();
