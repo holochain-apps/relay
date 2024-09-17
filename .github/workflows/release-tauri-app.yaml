@@ -129,6 +129,79 @@ jobs:
           tauriScript: nix develop --no-update-lock-file --command npm run tauri
           releaseId: ${{ needs.publish-happ.outputs.releaseId }}
 
+  release-tauri-android:
+    permissions: write-all
+    needs: publish-happ
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'ubuntu-22.04' 
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Support longpaths
+        if: matrix.platform != 'ubuntu-22.04'
+        run: git config --system core.longpaths true
+
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      # Checks out a copy of your repository on the ubuntu-latest machine
+      - uses: actions/checkout@v3
+
+      - name: Extend space
+        uses: ./.github/actions/extend-space
+
+      - name: Install nix
+        uses: cachix/install-nix-action@v27
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          nix_path: nixpkgs=channel:nixos-24.05
+
+      - uses: cachix/cachix-action@v15
+        with:
+          name: holochain-ci
+
+      - uses: cachix/cachix-action@v15
+        with:
+          name: holochain-open-dev
+
+      - uses: cachix/cachix-action@v15
+        with:
+          name: darksoil-studio
+
+      - name: Install and prepare
+        run: |
+          nix develop --no-update-lock-file --command npm install
+
+      - name: Download release of the .happ
+        uses: robinraju/release-downloader@v1.10
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with: 
+          token: ${{ secrets.GITHUB_TOKEN }}
+          releaseId: ${{ needs.publish-happ.outputs.releaseId }}
+          fileName: 'relay.happ'
+          out-file-path: 'workdir/'
+
+      - name: setup Android signing
+        run: |
+          cd src-tauri/gen/android
+          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" > keystore.properties
+          echo "password=${{ secrets.ANDROID_KEY_PASSWORD }}" >> keystore.properties
+          base64 -d <<< "${{ secrets.ANDROID_KEY_BASE64 }}" > $RUNNER_TEMP/keystore.jks
+          echo "storeFile=$RUNNER_TEMP/keystore.jks" >> keystore.properties
+
+      - name: Build android APKs
+        run: |
+          nix develop .#androidDev --no-update-lock-file --command bash -c "npm run tauri android build -- --split-per-abi"
+
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: "src-tauri/gen/android/app/build/outputs/apk/arm/release/*,src-tauri/gen/android/app/build/outputs/apk/arm64/release/*,src-tauri/gen/android/app/build/outputs/apk/x86_64/release/*,src-tauri/gen/android/app/build/outputs/apk/x86/release/*"
+          
+
   release-tauri-app-linux:
     permissions: write-all
     needs: publish-happ
