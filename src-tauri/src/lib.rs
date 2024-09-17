@@ -7,7 +7,7 @@ use tauri::{AppHandle, Listener};
 use tauri_plugin_holochain::{HolochainExt, HolochainPluginConfig, WANNetworkConfig};
 
 const APP_ID: &'static str = "relay";
-const SIGNAL_URL: &'static str = "wss://signal.holo.host";
+const SIGNAL_URL: &'static str = "wss://sbd.holo.host";
 const BOOTSTRAP_URL: &'static str = "https://bootstrap.holo.host";
 
 pub fn happ_bundle() -> anyhow::Result<AppBundle> {
