@@ -3695,8 +3695,7 @@ dependencies = [
 [[package]]
 name = "holochain_client"
 version = "0.6.0-dev.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e464e2caae7f2f98a7c95f9d162751263e83bae2bd38102010e9aaf05937655a"
+source = "git+https://github.com/holochain/holochain-client-rust?branch=develop#81a6bf88bfa28fca2e6a513ede1719791e87e124"
 dependencies = [
  "again",
  "anyhow",
@@ -3711,7 +3710,7 @@ dependencies = [
  "holochain_websocket",
  "holochain_zome_types 0.4.0-dev.16",
  "kitsune_p2p_types",
- "lair_keystore_api 0.4.5",
+ "lair_keystore_api",
  "parking_lot 0.12.3",
  "rand 0.8.5",
  "serde",
@@ -5270,7 +5269,7 @@ dependencies = [
  "kitsune_p2p_dht",
  "kitsune_p2p_dht_arc 0.4.0-dev.9",
  "kitsune_p2p_timestamp 0.4.0-dev.4",
- "lair_keystore_api 0.5.0",
+ "lair_keystore_api",
  "once_cell",
  "parking_lot 0.12.3",
  "paste",
@@ -5314,7 +5313,7 @@ version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "db43da034583683b3a25d473e6024c7f529c31115418a7b95e609d5b0f090e5b"
 dependencies = [
- "lair_keystore_api 0.5.0",
+ "lair_keystore_api",
  "pretty_assertions",
  "rpassword",
  "rusqlite",
@@ -5322,32 +5321,6 @@ dependencies = [
  "structopt",
  "sysinfo",
  "tracing-subscriber",
-]
-
-[[package]]
-name = "lair_keystore_api"
-version = "0.4.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9519a48df54d2041f8697bba7c3957263a5f2bb720ae6c4954004bad51693c61"
-dependencies = [
- "base64 0.22.1",
- "dunce",
- "hc_seed_bundle",
- "lru",
- "nanoid",
- "once_cell",
- "parking_lot 0.12.3",
- "rcgen",
- "serde",
- "serde_json",
- "serde_yaml",
- "time",
- "tokio",
- "toml 0.8.19",
- "tracing",
- "url",
- "winapi 0.3.9",
- "zeroize",
 ]
 
 [[package]]
@@ -9378,7 +9351,7 @@ dependencies = [
  "kitsune_p2p_mdns",
  "kitsune_p2p_types",
  "lair_keystore",
- "lair_keystore_api 0.5.0",
+ "lair_keystore_api",
  "local-ip-address",
  "log",
  "mime_guess",

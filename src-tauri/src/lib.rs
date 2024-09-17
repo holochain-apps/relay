@@ -51,10 +51,7 @@ pub fn run() {
         )
         .plugin(tauri_plugin_holochain::async_init(
             vec_to_locked(vec![]).expect("Can't build passphrase"),
-            HolochainPluginConfig {
-                wan_network_config: wan_network_config(),
-                holochain_dir: holochain_dir(),
-            },
+            HolochainPluginConfig::new(holochain_dir(),wan_network_config()),
         ));
     #[cfg(mobile)]
     {
@@ -131,6 +128,7 @@ async fn setup(handle: AppHandle) -> anyhow::Result<()> {
                 String::from(APP_ID),
                 happ_bundle()?,
                 HashMap::new(),
+                None,
                 None,
                 Some(random_seed),
             )
