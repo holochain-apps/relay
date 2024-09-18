@@ -191,7 +191,13 @@
           "crane"
         ],
         "holonix": "holonix_2",
-        "nixpkgs": "nixpkgs_3",
+        "nixpkgs": [
+          "p2p-shipyard",
+          "hc-infra",
+          "holonix",
+          "nixpkgs"
+        ],
+        "pnpmnixpkgs": "pnpmnixpkgs",
         "rust-overlay": [
           "p2p-shipyard",
           "hc-infra",
@@ -200,11 +206,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1726643453,
-        "narHash": "sha256-RNHFczpyV/0ZCVHRRbFVT6Pojma1F7+kBA78+ilhUFg=",
+        "lastModified": 1726667762,
+        "narHash": "sha256-wFFgvhVnOg/fXFJhnuPvFMD9NVsmPFiEgEHe5Y6q+fU=",
         "owner": "holochain-open-dev",
         "repo": "infrastructure",
-        "rev": "3df9f6b328c6d97d3600754d5e3414bb50d4c9b7",
+        "rev": "0eb9281d47c8d1432048919817da8d9226214f26",
         "type": "github"
       },
       "original": {
@@ -426,7 +432,7 @@
         "hc-scaffold": "hc-scaffold_3",
         "holochain": "holochain_3",
         "lair-keystore": "lair-keystore_3",
-        "nixpkgs": "nixpkgs_4",
+        "nixpkgs": "nixpkgs_3",
         "rust-overlay": "rust-overlay_3"
       },
       "locked": {
@@ -565,22 +571,6 @@
     },
     "nixpkgs_3": {
       "locked": {
-        "lastModified": 1726447378,
-        "narHash": "sha256-2yV8nmYE1p9lfmLHhOCbYwQC/W8WYfGQABoGzJOb1JQ=",
-        "owner": "nixos",
-        "repo": "nixpkgs",
-        "rev": "086b448a5d54fd117f4dc2dee55c9f0ff461bdc1",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nixos",
-        "ref": "nixos-24.05",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
-    "nixpkgs_4": {
-      "locked": {
         "lastModified": 1717179513,
         "narHash": "sha256-vboIEwIQojofItm2xGCdZCzW96U85l9nDW3ifMuAIdM=",
         "owner": "nixos",
@@ -618,17 +608,33 @@
         "webkitgtknixpkgs": "webkitgtknixpkgs"
       },
       "locked": {
-        "lastModified": 1726667254,
-        "narHash": "sha256-0ke8vRQkfRkD3KCtZ3OwwclA2mTjvERLGLzleJ71vK4=",
+        "lastModified": 1726670651,
+        "narHash": "sha256-ldJIQxTaT0Ydsbl0smMS9ZCtI9y8eR5CyNqVpl1dKgI=",
         "owner": "darksoil-studio",
         "repo": "p2p-shipyard",
-        "rev": "6577082990af321d87ac887130d39655c5c540ea",
+        "rev": "3e4fe7d55d463b85402765037c3b12352b4a275e",
         "type": "github"
       },
       "original": {
         "owner": "darksoil-studio",
         "ref": "develop",
         "repo": "p2p-shipyard",
+        "type": "github"
+      }
+    },
+    "pnpmnixpkgs": {
+      "locked": {
+        "lastModified": 1726447378,
+        "narHash": "sha256-2yV8nmYE1p9lfmLHhOCbYwQC/W8WYfGQABoGzJOb1JQ=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "086b448a5d54fd117f4dc2dee55c9f0ff461bdc1",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-24.05",
+        "repo": "nixpkgs",
         "type": "github"
       }
     },
