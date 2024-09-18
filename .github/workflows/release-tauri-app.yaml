@@ -113,7 +113,7 @@ jobs:
 
       - name: Build android APKs
         run: |
-          nix develop .#androidDev --no-update-lock-file --command bash -c "npm run tauri android build -- --apk --target aarch64 && rm -rf src-tauri/gen/android/app/src/main/jniLibs/* && npm run tauri android build -- --apk --target armv7 && rm -rf src-tauri/gen/android/app/src/main/jniLibs/* && npm run tauri android build -- --apk --target i686 && rm -rf src-tauri/gen/android/app/src/main/jniLibs/* && npm run tauri android build -- --apk --target x86_64"
+          nix develop .#androidDev --no-update-lock-file --command bash -c "npm run tauri android build -- --apk --split-per-abi"
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
