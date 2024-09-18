@@ -61,13 +61,8 @@ jobs:
     permissions: write-all
     needs: publish-happ
     environment: Relay Release
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: 'ubuntu-22.04' 
 
-    runs-on: ${{ matrix.platform }}
+    runs-on: 'ubuntu-22.04' 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       # Checks out a copy of your repository on the ubuntu-latest machine
@@ -239,7 +234,6 @@ jobs:
   release-tauri-app-macos:
     permissions: write-all
     needs: publish-happ
-
     strategy:
       fail-fast: false
       matrix:
@@ -247,6 +241,7 @@ jobs:
           - platform: 'macos-latest' # for Arm based macs (M1 and above).
           - platform: 'macos-13' # for Intel based macs.
           # - platform: 'ubuntu-22.04' 
+    runs-on: ${{ matrix.platform }}
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
