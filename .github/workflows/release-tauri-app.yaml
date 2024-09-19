@@ -263,7 +263,7 @@ jobs:
       - name: install Go stable
         uses: actions/setup-go@v4
         with:
-          go-version: 1.21.1
+          go-version: stable
 
       - name: Install and prepare
         run: |
@@ -278,6 +278,11 @@ jobs:
           releaseId: ${{ needs.publish-happ.outputs.releaseId }}
           fileName: 'relay.happ'
           out-file-path: 'workdir/'
+
+      - name: Build rust deps to workaround https://github.com/tauri-apps/tauri/issues/11054
+        run: |
+          cargo build --bins --features tauri/custom-protocol,tauri/native-tls --release
+
 
       - name: build the app
         uses: tauri-apps/tauri-action@v0
