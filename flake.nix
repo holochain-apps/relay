@@ -10,10 +10,7 @@
   };
 
   outputs = inputs@{ flake-parts, holonix, ... }:
-    flake-parts.lib.mkFlake {
-      specialArgs.nonWasmCrates = [ "relay" ];
-      inherit inputs;
-    } {
+    flake-parts.lib.mkFlake { inherit inputs; } {
       systems = builtins.attrNames holonix.devShells;
       perSystem = { config, pkgs, system, inputs', ... }: {
         devShells.default = pkgs.mkShell {

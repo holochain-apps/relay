@@ -240,9 +240,7 @@ jobs:
       matrix:
         include:
           - platform: 'macos-latest' # for Arm based macs (M1 and above).
-            args: ' --target aarch64-apple-darwin'
           - platform: 'macos-13' # for Intel based macs.
-            args: ' --target x86_64-apple-darwin'
           # - platform: 'ubuntu-22.04' 
 
     runs-on: ${{ matrix.platform }}
@@ -265,7 +263,7 @@ jobs:
       - name: install Go stable
         uses: actions/setup-go@v4
         with:
-          go-version: "stable"
+          go-version: 1.21.1
 
       - name: Install and prepare
         run: |
@@ -287,4 +285,3 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           releaseId: ${{ needs.publish-happ.outputs.releaseId }}
-          args: ${{ matrix.args }}
