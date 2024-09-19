@@ -119,7 +119,8 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: "src-tauri/gen/android/app/build/outputs/apk/arm/release/*,src-tauri/gen/android/app/build/outputs/apk/arm64/release/*,src-tauri/gen/android/app/build/outputs/apk/x86_64/release/*,src-tauri/gen/android/app/build/outputs/apk/x86/release/*"
+          file: src-tauri/gen/android/app/build/outputs/apk/*/release/app-*
+          file_glob: true
           
 
   release-tauri-app-linux:
