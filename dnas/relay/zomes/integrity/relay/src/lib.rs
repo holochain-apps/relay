@@ -54,7 +54,7 @@ pub enum Privacy {
 
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone)]
 pub struct Properties {
-    pub name: String,
+    pub created: Timestamp,
     pub privacy: Privacy,
     pub progenitor: AgentPubKey,
 }

@@ -118,20 +118,26 @@ export class RelayStore {
     return newConversation
   }
 
-  async createConversation(name: string, image: string, privacy: Privacy, initialContacts: Contact[] = []) {
-    if (!this.client) return;
-    const convoCellAndConfig = await this.client.createConversation(name, image, privacy)
-    const conversationStore = await this._addConversation(convoCellAndConfig)
-    if (conversationStore && initialContacts.length > 0) {
-      conversationStore.addContacts(initialContacts)
+  async createConversation(title: string, image: string, privacy: Privacy, initialContacts: Contact[] = []) {
+    if (!this.client) return null;
+    const convoCellAndConfig = await this.client.createConversation(title, image, privacy)
+    if (convoCellAndConfig) {
+      const conversationStore = await this._addConversation(convoCellAndConfig)
+      if (conversationStore && initialContacts.length > 0) {
+        conversationStore.addContacts(initialContacts)
+        return conversationStore
+      }
     }
-    return conversationStore
+    return null
   }
 
   async joinConversation(invitation: Invitation) {
-    if (!this.client) return;
+    if (!this.client) return null;
     const convoCellAndConfig = await this.client.joinConversation(invitation)
-    return await this._addConversation(convoCellAndConfig)
+    if (convoCellAndConfig) {
+      return await this._addConversation(convoCellAndConfig)
+    }
+    return null
   }
 
   async inviteAgentToConversation(conversationId: string, agent: AgentPubKey, role: number = 0) {
@@ -178,7 +184,7 @@ export class RelayStore {
     const contactResult = await this.client.createContact(contact)
     if (contactResult) {
       // Immediately add a conversation with the new contact, unless you already have one with them
-      let conversation = this.conversationsData.find(c => c.privacy === Privacy.Private && c.allMembers.every(m => m.publicKeyB64 === contact.publicKeyB64))
+      let conversation = this.conversationsData.find(c => c.privacy === Privacy.Private && c.allMembers.every(m => m.publicKeyB64 === contact.publicKeyB64)) || null
       if (!conversation) {
         conversation = await this.createConversation(contact.firstName + " " + contact.lastName, '', Privacy.Private, [contact])
       }
@@ -186,7 +192,6 @@ export class RelayStore {
       this.contacts.update(contacts => [...contacts, contactStore])
       return contactStore
     }
-    return false
   }
 
   async updateContact(contact: Contact) {

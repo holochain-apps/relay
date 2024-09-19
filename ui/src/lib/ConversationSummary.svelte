@@ -243,6 +243,6 @@
 
 <style>
   .unread {
-    font-weight: bold;
+    font-weight: 550;
   }
 </style>

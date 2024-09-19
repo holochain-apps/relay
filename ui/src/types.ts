@@ -52,7 +52,6 @@ export enum Privacy {
 // DNA modifier properties for a conversation
 export interface Properties {
   created: number,
-  name: string;
   privacy: Privacy;
   progenitor: AgentPubKeyB64;
 }
