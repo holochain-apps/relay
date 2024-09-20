@@ -9,7 +9,7 @@
   import { t } from '$lib/translations';
   import { copyToClipboard, handleFileChange, isMobile, MIN_TITLE_LENGTH, shareText } from '$lib/utils';
   import type { RelayStore } from '$store/RelayStore';
-  import { Privacy, type Config, type Invitation } from '../../../../types';
+  import { Privacy, type Config } from '../../../../types';
   import Button from '$lib/Button.svelte';
 
   // Silly hack to get around issues with typescript in sveltekit-i18n

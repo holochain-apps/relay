@@ -125,13 +125,21 @@ export class ConversationStore {
     }
     const proof = await this.relayStore.inviteAgentToConversation(this.data.id, decodeHashFromBase64(publicKeyB64))
     if (proof !== undefined) {
+      // The name of the conversation we are inviting to should be our name + # of other people invited
+      let myProfile = get(this.client.profilesStore.myProfile)
+      const profileData = myProfile.status === 'complete' ? myProfile.value?.entry : undefined
+      let title = (profileData?.fields.firstName || '') + ' ' + profileData?.fields.lastName
+      if (this.invitedContactKeys.length > 1) {
+        title = `${title} + ${this.invitedContactKeys.length - 1}`
+      }
+
       const invitation: Invitation = {
         created: this.created, // TODO: put in data
         progenitor: this.data.progenitor,
         privacy: this.data.privacy,
         proof,
         networkSeed: this.data.id,
-        title: this.title // TODO: other people should have a title that includes the progenitor's name
+        title
       }
       const msgpck = encode(invitation);
       return Base64.fromUint8Array(msgpck);
@@ -332,9 +340,9 @@ export class ConversationStore {
   }
 
   get lastActivityAt() {
-    return derived(this.lastMessage, ($lastMessage) =>
-      $lastMessage ? $lastMessage.timestamp.getTime() : this.created
-    )
+    return derived(this.lastMessage, ($lastMessage) => {
+      return $lastMessage ? $lastMessage.timestamp.getTime() : this.created
+  })
   }
 
   /***** Setters & actions ******/

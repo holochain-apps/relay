@@ -98,24 +98,23 @@ export class RelayClient {
     }
   }
 
-  async createConversation(title: string, image: string, privacy: Privacy) : Promise<ConversationCellAndConfig> {
+  async createConversation(title: string, image: string, privacy: Privacy) : Promise<ConversationCellAndConfig | null> {
     return this._createConversation(new Date().getTime(), title, image, privacy, this.client.myPubKey, undefined, undefined)
   }
 
-  async joinConversation(invitation: Invitation) : Promise<ConversationCellAndConfig> {
+  async joinConversation(invitation: Invitation) : Promise<ConversationCellAndConfig | null> {
     // we don't have the image at join time, it get's loaded later
     return this._createConversation(invitation.created, invitation.title, "", invitation.privacy, invitation.progenitor, invitation.proof, invitation.networkSeed)
   }
 
-  async _createConversation(created: number, title: string, image: string, privacy: Privacy, progenitor: AgentPubKey, membrane_proof: MembraneProof|undefined, networkSeed: string|undefined) : Promise<ConversationCellAndConfig> {
+  async _createConversation(created: number, title: string, image: string, privacy: Privacy, progenitor: AgentPubKey, membrane_proof: MembraneProof|undefined, networkSeed: string|undefined) : Promise<ConversationCellAndConfig | null> {
+    const conversationId = networkSeed || uuidv4()
+
     const properties: Properties = {
       created,
-      name: title,
       privacy,
       progenitor: encodeHashToBase64(progenitor),
     }
-
-    const conversationId = networkSeed || uuidv4()
 
     const cloneReq : AppCreateCloneCellRequest = {
       role_name: this.roleName,
@@ -127,17 +126,21 @@ export class RelayClient {
       },
     }
 
-    const cell = await this.client.createCloneCell(cloneReq)
-    let config: Config = { title, image }
-    if (!networkSeed) {
-      await this._setConfig(config, cell.cell_id)
+    try {
+      const cell = await this.client.createCloneCell(cloneReq)
+      let config: Config = { title, image }
+      if (!networkSeed) {
+        await this._setConfig(config, cell.cell_id)
+      }
+
+      await this.setMyProfileForConversation(cell.cell_id)
+      const convoCellAndConfig: ConversationCellAndConfig = {cell, config}
+      this.conversations[conversationId] = convoCellAndConfig
+      return convoCellAndConfig
+    } catch(e) {
+      console.error("Error creating conversation", e)
+      return null
     }
-
-    await this.setMyProfileForConversation(cell.cell_id)
-
-    const convoCellAndConfig: ConversationCellAndConfig = {cell, config}
-    this.conversations[conversationId] = convoCellAndConfig
-    return convoCellAndConfig
   }
 
   public async getAllMessages(conversationId: string, buckets: Array<number>) : Promise<Array<MessageRecord>> {

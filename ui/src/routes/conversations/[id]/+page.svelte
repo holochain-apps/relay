@@ -250,6 +250,8 @@
       <a class='pl-5' href={`/conversations/${conversation.data.id}/${conversation.data.privacy === Privacy.Public ? 'details' : 'invite'}`}>
         <SvgIcon icon='addPerson' size='24' color={$modeCurrent ? '%232e2e2e' : 'white'} />
       </a>
+    {:else}
+      <span class='pl-8'>&nbsp;</span>
     {/if}
   {/if}
 </Header>
@@ -326,7 +328,7 @@
                 <strong class='ml-2 text-sm'>{$t('conversations.share_invite_code')}</strong>
             </Button>
             {/if}
-  
+
           {/if}
         </div>
       {:else}
