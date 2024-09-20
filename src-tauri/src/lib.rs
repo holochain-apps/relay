@@ -16,7 +16,7 @@ pub fn happ_bundle() -> anyhow::Result<AppBundle> {
     Ok(bundle)
 }
 
-// use tauri::{Manager, Window};
+use tauri::{Manager};
 // // Create the command:
 // // This command must be async so that it doesn't run on the main thread.
 // #[tauri::command]

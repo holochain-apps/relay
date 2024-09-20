@@ -1,6 +1,6 @@
 [package]
 name = "relayapp"
-version = "0.5.0-beta"
+version = "0.7.0-beta"
 description = "Relay"
 authors = ["Tibet Sprague", "Eric Harris-Braun"]
 license = ""
