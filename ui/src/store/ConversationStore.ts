@@ -476,4 +476,8 @@ export class ConversationStore {
   setOpen(open: boolean) {
     this.localDataStore.update(data => ({ ...data, open }))
   }
+
+  setUnread(unread: boolean) {
+    this.localDataStore.update(data => ({ ...data, unread }))
+  }
 }

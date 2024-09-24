@@ -102,6 +102,7 @@
       window.addEventListener('resize', debouncedHandleResize);
       newMessageInput.focus();
       conversation.setOpen(true)
+      conversation.setUnread(false)
     }
   });
 
