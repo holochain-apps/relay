@@ -60,8 +60,14 @@ pub fn run() {
     {
         builder = builder.plugin(tauri_plugin_sharesheet::init());
     }
-    builder.setup(|app| {
+    builder
+        .setup(|app| {
             let handle = app.handle().clone();
+            let handle_fail: AppHandle = app.handle().clone();
+            app.handle()
+                .listen("holochain://setup-failed", move |_event| {
+                    handle_fail.exit(1);
+                });
             app.handle()
                 .listen("holochain://setup-completed", move |_event| {
                     let handle = handle.clone();
@@ -82,11 +88,9 @@ pub fn run() {
                         #[cfg(desktop)]
                         {
                             window = window.title(String::from("Relay"))
-
                         };
 
-                        window.build()
-                            .expect("Failed to open main window");
+                        window.build().expect("Failed to open main window");
                         #[cfg(desktop)]
                         {
                             // After it's done, close the splashscreen and display the main window
