@@ -7,7 +7,7 @@ import { ConversationStore } from './ConversationStore';
 import { RelayClient } from '$store/RelayClient'
 import type { Contact, Image, ConversationCellAndConfig, Invitation, Message, Properties, RelaySignal } from '../types';
 import { Privacy } from '../types';
-import { enqueueNotification } from '$lib/utils';
+import { enqueueNotification, isMobile } from '$lib/utils';
 
 export class RelayStore {
   public contacts: Writable<ContactStore[]>;
@@ -58,7 +58,12 @@ export class RelayStore {
           const sender = conversation.allMembers.find(m => m.publicKeyB64 == message.authorKey)
           conversation.addMessage(message)
           if (!conversation.archived) {
-            enqueueNotification(`Message from ${sender ? sender.firstName+" "+ sender.lastName : message.authorKey}`, message.content.length > 50 ? message.content.slice(0,50)+"...":  message.content)
+            const msgShort = message.content.length > 125 ? message.content.slice(0,50)+"...":  message.content
+            if (isMobile()) {
+              enqueueNotification(`${sender ? sender.firstName+" "+ sender.lastName : message.authorKey}: ${msgShort}`, message.content)
+            } else {
+              enqueueNotification(`Message from ${sender ? sender.firstName+" "+ sender.lastName : message.authorKey}`, message.content)
+            }
             conversation.loadImagesForMessage(message) // async load images
           }
         }
