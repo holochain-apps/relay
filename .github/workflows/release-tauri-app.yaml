@@ -6,56 +6,56 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+-[a-z]+.[0-9]+'
 
 jobs:
-  publish-happ:
-    permissions:
-      contents: write
-    runs-on: ubuntu-22.04
-    outputs:
-      releaseId: ${{ steps.create-release.outputs.id }}
-      appVersion: ${{ steps.version.outputs.APP_VERSION }}
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      # Checks out a copy of your repository on the ubuntu-latest machine
-      - uses: actions/checkout@v3
+  # publish-happ:
+  #   permissions:
+  #     contents: write
+  #   runs-on: ubuntu-22.04
+  #   outputs:
+  #     releaseId: ${{ steps.create-release.outputs.id }}
+  #     appVersion: ${{ steps.version.outputs.APP_VERSION }}
+  #   steps:
+  #     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+  #     # Checks out a copy of your repository on the ubuntu-latest machine
+  #     - uses: actions/checkout@v3
 
-      - name: Install nix
-        uses: cachix/install-nix-action@v27
-        with:
-          github_access_token: ${{ secrets.GITHUB_TOKEN }}
-          nix_path: nixpkgs=channel:nixos-24.05
+  #     - name: Install nix
+  #       uses: cachix/install-nix-action@v27
+  #       with:
+  #         github_access_token: ${{ secrets.GITHUB_TOKEN }}
+  #         nix_path: nixpkgs=channel:nixos-24.05
 
-      - uses: cachix/cachix-action@v15
-        with:
-          name: holochain-ci
+  #     - uses: cachix/cachix-action@v15
+  #       with:
+  #         name: holochain-ci
 
-      - uses: cachix/cachix-action@v15
-        with:
-          name: holochain-open-dev
+  #     - uses: cachix/cachix-action@v15
+  #       with:
+  #         name: holochain-open-dev
 
-      - uses: cachix/cachix-action@v15
-        with:
-          name: darksoil-studio
+  #     - uses: cachix/cachix-action@v15
+  #       with:
+  #         name: darksoil-studio
 
-      - name: Install and test
-        run: |
-          nix-store --gc
-          nix develop --no-update-lock-file --accept-flake-config --command bash -c "npm install && npm run build:happ"
+  #     - name: Install and test
+  #       run: |
+  #         nix-store --gc
+  #         nix develop --no-update-lock-file --accept-flake-config --command bash -c "npm install && npm run build:happ"
 
-      - name: Retrieve version
-        run: |
-          echo "APP_VERSION=$(cat src-tauri/tauri.conf.json | grep -oP '(?<="version": ")[^"]*')" >> $GITHUB_OUTPUT
-        id: version
+  #     - name: Retrieve version
+  #       run: |
+  #         echo "APP_VERSION=$(cat src-tauri/tauri.conf.json | grep -oP '(?<="version": ")[^"]*')" >> $GITHUB_OUTPUT
+  #       id: version
 
-      - id: create-release
-        uses: ncipollo/release-action@v1
-        with:
-          allowUpdates: true
-          artifacts: "workdir/relay.happ"
-          body: "See assets below to download and install this version."
-          name: Relay v${{ steps.version.outputs.APP_VERSION }}
-          tag: v${{ steps.version.outputs.APP_VERSION }}
-          prerelease: true
-          draft: false
+  #     - id: create-release
+  #       uses: ncipollo/release-action@v1
+  #       with:
+  #         allowUpdates: true
+  #         artifacts: "workdir/relay.happ"
+  #         body: "See assets below to download and install this version."
+  #         name: Relay v${{ steps.version.outputs.APP_VERSION }}
+  #         tag: v${{ steps.version.outputs.APP_VERSION }}
+  #         prerelease: true
+  #         draft: false
 
   release-tauri-app-android:
     permissions: write-all
@@ -93,15 +93,15 @@ jobs:
         run: |
           nix develop --no-update-lock-file --command npm install
 
-      - name: Download release of the .happ
-        uses: robinraju/release-downloader@v1.10
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with: 
-          token: ${{ secrets.GITHUB_TOKEN }}
-          releaseId: ${{ needs.publish-happ.outputs.releaseId }}
-          fileName: 'relay.happ'
-          out-file-path: 'workdir/'
+      # - name: Download release of the .happ
+      #   uses: robinraju/release-downloader@v1.10
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with: 
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     releaseId: ${{ needs.publish-happ.outputs.releaseId }}
+      #     fileName: 'relay.happ'
+      #     out-file-path: 'workdir/'
 
       - name: setup Android signing
         run: |
@@ -167,15 +167,15 @@ jobs:
         run: |
           npm install
 
-      - name: Download release of the .happ
-        uses: robinraju/release-downloader@v1.10
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with: 
-          token: ${{ secrets.GITHUB_TOKEN }}
-          releaseId: ${{ needs.publish-happ.outputs.releaseId }}
-          fileName: 'relay.happ'
-          out-file-path: 'workdir/'
+      # - name: Download release of the .happ
+      #   uses: robinraju/release-downloader@v1.10
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with: 
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     releaseId: ${{ needs.publish-happ.outputs.releaseId }}
+      #     fileName: 'relay.happ'
+      #     out-file-path: 'workdir/'
 
       - name: build the app
         uses: tauri-apps/tauri-action@v0
@@ -270,15 +270,15 @@ jobs:
           npm install
           npm run build -w ui
 
-      - name: Download release of the .happ
-        uses: robinraju/release-downloader@v1.10
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with: 
-          token: ${{ secrets.GITHUB_TOKEN }}
-          releaseId: ${{ needs.publish-happ.outputs.releaseId }}
-          fileName: 'relay.happ'
-          out-file-path: 'workdir/'
+      # - name: Download release of the .happ
+      #   uses: robinraju/release-downloader@v1.10
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with: 
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     releaseId: ${{ needs.publish-happ.outputs.releaseId }}
+      #     fileName: 'relay.happ'
+      #     out-file-path: 'workdir/'
 
       - name: Build rust deps to workaround https://github.com/tauri-apps/tauri/issues/11054
         run: |
