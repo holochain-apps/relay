@@ -57,9 +57,77 @@ jobs:
   #         prerelease: true
   #         draft: false
 
-  release-tauri-app-android:
+  release-tauri-app-linux:
     permissions: write-all
     # needs: publish-happ
+    environment: Relay Release
+    outputs:
+      releaseId: ${{ steps.build-app.outputs.releaseId }}
+
+    runs-on: ubuntu-22.04
+    steps:
+
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      # Checks out a copy of your repository on the ubuntu-latest machine
+      - uses: actions/checkout@v3
+
+      - name: setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 20
+
+      - name: install Rust stable
+        uses: actions-rs/toolchain@v1
+        with:
+          override: true
+          toolchain: 1.77.2
+
+      - name: install Go stable
+        uses: actions/setup-go@v4
+        with:
+          go-version: "stable"
+
+      - name: install dependencies (ubuntu only)
+        run: |
+          sudo apt update
+          sudo apt install libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+
+      - name: Install and prepare
+        run: |
+          npm install
+
+      # - name: Download release of the .happ
+      #   uses: robinraju/release-downloader@v1.10
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with: 
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     releaseId: ${{ needs.publish-happ.outputs.releaseId }}
+      #     fileName: 'relay.happ'
+      #     out-file-path: 'workdir/'
+
+      - id: build-app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: Relay-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
+          releaseName: 'Relay v__VERSION__'
+          releaseBody: 'See the assets to download this version and install.'
+          releaseDraft: true
+          prerelease: false
+
+  release-tauri-app-android:
+    permissions: write-all
+    needs: release-tauri-app-linux
     environment: Relay Release
 
     runs-on: 'ubuntu-22.04' 
@@ -115,79 +183,11 @@ jobs:
         run: |
           nix develop .#androidDev --no-update-lock-file --command bash -c "npm run tauri android build -- --apk --split-per-abi"
 
-      - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@v2
+      - uses: AButler/upload-release-assets@v3.0
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: src-tauri/gen/android/app/build/outputs/apk/*/release/app-*
-          file_glob: true
-          
-
-  release-tauri-app-linux:
-    permissions: write-all
-    # needs: publish-happ
-    environment: Relay Release
-
-    runs-on: ubuntu-22.04
-    steps:
-
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      # Checks out a copy of your repository on the ubuntu-latest machine
-      - uses: actions/checkout@v3
-
-      - name: setup node
-        uses: actions/setup-node@v1
-        with:
-          node-version: 20
-
-      - name: install Rust stable
-        uses: actions-rs/toolchain@v1
-        with:
-          override: true
-          toolchain: 1.77.2
-
-      - name: install Go stable
-        uses: actions/setup-go@v4
-        with:
-          go-version: "stable"
-
-      - name: install dependencies (ubuntu only)
-        run: |
-          sudo apt update
-          sudo apt install libwebkit2gtk-4.1-dev \
-            build-essential \
-            curl \
-            wget \
-            file \
-            libxdo-dev \
-            libssl-dev \
-            libayatana-appindicator3-dev \
-            librsvg2-dev
-
-      - name: Install and prepare
-        run: |
-          npm install
-
-      # - name: Download release of the .happ
-      #   uses: robinraju/release-downloader@v1.10
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with: 
-      #     token: ${{ secrets.GITHUB_TOKEN }}
-      #     releaseId: ${{ needs.publish-happ.outputs.releaseId }}
-      #     fileName: 'relay.happ'
-      #     out-file-path: 'workdir/'
-
-      - name: build the app
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tagName: Relay-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
-          releaseName: 'Relay v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
-          releaseDraft: true
-          prerelease: false
+          files: src-tauri/gen/android/app/build/outputs/apk/*/release/app-*
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          release-id: ${{ needs.release-tauri-app-linux.outputs.releaseId }}
 
   release-tauri-app-windows:
     permissions: write-all
