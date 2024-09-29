@@ -59,7 +59,7 @@ jobs:
 
   release-tauri-app-android:
     permissions: write-all
-    needs: publish-happ
+    # needs: publish-happ
     environment: Relay Release
 
     runs-on: 'ubuntu-22.04' 
@@ -125,7 +125,7 @@ jobs:
 
   release-tauri-app-linux:
     permissions: write-all
-    needs: publish-happ
+    # needs: publish-happ
 
     runs-on: ubuntu-22.04
     steps:
@@ -186,7 +186,7 @@ jobs:
 
   release-tauri-app-windows:
     permissions: write-all
-    needs: publish-happ
+    # needs: publish-happ
 
     runs-on: windows-latest
     steps:
@@ -234,7 +234,7 @@ jobs:
 
   release-tauri-app-macos:
     permissions: write-all
-    needs: publish-happ
+    # needs: publish-happ
     strategy:
       fail-fast: false
       matrix:
@@ -283,7 +283,6 @@ jobs:
       - name: Build rust deps to workaround https://github.com/tauri-apps/tauri/issues/11054
         run: |
           cargo build --bins --features tauri/custom-protocol,tauri/native-tls --release
-
 
       - name: build the app
         uses: tauri-apps/tauri-action@v0
