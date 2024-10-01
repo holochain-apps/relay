@@ -128,8 +128,10 @@ export class RelayStore {
     const convoCellAndConfig = await this.client.createConversation(title, image, privacy)
     if (convoCellAndConfig) {
       const conversationStore = await this._addConversation(convoCellAndConfig)
-      if (conversationStore && initialContacts.length > 0) {
-        conversationStore.addContacts(initialContacts)
+      if (conversationStore) {
+        if (initialContacts.length > 0) {
+          conversationStore.addContacts(initialContacts)
+        }
         return conversationStore
       }
     }
