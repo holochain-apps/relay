@@ -8436,30 +8436,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "relayapp"
-version = "0.5.0-beta"
-dependencies = [
- "anyhow",
- "app_dirs2",
- "holochain 0.3.3-rc.0",
- "holochain_client",
- "holochain_types 0.3.2",
- "lair_keystore",
- "log",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-clipboard-manager",
- "tauri-plugin-holochain",
- "tauri-plugin-log",
- "tauri-plugin-notification",
- "tauri-plugin-sharesheet",
- "tauri-plugin-shell",
- "tempdir",
- "url2",
-]
-
-[[package]]
 name = "remove_dir_all"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -11338,6 +11314,30 @@ name = "version_check"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
+
+[[package]]
+name = "volla_messenger"
+version = "0.5.0-beta"
+dependencies = [
+ "anyhow",
+ "app_dirs2",
+ "holochain 0.3.3-rc.0",
+ "holochain_client",
+ "holochain_types 0.3.2",
+ "lair_keystore",
+ "log",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-clipboard-manager",
+ "tauri-plugin-holochain",
+ "tauri-plugin-log",
+ "tauri-plugin-notification",
+ "tauri-plugin-sharesheet",
+ "tauri-plugin-shell",
+ "tempdir",
+ "url2",
+]
 
 [[package]]
 name = "vswhom"
