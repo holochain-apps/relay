@@ -43,6 +43,15 @@
 			.betaTag {
 				margin-left: 5px;
 			}
+			.betaText {
+				color: black;
+				border: 1px solid black;
+				border-radius: 2px;
+				font-size: 45%;
+				padding: 2px;
+				margin-bottom: 5px;
+				margin-left: 3px;
+			}
 
 			@media (prefers-color-scheme: dark) {
 				body {
@@ -55,6 +64,16 @@
 				.relayTitle path {
 					fill: white
 				}
+				.betaTag path {
+					fill: white;
+				}
+				.betaText {
+					color: white;
+					border-color: white;
+				}
+				h1 {
+					color: white;
+				}
 			}
 
 		</style>
@@ -62,7 +81,8 @@
 	<body>
 		<div class="container">
 			<img src="./icon.png" width='58' >
-			<h1>Volla Messenger<img src="./beta.svg" class="betaTag"/></h1>
+			<h1 >Volla Messages <span class="betaText">Beta</span></h1>
+			
 			<p class='startingUp'>Starting up...</p>
 		</div>
 	</body>

@@ -1,4 +1,4 @@
-# Relay
+# Volla Messages
 
 Private chat for Android and Desktop environments.
 
@@ -6,7 +6,7 @@ Built with Holochain + Tauri + SvelteKit + TailWind + Skeleton
 
 ## Developer Notes
 
-Relay is a Holochain application deployed using [p2pShipyard](https://darksoil.studio/p2p-shipyard/) for Mobile and Desktop.  
+Volla Messages is a Holochain application deployed using [p2pShipyard](https://darksoil.studio/p2p-shipyard/) for Mobile and Desktop.  
 
 ### Dev Testing Desktop only
 

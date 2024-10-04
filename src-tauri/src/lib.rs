@@ -87,7 +87,7 @@ pub fn run() {
                             .expect("Failed to build window");
                         #[cfg(desktop)]
                         {
-                            window = window.title(String::from("Volla Messenger"))
+                            window = window.title(String::from("Volla Messages"))
                         };
 
                         window.build().expect("Failed to open main window");

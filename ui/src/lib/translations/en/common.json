@@ -1,5 +1,5 @@
 {
-  "app_name": "Volla Messenger",
+  "app_name": "Volla Messages",
   "cancel": "Cancel",
   "connecting_to_holochain": "Connecting to Holochain...",
   "copy": "COPY",
@@ -23,7 +23,7 @@
   "tagline": "Peer-to-peer. Encrypted. Secure.",
   "use_invite_code": "Use Invite Code",
   "welcome": "Welcome",
-  "welcome_text_1": "On Volla Messenger, your data is only shared with the people you message with.",
+  "welcome_text_1": "On Volla Messages, your data is only shared with the people you message with.",
   "welcome_text_2": "Private, encrypted and secured by keys only you control.",
   "what_is_your_name": "What is your name?"
 }
