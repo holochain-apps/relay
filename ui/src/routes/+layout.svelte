@@ -7,6 +7,8 @@
 	import { t } from '$lib/translations';
 	import { RelayClient } from '$store/RelayClient';
 	import { RelayStore } from '$store/RelayStore';
+	import { isAppInstalled, installApp, appWebsocketAuth } from 'tauri-plugin-holochain-foreground-service-consumer-api';
+  import happUrl from "../../../workdir/relay.happ?url";
 
 	import '../app.postcss';
 
@@ -15,7 +17,7 @@
 	const appId = import.meta.env.VITE_APP_ID ? import.meta.env.VITE_APP_ID : 'relay'
 	const appPort = import.meta.env.VITE_APP_PORT ? import.meta.env.VITE_APP_PORT : 8888
 	const adminPort = import.meta.env.VITE_ADMIN_PORT
-	const url = `ws://localhost:${appPort}`;
+	const url = appPort ? new URL(`ws://localhost:${appPort}`) : undefined;
 
 	let client: AppWebsocket
 	let relayClient: RelayClient
@@ -36,10 +38,28 @@
 	//invoke('close_splashscreen')
 	})
 
+
+	const setupApp = async () => {
+    let isInstalled = await isAppInstalled(appId);
+		if (!isInstalled) {
+			await installApp({
+				appId,
+				appBundleBytes: new Uint8Array(await (await fetch(happUrl)).arrayBuffer()),
+				membraneProofs: new Map(),
+				agent: undefined,
+				networkSeed: "dev-relay-2024-10-06",
+			});
+    }
+    const auth = await appWebsocketAuth(appId);
+  }
+
+
 	onMount(() => {
 		async function initHolochain() {
 			// console.log("FISH", window.__TAURI__)
 			 //await invoke('close_splashscreen')
+
+			await setupApp();
 
 			let tokenResp
 			if (adminPort) {
@@ -50,7 +70,7 @@
 				await adminWebsocket.authorizeSigningCredentials(cellIds[0])
 			}
 			console.log("appPort and Id is", appPort, appId)
-			const params: AppWebsocketConnectionOptions = {url: new URL(url)}
+			const params: AppWebsocketConnectionOptions = { url }
 			if (tokenResp) params.token = tokenResp.token
 			client = await AppWebsocket.connect(params)
 			let profilesClient = new ProfilesClient(client, appId);

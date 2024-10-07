@@ -3,7 +3,7 @@ use lair_keystore::dependencies::sodoken::{BufRead, BufWrite};
 use std::path::PathBuf;
 use std::time::UNIX_EPOCH;
 use std::{collections::HashMap, time::SystemTime};
-use tauri::{AppHandle, Listener};
+use tauri::{AppHandle, Listener, WebviewWindowBuilder, WebviewUrl};
 use tauri_plugin_holochain::{HolochainExt, HolochainPluginConfig, WANNetworkConfig};
 
 const APP_ID: &'static str = "relay";
@@ -48,61 +48,77 @@ pub fn run() {
             tauri_plugin_log::Builder::default()
                 .level(log::LevelFilter::Warn)
                 .build(),
-        )
-        .plugin(tauri_plugin_holochain::async_init(
-            vec_to_locked(vec![]).expect("Can't build passphrase"),
-            HolochainPluginConfig {
-                wan_network_config: wan_network_config(),
-                holochain_dir: holochain_dir(),
-            },
-        ));
+        );
+    
     #[cfg(mobile)]
     {
-        builder = builder.plugin(tauri_plugin_sharesheet::init());
+        use tauri_plugin_holochain_foreground_service_consumer::InstallAppRequestArgs;
+        use tauri_plugin_holochain_foreground_service_consumer::HolochainForegroundServiceConsumerExt;
+
+        builder = builder
+            .plugin(tauri_plugin_sharesheet::init())
+            .plugin(tauri_plugin_holochain_foreground_service_consumer::init())
+            .setup(|app| {
+                let window_builder = WebviewWindowBuilder::new(
+                    app.handle(),
+                    "Relay".to_string(),
+                    WebviewUrl::App("".into()),
+                ).build();
+
+                Ok(())
+            })
     }
-    builder
-        .setup(|app| {
-            let handle = app.handle().clone();
-            let handle_fail: AppHandle = app.handle().clone();
-            app.handle()
-                .listen("holochain://setup-failed", move |_event| {
-                    handle_fail.exit(1);
-                });
-            app.handle()
-                .listen("holochain://setup-completed", move |_event| {
-                    let handle = handle.clone();
-                    tauri::async_runtime::spawn(async move {
-                        setup(handle.clone()).await.expect("Failed to setup");
 
-                        let mut window = handle
-                            .holochain()
-                            .expect("Failed to get holochain")
-                            .main_window_builder(
-                                String::from("main"),
-                                false,
-                                Some(APP_ID.into()),
-                                None,
-                            )
-                            .await
-                            .expect("Failed to build window");
-                        #[cfg(desktop)]
-                        {
-                            window = window.title(String::from("Relay"))
-                        };
-
-                        window.build().expect("Failed to open main window");
-                        #[cfg(desktop)]
-                        {
+    #[cfg(desktop)]
+    {
+        builder = builder
+            .plugin(tauri_plugin_holochain::async_init(
+                vec_to_locked(vec![]).expect("Can't build passphrase"),
+                HolochainPluginConfig {
+                    wan_network_config: wan_network_config(),
+                    holochain_dir: holochain_dir(),
+                },
+            ))
+            .setup(|app| {
+                let handle = app.handle().clone();
+                let handle_fail: AppHandle = app.handle().clone();
+                app.handle()
+                    .listen("holochain://setup-failed", move |_event| {
+                        handle_fail.exit(1);
+                    });
+                app.handle()
+                    .listen("holochain://setup-completed", move |_event| {
+                        let handle = handle.clone();
+                        tauri::async_runtime::spawn(async move {
+                            setup(handle.clone()).await.expect("Failed to setup");
+    
+                            let mut window = handle
+                                .holochain()
+                                .expect("Failed to get holochain")
+                                .main_window_builder(
+                                    String::from("main"),
+                                    false,
+                                    Some(APP_ID.into()),
+                                    None,
+                                )
+                                .await
+                                .expect("Failed to build window");
+    
+                            window = window.title(String::from("Relay"));
+                            window.build().expect("Failed to open main window");
+    
                             // After it's done, close the splashscreen and display the main window
                             let splashscreen_window =
                                 handle.get_webview_window("splashscreen").unwrap();
                             splashscreen_window.close().unwrap();
-                        }
+                        });
                     });
-                });
+    
+                Ok(())
+            });
+    }
 
-            Ok(())
-        })
+    builder
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

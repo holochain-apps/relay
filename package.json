@@ -24,6 +24,7 @@
     "build:zomes": "CARGO_TARGET_DIR=target cargo build --release --target wasm32-unknown-unknown --workspace --exclude relayapp",
     "local-services": "hc run-local-services --bootstrap-interface $INTERNAL_IP --bootstrap-port $BOOTSTRAP_PORT --signal-interfaces $INTERNAL_IP --signal-port $SIGNAL_PORT",
     "network:android": "npm run build:happ && BOOTSTRAP_PORT=$(port) SIGNAL_PORT=$(port) INTERNAL_IP=$(internal-ip --ipv4) concurrently -k \"npm run local-services\" \"UI_PORT=1420 npm run -w ui start\" \"npm run tauri dev\" \"npm run tauri android dev\"",
+    "start:android": "npm run build:happ && BOOTSTRAP_PORT=$(port) SIGNAL_PORT=$(port) INTERNAL_IP=$(internal-ip --ipv4) concurrently -k \"npm run local-services\" \"UI_PORT=1420 npm run -w ui start\" \"npm run tauri android dev\"",
     "launch": "concurrently-repeat \"npm run tauri dev\" $AGENTS",
     "tauri": "tauri"
   },
@@ -56,6 +57,7 @@
     "lodash-es": "^4.17.21",
     "svelte-gestures": "^5.0.4",
     "svelte-qrcode-image": "^2.0.0-alpha.1",
+    "tauri-plugin-holochain-foreground-service-consumer-api": "file:../p2p-shipyard/crates/tauri-plugin-holochain-foreground-service-consumer",
     "uuid": "^9.0.1"
   }
 }

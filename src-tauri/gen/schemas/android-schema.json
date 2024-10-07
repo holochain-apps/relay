@@ -2449,6 +2449,69 @@
           ]
         },
         {
+          "description": "holochain-foreground-service-consumer:default -> Default permissions for the plugin",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:default"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:allow-app-websocket-auth -> Enables the app_websocket_auth command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:allow-app-websocket-auth"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:allow-install-app -> Enables the install_app command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:allow-install-app"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:allow-is-app-installed -> Enables the is_app_installed command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:allow-is-app-installed"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:allow-sign-zome-call -> Enables the sign_zome_call command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:allow-sign-zome-call"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:deny-app-websocket-auth -> Denies the app_websocket_auth command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:deny-app-websocket-auth"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:deny-install-app -> Denies the install_app command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:deny-install-app"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:deny-is-app-installed -> Denies the is_app_installed command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:deny-is-app-installed"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:deny-sign-zome-call -> Denies the sign_zome_call command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:deny-sign-zome-call"
+          ]
+        },
+        {
           "description": "log:default -> Allows the log command",
           "type": "string",
           "enum": [

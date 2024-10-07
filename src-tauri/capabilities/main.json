@@ -19,6 +19,7 @@
     "clipboard-manager:allow-write-text",
     "clipboard-manager:allow-read-text",
     "sharesheet:allow-share-text",
-    "shell:default"
+    "shell:default",
+    "holochain-foreground-service-consumer:default"
   ]
 }

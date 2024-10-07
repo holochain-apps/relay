@@ -4827,7 +4827,7 @@ dependencies = [
  "httpdate",
  "itoa 1.0.11",
  "pin-project-lite",
- "socket2 0.5.7",
+ "socket2 0.4.10",
  "tokio",
  "tower-service",
  "tracing",
@@ -8451,6 +8451,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-clipboard-manager",
  "tauri-plugin-holochain",
+ "tauri-plugin-holochain-foreground-service-consumer",
  "tauri-plugin-log",
  "tauri-plugin-notification",
  "tauri-plugin-sharesheet",
@@ -10108,6 +10109,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "tauri-plugin-holochain-foreground-service-consumer"
+version = "0.1.0"
+source = "git+https://github.com/mattyg/p2p-shipyard.git?branch=feat/uniffi-bindings-take-2#00a50b3e490df3e6d0dc85f4ffab07ca82c7a1a8"
+dependencies = [
+ "serde",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin",
+ "thiserror",
+]
+
+[[package]]
 name = "tauri-plugin-log"
 version = "2.0.0-rc.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -10151,7 +10164,8 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-sharesheet"
 version = "0.0.1"
-source = "git+https://github.com/buildyourwebapp/tauri-plugin-sharesheet#c11aa05040fd12197bc498cb4a5b6aa7f8ca1c75"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6fe9f40c5f62fe0780abe84f192f084beda5d66e1a9095a24fa99d1c5b9c0956"
 dependencies = [
  "log",
  "serde",
