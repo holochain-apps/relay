@@ -1,5 +1,4 @@
 import java.util.Properties
-import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
@@ -20,14 +19,14 @@ keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 android {
     signingConfigs {
         create("release") {
-            keyAlias = keystoreProperties["keyAlias"] as String
-            keyPassword = keystoreProperties["password"] as String
-            storeFile = file(keystoreProperties["storeFile"] as String)
-            storePassword = keystoreProperties["password"] as String
+         keyAlias = keystoreProperties["keyAlias"] as String
+         keyPassword = keystoreProperties["password"] as String
+         storeFile = file(keystoreProperties["storeFile"] as String)
+         storePassword = keystoreProperties["password"] as String
         }
     }
     compileSdk = 34
-    namespace = "org.holochain.relay"
+    namespace = "org.holochain.messages"
     defaultConfig {
         manifestPlaceholders["usesCleartextTraffic"] = "true"
         applicationId = "org.holochain.messages"
@@ -60,6 +59,9 @@ android {
     }
     kotlinOptions {
         jvmTarget = "1.8"
+    }
+    buildFeatures {
+        buildConfig = true
     }
 }
 
