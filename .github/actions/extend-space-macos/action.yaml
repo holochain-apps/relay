@@ -1,0 +1,166 @@
+# Extends disk space on github hosted runners
+
+name: "Extend space macOS"
+description: "Teases out as much free space as possible"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Extend space macos
+      shell: "bash"
+      run: |
+        set -e
+        set -u
+        set -o pipefail
+
+        # Uninstall Gems.
+        for gem in $(gem list --no-versions | grep -v \
+                                                   -e 'bigdecimal' \
+                                                   -e 'CFPropertyList' \
+                                                   -e 'cmath' \
+                                                   -e 'csv' \
+                                                   -e 'date' \
+                                                   -e 'dbm' \
+                                                   -e 'did_you_mean' \
+                                                   -e 'e2mmap' \
+                                                   -e 'etc' \
+                                                   -e 'fcntl' \
+                                                   -e 'fiddle' \
+                                                   -e 'fileutils' \
+                                                   -e 'forwardable' \
+                                                   -e 'io-console' \
+                                                   -e 'ipaddr' \
+                                                   -e 'irb' \
+                                                   -e 'json' \
+                                                   -e 'libxml-ruby' \
+                                                   -e 'logger' \
+                                                   -e 'matrix' \
+                                                   -e 'minitest' \
+                                                   -e 'mutex_m' \
+                                                   -e 'net-telnet' \
+                                                   -e 'nokogiri' \
+                                                   -e 'openssl' \
+                                                   -e 'ostruct' \
+                                                   -e 'power_assert' \
+                                                   -e 'prime' \
+                                                   -e 'psych' \
+                                                   -e 'rake' \
+                                                   -e 'rexml' \
+                                                   -e 'rdoc' \
+                                                   -e 'rbs' \
+                                                   -e 'rss' \
+                                                   -e 'scanf' \
+                                                   -e 'shell' \
+                                                   -e 'sqlite3' \
+                                                   -e 'stringio' \
+                                                   -e 'strscan' \
+                                                   -e 'sync' \
+                                                   -e 'test-unit' \
+                                                   -e 'thwait' \
+                                                   -e 'tracer' \
+                                                   -e 'typeprof' \
+                                                   -e 'webrick' \
+                                                   -e 'xmlrpc' \
+                                                   -e 'zlib' \
+        ); do
+          sudo gem uninstall --force --all --ignore-dependencies --executables "$gem"
+        done
+
+        # Uninstall Homebrew.
+        brew update
+        sudo rm -rf /usr/local/miniconda &
+        rm -rf /usr/local/lib/node_modules &
+        rm -f /usr/local/bin/terminal-notifier
+        rm -f /usr/local/bin/change_hostname.sh
+        rm -f /usr/local/bin/azcopy
+
+        if which brew &>/dev/null; then
+          eval "$(brew list --formula | xargs -I% echo 'brew uninstall --formula --force --ignore-dependencies "%" &')"
+          eval "$(brew list --cask | xargs -I% echo '{ brew uninstall --cask --force "%"; brew uninstall --cask --zap --force "%"; } &')"
+          brew uninstall --cask --zap --force dotnet &
+          brew uninstall --cask --zap --force adoptopenjdk/openjdk/adoptopenjdk8 &
+          brew uninstall --cask --zap --force mono-mdk &
+          brew uninstall --cask --zap --force xamarin-android &
+          brew uninstall --cask --zap --force xamarin-ios &
+          brew uninstall --cask --zap --force xamarin-mac &
+          wait
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)" -- --force
+        fi
+
+        # # Uninstall Xcode and Command Line Tools
+        # mkdir -p /tmp/trash
+        # for trash in /Applications/Xcode*.app /Library/Developer/CommandLineTools; do
+        #   sudo mv "$trash" /tmp/trash/
+        # done
+        # sudo pkgutil --forget com.apple.pkg.CLTools_Executables
+        # sudo xcode-select --reset
+
+        # Clean environment.
+        for trash in ~/.DS_Store \
+                     ~/.Trash/* \
+                     ~/.aliyun \
+                     ~/.android \
+                     ~/.azcopy \
+                     ~/.azure \
+                     ~/.bash_history \
+                     ~/.bash_profile \
+                     ~/.bash_sessions \
+                     ~/.bashrc \
+                     ~/.cabal \
+                     ~/.cache \
+                     ~/.cargo \
+                     ~/.cocoapods \
+                     ~/.composer \
+                     ~/.conda \
+                     ~/.config \
+                     ~/.dotnet \
+                     ~/.fastlane \
+                     ~/.gem \
+                     ~/.ghcup \
+                     ~/.gitconfig \
+                     ~/.gradle \
+                     ~/.local \
+                     ~/.m2 \
+                     ~/.mono \
+                     ~/.npm \
+                     ~/.npmrc \
+                     ~/.nvm \
+                     ~/.oracle_jre_usage \
+                     ~/.packer.d \
+                     ~/.rustup \
+                     ~/.sh_history \
+                     ~/.ssh \
+                     ~/.subversion \
+                     ~/.sqlite_history \
+                     ~/.vcpkg \
+                     ~/.viminfo \
+                     ~/.wget-hsts \
+                     ~/.yarn \
+                     ~/Library/Caches/Homebrew \
+                     ~/Microsoft \
+                     ~/hostedtoolcache \
+                     ~/*.txt; do
+          if [[ -e "$trash" ]]; then
+            mv "$trash" /tmp/trash/
+          fi
+        done
+
+        # Delete broken symlinks.
+        for exe in /usr/local/bin/*; do
+          if [[ -L "$exe" ]] && ! [[ -e "$exe" ]]; then
+            rm "$exe"
+          fi
+        done
+
+        mkdir -p /tmp/trash
+        for pkg in /var/db/receipts/*.plist; do
+          pkg_id="$(basename "${pkg}" .plist)"
+          volume="$(pkgutil --pkg-info "${pkg_id}" | sed -n -e 's/^volume: //p')"
+          location="$(pkgutil --pkg-info "${pkg_id}" | sed -n -e 's/^location: //p')"
+          pkgutil --only-files --files "${pkg_id}" | xargs -I% sudo mv -f "${volume}${location}/%" /tmp/trash/ || true
+          pkgutil --only-dirs --files "${pkg_id}" | xargs -I% sudo rmdir -p "${volume}${location}/%" || true
+          pkgutil --forget "${pkg_id}"
+        done
+
+
+
