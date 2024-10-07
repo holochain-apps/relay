@@ -2,7 +2,7 @@
   description = "Template for Holochain app development";
 
   inputs = {
-    p2p-shipyard = { url = "github:darksoil-studio/p2p-shipyard/develop"; };
+    p2p-shipyard = { url = "github:darksoil-studio/p2p-shipyard/next"; };
     holonix.url = "github:holochain/holonix/main-0.3";
 
     nixpkgs.follows = "holonix/nixpkgs";

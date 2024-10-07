@@ -52,7 +52,7 @@
     "typescript": "^5.4.4"
   },
   "dependencies": {
-    "@tauri-apps/plugin-shell": "^2.0.0-rc.1",
+    "@tauri-apps/plugin-shell": "^2.0.0",
     "dompurify": "^3.1.6",
     "lodash-es": "^4.17.21",
     "svelte-gestures": "^5.0.4",
