@@ -7,7 +7,6 @@ on:
 jobs:
   release-tauri-app-linux:
     permissions: write-all
-    environment: Relay Release
     outputs:
       releaseId: ${{ steps.build-app.outputs.releaseId }}
 
@@ -119,7 +118,6 @@ jobs:
 
   release-tauri-app-windows:
     permissions: write-all
-    environment: Relay Release
 
     runs-on: windows-latest
     steps:
@@ -162,7 +160,6 @@ jobs:
 
   release-tauri-app-macos:
     permissions: write-all
-    environment: Relay Release
 
     strategy:
       fail-fast: false
