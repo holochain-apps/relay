@@ -1,0 +1,59 @@
+
+name: "release-tauri-app"
+on:
+  push:
+    tags:
+      - 'happ-v[0-9]+.[0-9]+.[0-9]+'
+      - 'happ-v[0-9]+.[0-9]+.[0-9]+-[a-z-]+.[0-9]+'
+
+jobs:
+  publish-happ:
+    permissions:
+      contents: write
+    runs-on: ubuntu-22.04
+    outputs:
+      releaseId: ${{ steps.create-release.outputs.id }}
+      appVersion: ${{ steps.version.outputs.APP_VERSION }}
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      # Checks out a copy of your repository on the ubuntu-latest machine
+      - uses: actions/checkout@v3
+
+      - name: Install nix
+        uses: cachix/install-nix-action@v27
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          nix_path: nixpkgs=channel:nixos-24.05
+
+      - uses: cachix/cachix-action@v15
+        with:
+          name: holochain-ci
+
+      - uses: cachix/cachix-action@v15
+        with:
+          name: holochain-open-dev
+
+      - uses: cachix/cachix-action@v15
+        with:
+          name: darksoil-studio
+
+      - name: Install and test
+        run: |
+          nix-store --gc
+          nix develop --no-update-lock-file --accept-flake-config --command bash -c "npm install && npm run build:happ"
+
+      - name: Retrieve version
+        run: |
+          echo "APP_VERSION=$(cat src-tauri/tauri.conf.json | grep -oP '(?<="version": ")[^"]*')" >> $GITHUB_OUTPUT
+        id: version
+
+      - id: create-release
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifacts: "workdir/relay.happ"
+          body: "See assets below to download and install this version."
+          name: Relay v${{ steps.version.outputs.APP_VERSION }}
+          tag: v${{ steps.version.outputs.APP_VERSION }}
+          prerelease: true
+          draft: false

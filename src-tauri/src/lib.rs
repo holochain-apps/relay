@@ -133,6 +133,7 @@ async fn setup(handle: AppHandle) -> anyhow::Result<()> {
                 happ_bundle()?,
                 HashMap::new(),
                 None,
+                None,
                 Some(random_seed),
             )
             .await?;
@@ -170,6 +171,10 @@ fn wan_network_config() -> Option<WANNetworkConfig> {
         Some(WANNetworkConfig {
             signal_url: url2::url2!("{}", SIGNAL_URL),
             bootstrap_url: url2::url2!("{}", BOOTSTRAP_URL),
+            ice_servers_urls: vec![
+                url2::url2!("stun:stun-0.main.infra.holo.host:443"),
+                url2::url2!("stun:stun-1.main.infra.holo.host:443"),
+            ],
         })
     }
 }

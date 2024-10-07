@@ -3,14 +3,14 @@ import i18n from 'sveltekit-i18n';
 const config = ({
   loaders: [
     {
-      locale: 'en',
+      locale: 'ca',
       key: 'common',
       loader: async () => (
         await import('./translations/en/common.json')
       ).default,
     },
     {
-      locale: 'en',
+      locale: 'ca',
       key: 'contacts',
       routes: [/\/contacts(.*)/, /^\/conversations(.*)/], // you can use regexes as well!
       loader: async () => (
@@ -18,7 +18,7 @@ const config = ({
       ).default,
     },
     {
-      locale: 'en',
+      locale: 'ca',
       key: 'conversations',
       routes: [/^\/conversations(.*)/, '/create'], // you can use regexes as well!
       loader: async () => (
@@ -26,7 +26,7 @@ const config = ({
       ).default,
     },
     {
-      locale: 'en',
+      locale: 'ca',
       key: 'create',
       routes: ['/create', /(.*)\/invite/], // you can use regexes as well!
       loader: async () => (
