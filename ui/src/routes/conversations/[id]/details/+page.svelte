@@ -7,9 +7,9 @@
   import Header from '$lib/Header.svelte';
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from '$lib/translations';
-  import { copyToClipboard, handleFileChange, MIN_TITLE_LENGTH } from '$lib/utils';
+  import { copyToClipboard, handleFileChange, isMobile, MIN_TITLE_LENGTH, shareText } from '$lib/utils';
   import type { RelayStore } from '$store/RelayStore';
-  import { Privacy, type Config, type Invitation } from '../../../../types';
+  import { Privacy, type Config } from '../../../../types';
   import Button from '$lib/Button.svelte';
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
@@ -158,6 +158,11 @@
               <SvgIcon icon='copy' size='14' color='%23FD3524' moreClasses='mr-2' />
               {$t('conversations.copy_invite')}
             </button>
+            {#if isMobile()}
+              <button class='rounded-full bg-surface-500 text-secondary-500 font-bold text-xs py-2 px-2 mr-1 flex items-center justify-center' on:click={() => shareText(conversation.publicInviteCode)}>
+                <SvgIcon icon='share' size='14' color='%23FD3524' moreClasses='mr-1' />
+              </button>
+            {/if}
           </li>
         {/if}
         {#if conversation.invitedUnjoined.length > 0}
@@ -170,6 +175,11 @@
                 <SvgIcon icon='copy' size='18' color='%23FD3524' moreClasses='mr-2' />
                 {$t('conversations.copy_invite')}
               </button>
+              {#if isMobile()}
+                <button class='rounded-2xl variant-filled-tertiary font-bold text-sm p-2 px-3 flex items-center justify-center' on:click={() => shareText(conversation.inviteCodeForAgent(contact.publicKeyB64)) }>
+                  <SvgIcon icon='share' size='18' color='%23FD3524' moreClasses='mr-2' />
+                </button>
+              {/if}
             </li>
           {/each}
         {/if}

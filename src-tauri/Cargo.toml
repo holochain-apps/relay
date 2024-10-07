@@ -1,7 +1,7 @@
 [package]
-name = "relayapp"
-version = "0.5.0-beta"
-description = "Relay"
+name = "volla_messages"
+version = "0.7.0-beta-rc.0"
+description = "Volla Messages"
 authors = ["Tibet Sprague", "Eric Harris-Braun"]
 license = ""
 repository = ""
@@ -15,23 +15,25 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "2.0.0-rc", default-features = false , features = [] }
+tauri-build = { version = "2.0.0", default-features = false , features = [] }
 
 [dependencies]
-tauri = { version = "2.0.0-rc", features = [] }
-tauri-plugin-holochain = { git = "https://github.com/darksoil-studio/p2p-shipyard", branch = "main" }
+tauri = { version = "2.0.0", features = [] }
+tauri-plugin-holochain = { git = "https://github.com/darksoil-studio/p2p-shipyard", branch = "next" }
 holochain_types = { version = "0.3.2" }
 lair_keystore = { version = "0.4.0" }
 
 holochain_client = { version = "0.5.0" }
 
 log = "0.4"
-tauri-plugin-log = "2.0.0-rc"
-tauri-plugin-notification = "2.0.0-rc"
-tauri-plugin-clipboard-manager = "2.0.0-rc"
+tauri-plugin-log = "2.0.0"
+tauri-plugin-notification = "2.0.0"
+tauri-plugin-clipboard-manager = "2.0.0"
+tauri-plugin-sharesheet = { git = "https://github.com/buildyourwebapp/tauri-plugin-sharesheet" }
 url2 = "0.0.6"
 app_dirs2 = "2.5.5"
 tempdir = "0.3.7"
 anyhow = "1"
 tauri-plugin-shell = "2.0.0-rc"
 serde_json = "1"
+holochain = { git ="https://github.com/holochain/holochain",branch="develop-0.3" }

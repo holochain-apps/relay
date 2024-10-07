@@ -1,7 +1,7 @@
 {
-  "productName": "relay",
-  "version": "0.6.1-beta",
-  "identifier": "org.holochain.relay",
+  "productName": "Volla Messages",
+  "version": "0.7.0-beta-rc.0",
+  "identifier": "org.holochain.messages",
   "build": {
     "beforeBuildCommand": "npm run build -w ui",
     "devUrl": "http://localhost:1420",

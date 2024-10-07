@@ -42,7 +42,7 @@
   <h1 class='h1 mb-10'>{$t('common.select_an_avatar')}</h1>
 
   <!-- Hidden file input -->
-  <input type="file" accept="image/jpeg, image/png, image/gif" capture="user" id="avatarInput" class='hidden'
+  <input type="file" accept="image/*" id="avatarInput" class='hidden'
     on:change={(event) => handleFileChange(event,
       (imageData) => {
         UserStore.update(current => {

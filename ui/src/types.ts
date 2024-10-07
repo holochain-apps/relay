@@ -52,7 +52,6 @@ export enum Privacy {
 // DNA modifier properties for a conversation
 export interface Properties {
   created: number,
-  name: string;
   privacy: Privacy;
   progenitor: AgentPubKeyB64;
 }
@@ -86,6 +85,13 @@ export interface Conversation {
   progenitor: AgentPubKey;
   messages: Messages;
   agentProfiles: { [key: AgentPubKeyB64]: Profile };
+}
+
+export interface LocalConversationData {
+  archived?: boolean;
+  invitedContactKeys: string[];
+  open?: boolean;
+  unread?: boolean;
 }
 
 export interface MembraneProofData {

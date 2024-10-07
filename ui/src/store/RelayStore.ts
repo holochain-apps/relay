@@ -7,7 +7,7 @@ import { ConversationStore } from './ConversationStore';
 import { RelayClient } from '$store/RelayClient'
 import type { Contact, Image, ConversationCellAndConfig, Invitation, Message, Properties, RelaySignal } from '../types';
 import { Privacy } from '../types';
-import { enqueueNotification } from '$lib/utils';
+import { enqueueNotification, isMobile } from '$lib/utils';
 
 export class RelayStore {
   public contacts: Writable<ContactStore[]>;
@@ -56,9 +56,16 @@ export class RelayStore {
 
         if (conversation && message.authorKey !== this.client.myPubKeyB64) {
           const sender = conversation.allMembers.find(m => m.publicKeyB64 == message.authorKey)
-          enqueueNotification(`Message from ${sender ? sender.firstName+" "+ sender.lastName : message.authorKey}`, message.content.length > 50 ? message.content.slice(0,50)+"...":  message.content)
           conversation.addMessage(message)
-          conversation.loadImagesForMessage(message) // async load images
+          if (!conversation.archived) {
+            const msgShort = message.content.length > 125 ? message.content.slice(0,50)+"...":  message.content
+            if (isMobile()) {
+              enqueueNotification(`${sender ? sender.firstName+" "+ sender.lastName : message.authorKey}: ${msgShort}`, message.content)
+            } else {
+              enqueueNotification(`Message from ${sender ? sender.firstName+" "+ sender.lastName : message.authorKey}`, message.content)
+            }
+            conversation.loadImagesForMessage(message) // async load images
+          }
         }
         // let messageList = this.expectations.get(message.from)
         // if (messageList) {
@@ -95,6 +102,7 @@ export class RelayStore {
     const privacy = properties.privacy
     const seed = convoCellAndConfig.cell.dna_modifiers.network_seed
     const newConversation = new ConversationStore(this, seed, convoCellAndConfig.cell.cell_id, convoCellAndConfig.config, properties.created, privacy, progenitor )
+
     const unsub = newConversation.lastMessage.subscribe(() => {
       // Trigger update to conversations store whenever lastMessage changes
       this.conversations.update((convs) => {
@@ -102,25 +110,41 @@ export class RelayStore {
       });
     });
 
+    const unsub2 = newConversation.localDataStore.subscribe(() => {
+      // Trigger update to conversations store whenever localDataStore changes
+      this.conversations.update((convs) => {
+        return [...convs]; // Force reactivity by returning a new array reference
+      });
+    });
+
     this.conversations.update(conversations => [...conversations, newConversation])
+
     await newConversation.initialize()
     return newConversation
   }
 
-  async createConversation(name: string, image: string, privacy: Privacy, initialContacts: Contact[] = []) {
-    if (!this.client) return;
-    const convoCellAndConfig = await this.client.createConversation(name, image, privacy)
-    const conversationStore = await this._addConversation(convoCellAndConfig)
-    if (conversationStore && initialContacts.length > 0) {
-      conversationStore.addContacts(initialContacts)
+  async createConversation(title: string, image: string, privacy: Privacy, initialContacts: Contact[] = []) {
+    if (!this.client) return null;
+    const convoCellAndConfig = await this.client.createConversation(title, image, privacy)
+    if (convoCellAndConfig) {
+      const conversationStore = await this._addConversation(convoCellAndConfig)
+      if (conversationStore) {
+        if (initialContacts.length > 0) {
+          conversationStore.addContacts(initialContacts)
+        }
+        return conversationStore
+      }
     }
-    return conversationStore
+    return null
   }
 
   async joinConversation(invitation: Invitation) {
-    if (!this.client) return;
+    if (!this.client) return null;
     const convoCellAndConfig = await this.client.joinConversation(invitation)
-    return await this._addConversation(convoCellAndConfig)
+    if (convoCellAndConfig) {
+      return await this._addConversation(convoCellAndConfig)
+    }
+    return null
   }
 
   async inviteAgentToConversation(conversationId: string, agent: AgentPubKey, role: number = 0) {
@@ -167,7 +191,7 @@ export class RelayStore {
     const contactResult = await this.client.createContact(contact)
     if (contactResult) {
       // Immediately add a conversation with the new contact, unless you already have one with them
-      let conversation = this.conversationsData.find(c => c.privacy === Privacy.Private && c.allMembers.every(m => m.publicKeyB64 === contact.publicKeyB64))
+      let conversation = this.conversationsData.find(c => c.privacy === Privacy.Private && c.allMembers.every(m => m.publicKeyB64 === contact.publicKeyB64)) || null
       if (!conversation) {
         conversation = await this.createConversation(contact.firstName + " " + contact.lastName, '', Privacy.Private, [contact])
       }
@@ -175,7 +199,6 @@ export class RelayStore {
       this.contacts.update(contacts => [...contacts, contactStore])
       return contactStore
     }
-    return false
   }
 
   async updateContact(contact: Contact) {

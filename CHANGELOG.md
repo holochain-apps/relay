@@ -1,10 +1,14 @@
 # Changelog
-All notable changes to Relay will be documented in this file.
+All notable changes to Volla Messages will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+## [0.7.0-beta-rc.0] - 2024-10-04
+
+- Update name and icons, and splash screen
 
 ## [0.6.1-beta] - 2024-09-06
 
@@ -55,7 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.5.1-beta] - 2024-08-17
 
 ### Added
-- Localize/Internationalize Relay! Start with englsh and german locales, pending the actual German translations.
+- Localize/Internationalize  Start with english and german locales, pending the actual German translations.
 
 ### Changed
 - Display name and avatar from a local contact first, then from the agent's profile if there is no contact for them

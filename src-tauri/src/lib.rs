@@ -40,7 +40,7 @@ async fn close_splashscreen(window: Window) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -52,16 +52,26 @@ pub fn run() {
         .plugin(tauri_plugin_holochain::async_init(
             vec_to_locked(vec![]).expect("Can't build passphrase"),
             HolochainPluginConfig::new(holochain_dir(), wan_network_config()),
-        ))
+        ));
+    #[cfg(mobile)]
+    {
+        builder = builder.plugin(tauri_plugin_sharesheet::init());
+    }
+    builder
         .setup(|app| {
             let handle = app.handle().clone();
+            let handle_fail: AppHandle = app.handle().clone();
+            app.handle()
+                .listen("holochain://setup-failed", move |_event| {
+                    handle_fail.exit(1);
+                });
             app.handle()
                 .listen("holochain://setup-completed", move |_event| {
                     let handle = handle.clone();
                     tauri::async_runtime::spawn(async move {
                         setup(handle.clone()).await.expect("Failed to setup");
 
-                        handle
+                        let mut window = handle
                             .holochain()
                             .expect("Failed to get holochain")
                             .main_window_builder(
@@ -71,9 +81,13 @@ pub fn run() {
                                 None,
                             )
                             .await
-                            .expect("Failed to build window")
-                            .build()
-                            .expect("Failed to open main window");
+                            .expect("Failed to build window");
+                        #[cfg(desktop)]
+                        {
+                            window = window.title(String::from("Volla Messages"))
+                        };
+
+                        window.build().expect("Failed to open main window");
                         #[cfg(desktop)]
                         {
                             // After it's done, close the splashscreen and display the main window
