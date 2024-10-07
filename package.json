@@ -2,9 +2,7 @@
   "name": "volla_messages",
   "version": "0.7.0-beta-rc.0",
   "private": true,
-  "workspaces": [
-    "ui"
-  ],
+  "workspaces": ["ui"],
   "scripts": {
     "start": "npm run build:happ && AGENTS=2 npm run network",
     "spin": "AGENTS=2 npm run spin-network",
@@ -32,7 +30,7 @@
     "@holochain-playground/cli": "^0.2.0",
     "@holochain/hc-spin": "^0.400.0-dev.3",
     "@rollup/plugin-typescript": "^8.0.0",
-    "@tauri-apps/cli": "^2.0.0",
+    "@tauri-apps/cli": "^2.0.1",
     "@tsconfig/svelte": "^5.0.4",
     "@types/dompurify": "^3.0.5",
     "@types/lodash-es": "^4.17.12",

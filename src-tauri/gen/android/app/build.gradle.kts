@@ -30,7 +30,7 @@ android {
     namespace = "org.holochain.relay"
     defaultConfig {
         manifestPlaceholders["usesCleartextTraffic"] = "true"
-        applicationId = "org.holochain.relay"
+        applicationId = "org.holochain.messages"
         minSdk = 24
         targetSdk = 34
         versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()

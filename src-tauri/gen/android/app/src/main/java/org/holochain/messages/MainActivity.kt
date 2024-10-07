@@ -1,3 +1,3 @@
-package org.holochain.relay
+package org.holochain.messages
 
 class MainActivity : TauriActivity()

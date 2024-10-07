@@ -51,6 +51,7 @@ jobs:
       - name: Install and prepare
         run: |
           npm install
+          npm run setup:happ-release
 
       - id: build-app
         uses: tauri-apps/tauri-action@v0
@@ -97,7 +98,7 @@ jobs:
 
       - name: Install and prepare
         run: |
-          nix develop --no-update-lock-file --command npm install
+          nix develop --no-update-lock-file --command npm install && npm run setup:happ-release
 
       - name: setup Android signing
         run: |
@@ -147,6 +148,7 @@ jobs:
       - name: Install and prepare
         run: |
           npm install
+          npm run setup:happ-release
 
       - name: build the app
         uses: tauri-apps/tauri-action@v0
@@ -196,7 +198,7 @@ jobs:
       - name: Install and prepare
         run: |
           npm install
-          npm run build -w ui
+          npm run setup:happ-release
 
       - name: build the app
         uses: tauri-apps/tauri-action@v0
