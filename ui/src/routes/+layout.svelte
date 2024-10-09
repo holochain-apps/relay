@@ -15,9 +15,9 @@
 	//	export let data: LayoutData;
 
 	const appId = import.meta.env.VITE_APP_ID ? import.meta.env.VITE_APP_ID : 'relay'
-	const appPort = import.meta.env.VITE_APP_PORT ? import.meta.env.VITE_APP_PORT : 8888
+	const appPort = import.meta.env.VITE_APP_PORT ? import.meta.env.VITE_APP_PORT : undefined
 	const adminPort = import.meta.env.VITE_ADMIN_PORT
-	const url = appPort ? new URL(`ws://localhost:${appPort}`) : undefined;
+	const url = appPort ? new URL(`ws://localhost:${appPort}`) : undefined
 
 	let client: AppWebsocket
 	let relayClient: RelayClient

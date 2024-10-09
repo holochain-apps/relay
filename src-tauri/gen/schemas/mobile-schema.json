@@ -2463,6 +2463,34 @@
           ]
         },
         {
+          "description": "holochain-foreground-service-consumer:allow-create-app-websocket -> Enables the create_app_websocket command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:allow-create-app-websocket"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:allow-disable-app -> Enables the disable_app command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:allow-disable-app"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:allow-enable-app -> Enables the enable_app command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:allow-enable-app"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:allow-get-admin-port -> Enables the get_admin_port command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:allow-get-admin-port"
+          ]
+        },
+        {
           "description": "holochain-foreground-service-consumer:allow-install-app -> Enables the install_app command without any pre-configured scope.",
           "type": "string",
           "enum": [
@@ -2477,6 +2505,34 @@
           ]
         },
         {
+          "description": "holochain-foreground-service-consumer:allow-launch -> Enables the launch command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:allow-launch"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:allow-list-installed-apps -> Enables the list_installed_apps command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:allow-list-installed-apps"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:allow-request-install-app -> Enables the request_install_app command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:allow-request-install-app"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:allow-shutdown -> Enables the shutdown command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:allow-shutdown"
+          ]
+        },
+        {
           "description": "holochain-foreground-service-consumer:allow-sign-zome-call -> Enables the sign_zome_call command without any pre-configured scope.",
           "type": "string",
           "enum": [
@@ -2484,10 +2540,59 @@
           ]
         },
         {
+          "description": "holochain-foreground-service-consumer:allow-start -> Enables the start command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:allow-start"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:allow-stop -> Enables the stop command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:allow-stop"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:allow-uninstall-app -> Enables the uninstall_app command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:allow-uninstall-app"
+          ]
+        },
+        {
           "description": "holochain-foreground-service-consumer:deny-app-websocket-auth -> Denies the app_websocket_auth command without any pre-configured scope.",
           "type": "string",
           "enum": [
             "holochain-foreground-service-consumer:deny-app-websocket-auth"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:deny-create-app-websocket -> Denies the create_app_websocket command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:deny-create-app-websocket"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:deny-disable-app -> Denies the disable_app command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:deny-disable-app"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:deny-enable-app -> Denies the enable_app command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:deny-enable-app"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:deny-get-admin-port -> Denies the get_admin_port command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:deny-get-admin-port"
           ]
         },
         {
@@ -2505,10 +2610,59 @@
           ]
         },
         {
+          "description": "holochain-foreground-service-consumer:deny-launch -> Denies the launch command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:deny-launch"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:deny-list-installed-apps -> Denies the list_installed_apps command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:deny-list-installed-apps"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:deny-request-install-app -> Denies the request_install_app command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:deny-request-install-app"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:deny-shutdown -> Denies the shutdown command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:deny-shutdown"
+          ]
+        },
+        {
           "description": "holochain-foreground-service-consumer:deny-sign-zome-call -> Denies the sign_zome_call command without any pre-configured scope.",
           "type": "string",
           "enum": [
             "holochain-foreground-service-consumer:deny-sign-zome-call"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:deny-start -> Denies the start command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:deny-start"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:deny-stop -> Denies the stop command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:deny-stop"
+          ]
+        },
+        {
+          "description": "holochain-foreground-service-consumer:deny-uninstall-app -> Denies the uninstall_app command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "holochain-foreground-service-consumer:deny-uninstall-app"
           ]
         },
         {

@@ -58,15 +58,6 @@ pub fn run() {
         builder = builder
             .plugin(tauri_plugin_sharesheet::init())
             .plugin(tauri_plugin_holochain_foreground_service_consumer::init())
-            .setup(|app| {
-                let window_builder = WebviewWindowBuilder::new(
-                    app.handle(),
-                    "Relay".to_string(),
-                    WebviewUrl::App("".into()),
-                ).build();
-
-                Ok(())
-            })
     }
 
     #[cfg(desktop)]

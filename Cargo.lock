@@ -10111,7 +10111,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-holochain-foreground-service-consumer"
 version = "0.1.0"
-source = "git+https://github.com/mattyg/p2p-shipyard.git?branch=feat/uniffi-bindings-take-2#00a50b3e490df3e6d0dc85f4ffab07ca82c7a1a8"
+source = "git+https://github.com/mattyg/p2p-shipyard.git?branch=feat/uniffi-bindings-take-2#c4a39976b4660e5e32bf8838a8e759d93a4e15f5"
 dependencies = [
  "serde",
  "tauri",
