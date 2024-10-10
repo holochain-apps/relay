@@ -181,7 +181,7 @@ fn holochain_dir() -> PathBuf {
             app_dirs2::app_root(
                 app_dirs2::AppDataType::UserCache,
                 &app_dirs2::AppInfo {
-                    name: "{{app_name}}",
+                    name: "volla-messages",
                     author: std::env!("CARGO_PKG_AUTHORS"),
                 },
             )
@@ -190,7 +190,7 @@ fn holochain_dir() -> PathBuf {
         #[cfg(not(target_os = "android"))]
         {
             let tmp_dir =
-                tempdir::TempDir::new("relay").expect("Could not create temporary directory");
+                tempdir::TempDir::new("volla-messages").expect("Could not create temporary directory");
 
             // Convert `tmp_dir` into a `Path`, destroying the `TempDir`
             // without deleting the directory.
@@ -201,12 +201,13 @@ fn holochain_dir() -> PathBuf {
         app_dirs2::app_root(
             app_dirs2::AppDataType::UserData,
             &app_dirs2::AppInfo {
-                name: "relay",
+                name: "volla-messages",
                 author: std::env!("CARGO_PKG_AUTHORS"),
             },
         )
         .expect("Could not get app root")
         .join("holochain")
+        .join(get_version())
     }
 }
 
@@ -225,4 +226,19 @@ fn vec_to_locked(mut pass_tmp: Vec<u8>) -> std::io::Result<BufRead> {
             Ok(p.to_read())
         }
     }
+}
+
+fn get_version() -> String {
+    let semver = std::env!("CARGO_PKG_VERSION");
+
+    if semver.starts_with("0.0.") {
+        return semver.to_string();
+    }
+
+    if semver.starts_with("0.") {
+        let v: Vec<&str> = semver.split(".").collect();
+        return format!("{}.{}", v[0], v[1]);
+    }
+    let v: Vec<&str> = semver.split(".").collect();
+    return format!("{}", v[0]);
 }
