@@ -8,7 +8,8 @@ use tauri_plugin_holochain::{HolochainExt, HolochainPluginConfig, WANNetworkConf
 
 const APP_ID: &'static str = "relay";
 const SIGNAL_URL: &'static str = "wss://sbd.holo.host";
-const BOOTSTRAP_URL: &'static str = "https://bootstrap.holo.host";
+// const BOOTSTRAP_URL: &'static str = "https://bootstrap.holo.host";
+const BOOTSTRAP_URL: &'static str = "https://bootstrap-0.infra.holochain.org";
 
 pub fn happ_bundle() -> anyhow::Result<AppBundle> {
     let bytes = include_bytes!("../../workdir/relay.happ");
