@@ -29,6 +29,15 @@ Volla Messages is a Holochain application deployed using [p2pShipyard](https://d
 `npm run tauri android build`
 `adb -s device install /path/to/relay.apk`
 
+### Testing with a .happ release 
+
+To test with the released version of the `.happ`, run:
+
+`nix develop`
+`npm run setup:happ-release`
+`AGENTS=2 npm run network`
+
+The `.happ` release that is downloaded with this script can be changed in the `setup:happ-release` script in the [package.json](./package.json).
 
 ## License
 

@@ -7,8 +7,9 @@ use tauri::{AppHandle, Listener};
 use tauri_plugin_holochain::{HolochainExt, HolochainPluginConfig, WANNetworkConfig};
 
 const APP_ID: &'static str = "relay";
-const SIGNAL_URL: &'static str = "wss://signal.holo.host";
-const BOOTSTRAP_URL: &'static str = "https://bootstrap.holo.host";
+const SIGNAL_URL: &'static str = "wss://sbd.holo.host";
+// const BOOTSTRAP_URL: &'static str = "https://bootstrap.holo.host";
+const BOOTSTRAP_URL: &'static str = "https://bootstrap-0.infra.holochain.org";
 
 pub fn happ_bundle() -> anyhow::Result<AppBundle> {
     let bytes = include_bytes!("../../workdir/relay.happ");
@@ -51,10 +52,7 @@ pub fn run() {
         )
         .plugin(tauri_plugin_holochain::async_init(
             vec_to_locked(vec![]).expect("Can't build passphrase"),
-            HolochainPluginConfig {
-                wan_network_config: wan_network_config(),
-                holochain_dir: holochain_dir(),
-            },
+            HolochainPluginConfig::new(holochain_dir(), wan_network_config()),
         ));
     #[cfg(mobile)]
     {
@@ -91,6 +89,12 @@ pub fn run() {
                         };
 
                         window.build().expect("Failed to open main window");
+
+                        #[cfg(target_os = "linux")]
+                        {
+                            // Workaround https://github.com/tauri-apps/tauri/issues/11171
+                            std::thread::sleep_ms(2000);
+                        }
                         #[cfg(desktop)]
                         {
                             // After it's done, close the splashscreen and display the main window
@@ -109,8 +113,8 @@ pub fn run() {
 
 // Very simple setup for now:
 // - On app start, list installed apps:
-//   - If there are no apps installed, this is the first time the app is opened: install our hApp
-//   - If there **are** apps:
+//   - If our hApp is not installed, this is the first time the app is opened: install our hApp
+//   - If our hApp **is** installed:
 //     - Check if it's necessary to update the coordinators for our hApp
 //       - And do so if it is
 //
@@ -123,7 +127,12 @@ async fn setup(handle: AppHandle) -> anyhow::Result<()> {
         .await
         .map_err(|err| tauri_plugin_holochain::Error::ConductorApiError(err))?;
 
-    if installed_apps.len() == 0 {
+    // DeepKey comes preinstalled as the first app
+    if installed_apps
+        .iter()
+        .find(|app| app.installed_app_id.as_str().eq(APP_ID))
+        .is_none()
+    {
         // we do this because we don't want to join everybody into the same dht!
         let random_seed = format!(
             "{}",
@@ -136,6 +145,7 @@ async fn setup(handle: AppHandle) -> anyhow::Result<()> {
                 happ_bundle()?,
                 HashMap::new(),
                 None,
+                None,
                 Some(random_seed),
             )
             .await?;
@@ -145,23 +155,6 @@ async fn setup(handle: AppHandle) -> anyhow::Result<()> {
             .update_app_if_necessary(String::from(APP_ID), happ_bundle()?)
             .await?;
     }
-    // After set up we can be sure our app is installed and up to date, so we can just open it
-    // handle
-    //     .holochain()?
-    //     .main_window_builder(
-    //         String::from("main"),
-    //         false,
-    //         Some(String::from("relay")),
-    //         None,
-    //     )
-    //     .await?
-    //     .build()?;
-
-    // Alternatively, you could just send an event that the splashscreen window listens to,
-    // and then show a button that invokes the "close_splashcreen"
-    // If so then move the code above "main_window_builder" to the "close_splashscreen" command
-    // The event could be sent like this:
-    // handle.emit("setup-completed", ())?;
     Ok(())
 }
 
@@ -173,6 +166,10 @@ fn wan_network_config() -> Option<WANNetworkConfig> {
         Some(WANNetworkConfig {
             signal_url: url2::url2!("{}", SIGNAL_URL),
             bootstrap_url: url2::url2!("{}", BOOTSTRAP_URL),
+            ice_servers_urls: vec![
+                url2::url2!("stun:stun-0.main.infra.holo.host:443"),
+                url2::url2!("stun:stun-1.main.infra.holo.host:443"),
+            ],
         })
     }
 }
@@ -184,7 +181,7 @@ fn holochain_dir() -> PathBuf {
             app_dirs2::app_root(
                 app_dirs2::AppDataType::UserCache,
                 &app_dirs2::AppInfo {
-                    name: "{{app_name}}",
+                    name: "volla-messages",
                     author: std::env!("CARGO_PKG_AUTHORS"),
                 },
             )
@@ -193,7 +190,7 @@ fn holochain_dir() -> PathBuf {
         #[cfg(not(target_os = "android"))]
         {
             let tmp_dir =
-                tempdir::TempDir::new("relay").expect("Could not create temporary directory");
+                tempdir::TempDir::new("volla-messages").expect("Could not create temporary directory");
 
             // Convert `tmp_dir` into a `Path`, destroying the `TempDir`
             // without deleting the directory.
@@ -204,12 +201,13 @@ fn holochain_dir() -> PathBuf {
         app_dirs2::app_root(
             app_dirs2::AppDataType::UserData,
             &app_dirs2::AppInfo {
-                name: "relay",
+                name: "volla-messages",
                 author: std::env!("CARGO_PKG_AUTHORS"),
             },
         )
         .expect("Could not get app root")
         .join("holochain")
+        .join(get_version())
     }
 }
 
@@ -228,4 +226,19 @@ fn vec_to_locked(mut pass_tmp: Vec<u8>) -> std::io::Result<BufRead> {
             Ok(p.to_read())
         }
     }
+}
+
+fn get_version() -> String {
+    let semver = std::env!("CARGO_PKG_VERSION");
+
+    if semver.starts_with("0.0.") {
+        return semver.to_string();
+    }
+
+    if semver.starts_with("0.") {
+        let v: Vec<&str> = semver.split(".").collect();
+        return format!("{}.{}", v[0], v[1]);
+    }
+    let v: Vec<&str> = semver.split(".").collect();
+    return format!("{}", v[0]);
 }

@@ -1,7 +1,7 @@
 {
   "productName": "Volla Messages",
   "version": "0.7.0-beta-rc.0",
-  "identifier": "org.holochain.messages",
+  "identifier": "com.volla.messages",
   "build": {
     "beforeBuildCommand": "npm run build -w ui",
     "devUrl": "http://localhost:1420",
