@@ -27,10 +27,10 @@ android {
         }
     }
     compileSdk = 34
-    namespace = "org.holochain.messages"
+    namespace = "com.volla.messages"
     defaultConfig {
         manifestPlaceholders["usesCleartextTraffic"] = "true"
-        applicationId = "org.holochain.messages"
+        applicationId = "com.volla.messages"
         minSdk = 24
         targetSdk = 34
         versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()

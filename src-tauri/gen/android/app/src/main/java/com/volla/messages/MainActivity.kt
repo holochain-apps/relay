@@ -1,3 +1,3 @@
-package org.holochain.messages
+package com.volla.messages
 
 class MainActivity : TauriActivity()
