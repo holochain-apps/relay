@@ -44,7 +44,7 @@
 				await adminWebsocket.authorizeSigningCredentials(cellIds[0])
 			}
 			console.log("appPort and Id is", appPort, appId)
-			const params: AppWebsocketConnectionOptions = {url: new URL(url)}
+			const params: AppWebsocketConnectionOptions = {url: new URL(url), defaultTimeout: 60000}
 			if (tokenResp) params.token = tokenResp.token
 			client = await AppWebsocket.connect(params)
 			let profilesClient = new ProfilesClient(client, appId);
