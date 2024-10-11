@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.7.0-beta-rc.1] - 2024-10-11
+
+- Update package name
+- fix translations
+- remove dpki
+
 ## [0.7.0-beta-rc.0] - 2024-10-04
 
 - Update name and icons, and splash screen
