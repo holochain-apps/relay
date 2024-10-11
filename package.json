@@ -1,6 +1,6 @@
 {
   "name": "volla_messages",
-  "version": "0.7.0-beta-rc.0",
+  "version": "0.7.0-beta-rc.1",
   "private": true,
   "workspaces": [
     "ui"
@@ -31,7 +31,7 @@
     "@holochain-playground/cli": "^0.2.0",
     "@holochain/hc-spin": "^0.400.0-dev.3",
     "@rollup/plugin-typescript": "^8.0.0",
-    "@tauri-apps/cli": "^2.0.0-rc.16",
+    "@tauri-apps/cli": "^2.0.2",
     "@tsconfig/svelte": "^5.0.4",
     "@types/dompurify": "^3.0.5",
     "@types/lodash-es": "^4.17.12",
@@ -51,7 +51,7 @@
     "typescript": "^5.4.4"
   },
   "dependencies": {
-    "@tauri-apps/plugin-shell": "^2.0.0-rc.1",
+    "@tauri-apps/plugin-shell": "^2.0.0",
     "dompurify": "^3.1.6",
     "lodash-es": "^4.17.21",
     "svelte-gestures": "^5.0.4",

@@ -6,7 +6,7 @@ use std::{collections::HashMap, time::SystemTime};
 use tauri::{AppHandle, Listener};
 use tauri_plugin_holochain::{HolochainExt, HolochainPluginConfig, WANNetworkConfig};
 
-const APP_ID: &'static str = "relay";
+const APP_ID: &'static str = "volla-messages";
 const SIGNAL_URL: &'static str = "wss://signal.holo.host";
 const BOOTSTRAP_URL: &'static str = "https://bootstrap.holo.host";
 
@@ -17,26 +17,6 @@ pub fn happ_bundle() -> anyhow::Result<AppBundle> {
 }
 
 use tauri::{Manager, Window};
-// Create the command:
-// This command must be async so that it doesn't run on the main thread.
-#[tauri::command]
-async fn close_splashscreen(window: Window) {
-    #[cfg(desktop)]
-    {
-        // Close splashscreen
-        window
-            .get_webview_window("splashscreen")
-            .expect("no window labeled 'splashscreen' found")
-            .close()
-            .unwrap();
-        // Show main window
-        window
-            .get_webview_window("main")
-            .expect("no window labeled 'main' found")
-            .show()
-            .unwrap();
-    }
-}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -54,6 +34,7 @@ pub fn run() {
             HolochainPluginConfig {
                 wan_network_config: wan_network_config(),
                 holochain_dir: holochain_dir(),
+                admin_port: None,
             },
         ));
     #[cfg(mobile)]
@@ -109,8 +90,8 @@ pub fn run() {
 
 // Very simple setup for now:
 // - On app start, list installed apps:
-//   - If there are no apps installed, this is the first time the app is opened: install our hApp
-//   - If there **are** apps:
+//   - If our hApp is not installed, this is the first time the app is opened: install our hApp
+//   - If our hApp **is** installed:
 //     - Check if it's necessary to update the coordinators for our hApp
 //       - And do so if it is
 //
@@ -145,23 +126,6 @@ async fn setup(handle: AppHandle) -> anyhow::Result<()> {
             .update_app_if_necessary(String::from(APP_ID), happ_bundle()?)
             .await?;
     }
-    // After set up we can be sure our app is installed and up to date, so we can just open it
-    // handle
-    //     .holochain()?
-    //     .main_window_builder(
-    //         String::from("main"),
-    //         false,
-    //         Some(String::from("relay")),
-    //         None,
-    //     )
-    //     .await?
-    //     .build()?;
-
-    // Alternatively, you could just send an event that the splashscreen window listens to,
-    // and then show a button that invokes the "close_splashcreen"
-    // If so then move the code above "main_window_builder" to the "close_splashscreen" command
-    // The event could be sent like this:
-    // handle.emit("setup-completed", ())?;
     Ok(())
 }
 
@@ -184,7 +148,7 @@ fn holochain_dir() -> PathBuf {
             app_dirs2::app_root(
                 app_dirs2::AppDataType::UserCache,
                 &app_dirs2::AppInfo {
-                    name: "{{app_name}}",
+                    name: APP_ID,
                     author: std::env!("CARGO_PKG_AUTHORS"),
                 },
             )
@@ -193,7 +157,7 @@ fn holochain_dir() -> PathBuf {
         #[cfg(not(target_os = "android"))]
         {
             let tmp_dir =
-                tempdir::TempDir::new("relay").expect("Could not create temporary directory");
+                tempdir::TempDir::new(APP_ID).expect("Could not create temporary directory");
 
             // Convert `tmp_dir` into a `Path`, destroying the `TempDir`
             // without deleting the directory.
@@ -204,12 +168,13 @@ fn holochain_dir() -> PathBuf {
         app_dirs2::app_root(
             app_dirs2::AppDataType::UserData,
             &app_dirs2::AppInfo {
-                name: "relay",
+                name: APP_ID,
                 author: std::env!("CARGO_PKG_AUTHORS"),
             },
         )
         .expect("Could not get app root")
         .join("holochain")
+        .join(get_version())
     }
 }
 
@@ -228,4 +193,19 @@ fn vec_to_locked(mut pass_tmp: Vec<u8>) -> std::io::Result<BufRead> {
             Ok(p.to_read())
         }
     }
+}
+
+fn get_version() -> String {
+    let semver = std::env!("CARGO_PKG_VERSION");
+
+    if semver.starts_with("0.0.") {
+        return semver.to_string();
+    }
+
+    if semver.starts_with("0.") {
+        let v: Vec<&str> = semver.split(".").collect();
+        return format!("{}.{}", v[0], v[1]);
+    }
+    let v: Vec<&str> = semver.split(".").collect();
+    return format!("{}", v[0]);
 }

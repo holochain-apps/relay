@@ -31,16 +31,9 @@
 		document.documentElement.style.setProperty('--app-height', `${appHeight}px`);
   }
 
-	document.addEventListener('DOMContentLoaded', () => {
-	// This will wait for the window to load, but you could
-	// run this function on whatever trigger you want
-	//invoke('close_splashscreen')
-	})
-
 	onMount(() => {
 		async function initHolochain() {
 			// console.log("FISH", window.__TAURI__)
-			 //await invoke('close_splashscreen')
 
 			let tokenResp
 			if (adminPort) {
