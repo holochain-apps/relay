@@ -1,9 +1,11 @@
 {
+  "app_name": "Volla Messages",
   "cancel": "Afbryd",
   "connecting_to_holochain": "Forbinder til Holochain...",
   "copy": "KOPIÉR",
   "share": "DEL",
   "copy_your_contact_code": "Kopiér din kontaktkode",
+  "share_your_contact_code": "Del din kontaktkode",
   "create_an_account": "Opret konto",
   "done": "Klar",
   "first": "Fornavn",
@@ -21,7 +23,7 @@
   "tagline": "P2P. Krypteret. Sikker.",
   "use_invite_code": "Indtast kode",
   "welcome": "Velkommen",
-  "welcome_text_1": "Relay deler data kun med de personer, du konverserer med.",
+  "welcome_text_1": "Volla Messages deler data kun med de personer, du konverserer med.",
   "welcome_text_2": "Privat, krypteret og sikret med nøgler, som kun du kontrollerer.",
   "what_is_your_name": "Hvad hedder du?"
 }
