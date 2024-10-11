@@ -4,6 +4,8 @@ use std::path::PathBuf;
 use std::time::UNIX_EPOCH;
 use std::{collections::HashMap, time::SystemTime};
 use tauri::{AppHandle, Listener};
+#[cfg(desktop)]
+use tauri::{Manager, Window};
 use tauri_plugin_holochain::{HolochainExt, HolochainPluginConfig, WANNetworkConfig};
 
 const APP_ID: &'static str = "volla-messages";
@@ -15,8 +17,6 @@ pub fn happ_bundle() -> anyhow::Result<AppBundle> {
     let bundle = AppBundle::decode(bytes)?;
     Ok(bundle)
 }
-
-use tauri::{Manager, Window};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -55,6 +55,7 @@ pub fn run() {
                     tauri::async_runtime::spawn(async move {
                         setup(handle.clone()).await.expect("Failed to setup");
 
+                        #[allow(clippy::unused_mut)] 
                         let mut window = handle
                             .holochain()
                             .expect("Failed to get holochain")
