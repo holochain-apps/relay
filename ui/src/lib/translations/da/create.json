@@ -4,5 +4,6 @@
   "open_conversation": "{{existingConversation; true:Open; false:Create;}} konversation",
   "page_title": "Opræt",
   "search_placeholder": "Søg på navn eller kode",
-  "view": "Se"
+  "view": "Se",
+  "unconfirmed": "Ubekræftet"
 }
