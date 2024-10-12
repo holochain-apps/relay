@@ -13,10 +13,10 @@
 
 	//	export let data: LayoutData;
 
-	const appId = import.meta.env.VITE_APP_ID ? import.meta.env.VITE_APP_ID : 'relay'
-	const appPort = import.meta.env.VITE_APP_PORT ? import.meta.env.VITE_APP_PORT : 8888
+	const appId = import.meta.env.VITE_APP_ID ? import.meta.env.VITE_APP_ID : 'volla-messages'
+	const appPort = import.meta.env.VITE_APP_PORT ? import.meta.env.VITE_APP_PORT : undefined;
 	const adminPort = import.meta.env.VITE_ADMIN_PORT
-	const url = `ws://localhost:${appPort}`;
+	const url = appPort ? new URL(`wss://localhost:${appPort}`) : undefined;
 
 	let client: AppWebsocket
 	let relayClient: RelayClient
@@ -44,10 +44,11 @@
 				await adminWebsocket.authorizeSigningCredentials(cellIds[0])
 			}
 			console.log("appPort and Id is", appPort, appId)
-			const params: AppWebsocketConnectionOptions = {url: new URL(url), defaultTimeout: 60000}
+			console.log("__HC_LAUNCHER_ENV__ is", window.__HC_LAUNCHER_ENV__)
+			const params: AppWebsocketConnectionOptions = {url, defaultTimeout: 60000}
 			if (tokenResp) params.token = tokenResp.token
 			client = await AppWebsocket.connect(params)
-			let profilesClient = new ProfilesClient(client, appId);
+			let profilesClient = new ProfilesClient(client, 'relay');
 			profilesStore = new ProfilesStore(profilesClient);
 			relayClient = new RelayClient(client, "relay", profilesStore);
 			relayStore = new RelayStore(relayClient)
