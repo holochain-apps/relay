@@ -2,42 +2,29 @@
   description = "Template for Holochain app development";
 
   inputs = {
-    p2p-shipyard = {
-      url = "github:darksoil-studio/p2p-shipyard";
-      inputs.holochain.follows = "holochain-flake";
-      inputs.versions.follows = "holochain-nix-versions";
-    };
-    holochain-nix-versions.url =
-      "github:holochain/holochain/?dir=versions/0_3";
-    holochain-flake = {
-      url = "github:holochain/holochain";
-      inputs.versions.follows = "holochain-nix-versions";
-    };
+    holonix.url = "github:holochain/holonix/main-0.3";
 
-    nixpkgs.follows = "holochain-flake/nixpkgs";
-    flake-parts.follows = "holochain-flake/flake-parts";
+    nixpkgs.follows = "holonix/nixpkgs";
+    flake-parts.follows = "holonix/flake-parts";
+
+    p2p-shipyard.url = "github:darksoil-studio/p2p-shipyard";
   };
 
-  outputs = inputs@{ flake-parts, holochain-flake, ... }:
-    flake-parts.lib.mkFlake {
-      specialArgs.nonWasmCrates = [ "relay" ];
-      inherit inputs;
-    } {
-      systems = builtins.attrNames holochain-flake.devShells;
-      perSystem = { config, pkgs, system, inputs', ... }: {
+  outputs = inputs:
+    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = builtins.attrNames inputs.holonix.devShells;
+      perSystem = { inputs', config, pkgs, system, ... }: {
         devShells.default = pkgs.mkShell {
-          inputsFrom = [
-            inputs'.p2p-shipyard.devShells.holochainTauriDev
-            holochain-flake.devShells.${system}.holonix
+          inputsFrom = [ 
+            inputs'.p2p-shipyard.devShells.holochainTauriDev 
+            inputs'.holonix.devShells.default
           ];
-          packages = [ pkgs.nodejs-18_x ];
         };
         devShells.androidDev = pkgs.mkShell {
-          inputsFrom = [
-            inputs'.p2p-shipyard.devShells.holochainTauriAndroidDev
-            holochain-flake.devShells.${system}.holonix
+          inputsFrom = [ 
+            inputs'.p2p-shipyard.devShells.holochainTauriAndroidDev 
+            inputs'.holonix.devShells.default
           ];
-          packages = [ pkgs.nodejs-18_x ];
         };
       };
     };
