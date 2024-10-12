@@ -642,7 +642,11 @@
           "holonix",
           "nixpkgs"
         ],
-        "p2p-shipyard": "p2p-shipyard"
+        "p2p-shipyard": "p2p-shipyard",
+        "rust-overlay": [
+          "holonix",
+          "rust-overlay"
+        ]
       }
     },
     "rust-overlay": {
