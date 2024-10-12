@@ -45,7 +45,7 @@
 			}
 			console.log("appPort and Id is", appPort, appId)
 			console.log("__HC_LAUNCHER_ENV__ is", window.__HC_LAUNCHER_ENV__)
-			const params: AppWebsocketConnectionOptions = {url, defaultTimeout: 60000}
+			const params: AppWebsocketConnectionOptions = {url, defaultTimeout: 120000}
 			if (tokenResp) params.token = tokenResp.token
 			client = await AppWebsocket.connect(params)
 			let profilesClient = new ProfilesClient(client, 'relay');
