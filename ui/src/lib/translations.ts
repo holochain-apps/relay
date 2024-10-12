@@ -1,62 +1,41 @@
 import i18n from "sveltekit-i18n";
+import { flatten } from "lodash-es";
 
-const config = {
-  loaders: [
+const ALL_LOCALES = ["bg", "da", "de", "en", "es", "fr", "it", "no", "ro", "sk", "sv"];
+
+function makeLoaders(locales: string[]) {
+  const loaders = locales.map((locale) => [
     {
-      locale: "en",
+      locale,
       key: "common",
-      loader: async () =>
-        (await import("./translations/en/common.json")).default,
+      loader: async () => (await import(`./translations/${locale}/common.json`)).default,
     },
     {
-      locale: "en",
+      locale,
       key: "contacts",
-      routes: [/\/contacts(.*)/, /^\/conversations(.*)/], // you can use regexes as well!
-      loader: async () =>
-        (await import("./translations/en/contacts.json")).default,
+      routes: [/\/contacts(.*)/, /^\/conversations(.*)/],
+      loader: async () => (await import(`./translations/${locale}/contacts.json`)).default,
     },
     {
-      locale: "en",
+      locale,
       key: "conversations",
-      routes: [/^\/conversations(.*)/, "/create"], // you can use regexes as well!
-      loader: async () =>
-        (await import("./translations/en/conversations.json")).default,
+      routes: [/^\/conversations(.*)/, "/create"],
+      loader: async () => (await import(`./translations/${locale}/conversations.json`)).default,
     },
     {
-      locale: "en",
-      key: "create",
-      routes: ["/create", /(.*)\/invite/], // you can use regexes as well!
-      loader: async () =>
-        (await import("./translations/en/create.json")).default,
-    },
-    {
-      locale: "de",
-      key: "common",
-      loader: async () =>
-        (await import("./translations/de/common.json")).default,
-    },
-    {
-      locale: "de",
-      key: "contacts",
-      routes: [/\/contacts(.*)/], // you can use regexes as well!
-      loader: async () =>
-        (await import("./translations/de/contacts.json")).default,
-    },
-    {
-      locale: "de",
-      key: "conversations",
-      routes: [/^\/conversations(.*)/, "/create"], // you can use regexes as well!
-      loader: async () =>
-        (await import("./translations/de/conversations.json")).default,
-    },
-    {
-      locale: "de",
+      locale,
       key: "create",
       routes: ["/create", /(.*)\/invite/],
-      loader: async () =>
-        (await import("./translations/de/create.json")).default,
+      loader: async () => (await import(`./translations/${locale}/create.json`)).default,
     },
-  ],
+  ]);
+
+  return flatten(loaders);
+}
+
+const config = {
+  fallbackLocale: "en",
+  loaders: makeLoaders(ALL_LOCALES),
 };
 
 export const { t, locale, locales, loading, loadTranslations } = new i18n(
