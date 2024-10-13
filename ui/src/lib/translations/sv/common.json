@@ -1,10 +1,11 @@
 {
+  "app_name": "Volla Messages",
   "cancel": "Afbryt",
   "connecting_to_holochain": "Ansluter till Holochain...",
   "copy": "KOPIERA",
   "share": "DELA",
   "copy_your_contact_code": "Kopiera din kontaktkod",
-  "share_your_contact_code": "Share your contact code",
+  "share_your_contact_code": "Dela din kontaktkod",
   "create_an_account": "Skapa ett konto",
   "done": "Klar",
   "first": "Förnamn",
@@ -22,7 +23,7 @@
   "tagline": "P2P. Krypterad. Säker.",
   "use_invite_code": "Använd inbjudningskod",
   "welcome": "Välkommen",
-  "welcome_text_1": "På Relay delas dina uppgifter endast med de personer som du skickar meddelanden till.",
+  "welcome_text_1": "I Volla Messages delas dina uppgifter endast med de personer som du skickar meddelanden till.",
   "welcome_text_2": "Privat, krypterat och säkrat med nycklar som bara du kontrollerar.",
   "what_is_your_name": "Vad heter du?"
 }
