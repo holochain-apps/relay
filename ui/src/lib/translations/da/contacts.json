@@ -1,4 +1,4 @@
-{
+e{
   "cant_add_yourself": "Man kan ikke tilføje sig selv som kontakt",
   "contact_already_exist": "Eksisterende kontakt",
   "contact_code": "Kontaktkode",
@@ -14,5 +14,5 @@
   "pending_connection_description": "{{name}} skal indtaste din kode for at skabe en forbindelse.",
   "pending_connection_header": "Kontakt skal bekræfte",
   "request_contact_code": "En kontakts unikke kode finder du ved at besøge deres personlige profil.",  
-  "send_message": "Send message"
+  "send_message": "Send besked"
 }
