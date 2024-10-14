@@ -15,9 +15,10 @@
     "package": "rm -f dist.zip && npm run build && cd build && bestzip ../dist.zip *"
   },
   "dependencies": {
-    "@lightningrodlabs/we-applet": "^0.17.0-dev.2",
     "@buildyourwebapp/tauri-plugin-sharesheet": "0.0.1",
+    "@lightningrodlabs/we-applet": "^0.17.0-dev.2",
     "@tauri-apps/api": "^2.0.2",
+    "bigger-picture": "^1.1.17",
     "sveltekit-i18n": "^2.4.2"
   },
   "devDependencies": {

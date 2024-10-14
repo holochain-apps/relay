@@ -16,6 +16,8 @@
   import { copyToClipboard, isMobile, linkify, sanitizeHTML, shareText } from '$lib/utils';
   import { RelayStore } from '$store/RelayStore';
   import { Privacy, type Conversation, type Message, type Image } from '../../../types';
+  import BiggerPicture from 'bigger-picture';
+  import 'bigger-picture/css';
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
   const tAny = t as any;
@@ -43,6 +45,11 @@
   let conversationContainer: HTMLElement;
   let scrollAtBottom = true;
   let scrollAtTop = false;
+
+	let biggerPicture = BiggerPicture({
+		target: document.body
+	});
+
   const SCROLL_BOTTOM_THRESHOLD = 100; // How close to the bottom must the user be to consider it "at the bottom"
   const SCROLL_TOP_THRESHOLD = 300; // How close to the top must the user be to consider it "at the top"
 
@@ -234,6 +241,22 @@
       })
     }
   }
+
+  function handleOpenImageLightbox(e: PointerEvent, url: string) {
+    const targetImg = e.target as HTMLImageElement;
+    biggerPicture.open({
+      items: [
+        {
+          // Because we don't know the original image dimensions,
+          // we scale by 10x and let bigger-picture handle constaining within window
+          // TODO: use the original image dimensions either by publishing to DHT or determining after downloading image
+          width: targetImg.width * 10,
+          height: targetImg.height * 10,
+          img: url,
+        }
+      ]
+    })
+  }
 </script>
 
 <Header>
@@ -362,7 +385,9 @@
                         {#if image && image.status === 'loaded' || image.status === 'pending'}
                           <!-- svelte-ignore a11y-missing-attribute -->
                           <div class='relative inline {fromMe && 'text-end'}'>
-                            <img src={image.dataURL} class='inline max-w-2/3 object-cover mb-2' />
+                            <button class='inline max-w-2/3 mb-2' on:click={(e) => handleOpenImageLightbox(e, image.dataURL) }>
+                              <img src={image.dataURL} class="object-cover" />
+                            </button>
                             {#if image.status === 'pending'}
                               <SvgIcon icon='spinner' color='white' size='10' moreClasses='absolute top-1/2 left-1/2 -mt-1' />
                             {/if}
