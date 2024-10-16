@@ -426,7 +426,7 @@ export class ConversationStore {
         {
           retries: 10,
           minTimeout: 1000,
-          factor: 1.5,
+          factor: 2,
           onFailedAttempt: (e) => {
             console.error(`Failed to download file from hash ${encodeHashToBase64(image.storageEntryHash as Uint8Array)}`, e);
           },

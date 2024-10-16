@@ -383,18 +383,18 @@
                   {#if message.images && message.images.length > 0}
                       {#each message.images as image}
                         <div class='flex {fromMe ? 'justify-end' : 'justify-start'}'>
-                          {#if image.status === 'loading' || image.status === 'pending'}
-                            <div class='w-20 h-20 bg-surface-800 mb-2 flex items-center justify-center'>
-                              <SvgIcon icon='spinner' color={$modeCurrent ? '%232e2e2e' : 'white'} size='30' />
-                            </div>
-                          {:else if image.status === 'error'}
-                            <div class='w-20 h-20 bg-surface-500 mb-2 flex items-center justify-center'>
-                              <SvgIcon icon='x' color={$modeCurrent ? '%232e2e2e' : 'white'} size='30' />
-                            </div>
-                          {:else if image.status === 'loaded'}
+                          {#if image.status === 'loaded'}
                             <button class='inline max-w-2/3 mb-2' on:click={(e) => handleOpenImageLightbox(e, image.dataURL) }>
                               <img src={image.dataURL} alt={image.name} class="object-cover" />
                             </button>
+                          {:else if image.status === 'loading' || image.status === 'pending'}
+                            <div class='w-20 h-20 bg-surface-800 mb-2 flex items-center justify-center'>
+                              <SvgIcon icon='spinner' color={$modeCurrent ? '%232e2e2e' : 'white'} size='30' />
+                            </div>
+                          {:else}
+                            <div class='w-20 h-20 bg-surface-800 mb-2 flex items-center justify-center'>
+                              <SvgIcon icon='x' color={$modeCurrent ? '%232e2e2e' : 'white'} size='30' />
+                            </div>
                           {/if}
                         </div>
                       {/each}
