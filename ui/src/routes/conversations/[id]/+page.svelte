@@ -242,7 +242,7 @@
     }
   }
 
-  function handleOpenImageLightbox(e: PointerEvent, url: string) {
+  function handleOpenImageLightbox(e: PointerEvent | MouseEvent, url: string) {
     const targetImg = e.target as HTMLImageElement;
     biggerPicture.open({
       items: [
