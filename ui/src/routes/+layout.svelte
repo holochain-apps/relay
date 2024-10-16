@@ -8,6 +8,7 @@
 	import { t } from '$lib/translations';
 	import { RelayClient } from '$store/RelayClient';
 	import { RelayStore } from '$store/RelayStore';
+	import { type RoleNameCallZomeRequest } from '@holochain/client';
 
 	import '../app.postcss';
 
@@ -45,9 +46,24 @@
 			}
 			console.log("appPort and Id is", appPort, appId)
 			console.log("__HC_LAUNCHER_ENV__ is", window.__HC_LAUNCHER_ENV__)
-			const params: AppWebsocketConnectionOptions = {url, defaultTimeout: 120000}
+			const params: AppWebsocketConnectionOptions = {url, defaultTimeout: 15000}
 			if (tokenResp) params.token = tokenResp.token
 			client = await AppWebsocket.connect(params)
+
+			// Call 'ping' with very long timeout
+			// This should be the first zome call after the client connects,
+			// as subsequent zome calls will be much faster and can use the default timeout.
+			await client.callZome(
+				{
+					role_name: "relay",
+					zome_name: "relay",
+					fn_name: "ping",
+				} as RoleNameCallZomeRequest, 
+
+				// 240s timeout
+				240000
+			);
+			
 			let profilesClient = new ProfilesClient(client, 'relay');
 			profilesStore = new ProfilesStore(profilesClient);
 			relayClient = new RelayClient(client, "relay", profilesStore);
