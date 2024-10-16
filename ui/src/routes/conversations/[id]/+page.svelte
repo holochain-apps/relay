@@ -381,20 +381,21 @@
                     </span>
                   {/if}
                   {#if message.images && message.images.length > 0}
-                      {#each message.images as image (image.name + image.lastModified)}
-                        {#if image && image.status === 'loaded' || image.status === 'pending'}
+                      {#each message.images as image}
+                        {#if image.status === 'loaded'}
                           <!-- svelte-ignore a11y-missing-attribute -->
                           <div class='relative inline {fromMe && 'text-end'}'>
                             <button class='inline max-w-2/3 mb-2' on:click={(e) => handleOpenImageLightbox(e, image.dataURL) }>
                               <img src={image.dataURL} class="object-cover" />
                             </button>
-                            {#if image.status === 'pending'}
-                              <SvgIcon icon='spinner' color='white' size='10' moreClasses='absolute top-1/2 left-1/2 -mt-1' />
-                            {/if}
+                        </div>
+                        {:else if image.status === 'loading' || image.status === 'pending'}
+                          <div class='w-20 h-20 bg-tertiary-500 mb-2 flex items-center justify-center'>
+                            <SvgIcon icon='spinner' color={$modeCurrent ? '%232e2e2e' : 'white'} size='30' />
                           </div>
                         {:else}
                           <div class='w-20 h-20 bg-tertiary-500 mb-2 flex items-center justify-center'>
-                            <SvgIcon icon='spinner' color='white' size='10' />
+                            <SvgIcon icon='x' color={$modeCurrent ? '%232e2e2e' : 'white'} size='30' />
                           </div>
                         {/if}
                       {/each}

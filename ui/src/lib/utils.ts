@@ -2,6 +2,7 @@ import DOMPurify from 'dompurify';
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
 import { shareText as sharesheetShareText } from "@buildyourwebapp/tauri-plugin-sharesheet";
+import { type Image } from '../types';
 
 export const MIN_TITLE_LENGTH = 3;
 
@@ -146,4 +147,20 @@ export function isIOS() : boolean {
 
 export function isMobile() : boolean {
   return isAndroid() || isIOS()
+}
+
+export async function fileToDataUrl(file: File): Promise<string> {
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+
+  return new Promise((resolve, reject) => {
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result)
+      } else {
+        reject("Failed to convert File to Image: File contents are not a string");
+      }
+    };
+    reader.onerror = (e) => reject(`Failed to convert File to Image: ${e}`);
+  });
 }
