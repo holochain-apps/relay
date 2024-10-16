@@ -18,20 +18,21 @@
 	let relayStore = relayStoreContext.getStore()
 
   export let editContactId : string | null = null
-  let contact = editContactId ? relayStore.getContact(editContactId) : null
+  export let editing = !editContactId
+  export let isNewContact = false;
 
-  let firstName = contact?.data.firstName || ''
-  let lastName = contact?.data.lastName || ''
-  let publicKeyB64 = editContactId || ''
-  let imageUrl = writable(contact?.data.avatar || '')
-
-  let editing = !editContactId
   let pendingSave = false
   let valid = false
   let error = writable('')
   let decodedPublicKey: HoloHash
 
   $: contacts = relayStore.contacts
+  $: contact = editContactId ? relayStore.getContact(editContactId) : null
+  $: firstName = contact?.data.firstName || ''
+  $: lastName = contact?.data.lastName || ''
+  $: publicKeyB64 = editContactId || ''
+  $: imageUrl = writable(contact?.data.avatar || '')
+  
   $: try {
     decodedPublicKey = decodeHashFromBase64(publicKeyB64)
     if (firstName.trim().length === 0 || publicKeyB64.trim().length === 0) {
@@ -84,10 +85,11 @@
 
   function cancel(e: Event) {
     e.preventDefault()
-    if (!editContactId) {
+    if (!editContactId || isNewContact) {
       history.back()
+    } else {
+      editing = false;
     }
-    editing = false
   }
 
 </script>

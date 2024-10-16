@@ -24,6 +24,7 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_os::init())
         .plugin(
             tauri_plugin_log::Builder::default()
                 .level(log::LevelFilter::Warn)
@@ -55,7 +56,7 @@ pub fn run() {
                     tauri::async_runtime::spawn(async move {
                         setup(handle.clone()).await.expect("Failed to setup");
 
-                        #[allow(clippy::unused_mut)] 
+                        #[allow(clippy::unused_mut)]
                         let mut window = handle
                             .holochain()
                             .expect("Failed to get holochain")
@@ -80,6 +81,13 @@ pub fn run() {
                                 handle.get_webview_window("splashscreen").unwrap();
                             splashscreen_window.close().unwrap();
                         }
+
+                        // Load barcode scanner plugin if on supported platform
+                        // It is necessary to load this after we have created the new 'main' webview
+                        //  which will be calling into it
+                        #[cfg(mobile)]
+                        handle.plugin(tauri_plugin_barcode_scanner::init())
+                            .expect("Failed to initiailze tauri_plugin_barcode_scanner");
                     });
                 });
 
