@@ -61,8 +61,8 @@
 					fn_name: "ping",
 				} as RoleNameCallZomeRequest, 
 
-				// 240s timeout
-				240000
+				// 48s timeout
+				48 * 1000
 			);
 			console.log("Relay cell ready.");
 
