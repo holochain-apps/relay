@@ -1,6 +1,6 @@
 {
   "productName": "Volla Messages",
-  "version": "0.7.0-beta-rc.2",
+  "version": "0.7.0-beta-rc.3",
   "identifier": "com.volla.messages",
   "build": {
     "beforeBuildCommand": "npm run build -w ui",
