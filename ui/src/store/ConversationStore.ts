@@ -406,21 +406,13 @@ export class ConversationStore {
   }
 
   async loadImagesForMessage(message: Message) {
-    if (message.images?.length > 0) {
-      // We have to load them all and then update the message otherwise the various updates overwrite each other
-      for (const image of message.images) {
-        const newImage = await this.loadImage(image)
-        this.conversation.update(conversation => {
-          const messages = {...conversation.messages}
-          const msg = messages[message.hash]
-          if (msg) {
-            const images = msg.images.map(i => i.name === newImage.name ? newImage : i)
-            messages[message.hash] = { ...msg, images }
-          }
-          return { ...conversation, messages }
-        })
-      }
-    }
+    if(message.images?.length === 0) return;
+
+    const images = await Promise.all(message.images.map((image) => this.loadImage(image)));      
+    this.conversation.update(conversation => {
+      conversation.messages[message.hash].images = images;
+      return conversation;
+    });
   }
 
   async loadImage(image: Image): Promise<Image> {
