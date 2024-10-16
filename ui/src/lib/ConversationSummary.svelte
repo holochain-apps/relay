@@ -15,7 +15,7 @@
   $: conversation = store.conversation;
   $: unread = store.unread;
   $: lastMessage = store.lastMessage
-  $: lastMessageAuthor = $lastMessage ? $conversation.agentProfiles[$lastMessage.authorKey].fields.firstName : null
+  $: lastMessageAuthor = $lastMessage ? $conversation.agentProfiles[$lastMessage.authorKey]?.fields.firstName : null
   $: allMembers = store.allMembers
   $: joinedMembers = store.memberList()
 
