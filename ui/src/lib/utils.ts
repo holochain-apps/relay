@@ -3,6 +3,7 @@ import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
 import { shareText as sharesheetShareText } from "@buildyourwebapp/tauri-plugin-sharesheet";
 import { type Image } from '../types';
+import { platform } from '@tauri-apps/plugin-os';
 
 export const MIN_TITLE_LENGTH = 3;
 
@@ -123,15 +124,15 @@ export async function enqueueNotification(title: string, body: string) {
 }
 
 export function isLinux(): boolean {
-  return navigator.appVersion.includes('Linux')
+  return platform() === 'linux';
 }
 
 export function isWindows(): boolean {
-  return navigator.appVersion.includes('Win')
+  return platform() === 'windows';
 }
 
 export function isMacOS(): boolean {
-  return navigator.appVersion.includes('Mac')
+  return platform() === 'macos';
 }
 
 export function isDesktop() : boolean {
@@ -139,10 +140,11 @@ export function isDesktop() : boolean {
 }
 
 export function isAndroid() : boolean {
-  return navigator.appVersion.includes('Android')
+  return platform() === 'android';
 }
+
 export function isIOS() : boolean {
-  return navigator.appVersion.includes('IOS')
+  return platform() === 'ios';
 }
 
 export function isMobile() : boolean {

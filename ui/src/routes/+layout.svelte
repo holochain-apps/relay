@@ -53,6 +53,7 @@
 			// Call 'ping' with very long timeout
 			// This should be the first zome call after the client connects,
 			// as subsequent zome calls will be much faster and can use the default timeout.
+			console.log("Awaiting relay cell launch");
 			await client.callZome(
 				{
 					role_name: "relay",
@@ -60,10 +61,11 @@
 					fn_name: "ping",
 				} as RoleNameCallZomeRequest, 
 
-				// 240s timeout
-				240000
+				// 48s timeout
+				48 * 1000
 			);
-			
+			console.log("Relay cell ready.");
+
 			let profilesClient = new ProfilesClient(client, 'relay');
 			profilesStore = new ProfilesStore(profilesClient);
 			relayClient = new RelayClient(client, "relay", profilesStore);
@@ -166,6 +168,7 @@
     position: fixed;
     width: 100%;
     height: 100%;
+		background-color: var(--app-background-color);
   }
 
 	.wrapper {
