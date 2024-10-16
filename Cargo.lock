@@ -1648,6 +1648,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "ctrlc"
+version = "3.4.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "90eeab0aa92f3f9b4e87f258c72b139c207d251f9cbc1080a0086b86a8870dd3"
+dependencies = [
+ "nix 0.29.0",
+ "windows-sys 0.59.0",
+]
+
+[[package]]
 name = "curve25519-dalek"
 version = "4.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9296,13 +9306,14 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-holochain"
 version = "0.0.0"
-source = "git+https://github.com/mattyg/p2p-shipyard?branch=build/tauri-version-pinning#8e96fd5843d8170d1d301073395e9f5228c37377"
+source = "git+https://github.com/darksoil-studio/p2p-shipyard?branch=main#b78ab78dfa8a5956113782d68828ea786426dd0f"
 dependencies = [
  "anyhow",
  "async-std",
  "async-trait",
  "base64 0.22.1",
  "bzip2",
+ "ctrlc",
  "either",
  "futures",
  "hc_seed_bundle",
