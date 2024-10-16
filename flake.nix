@@ -18,7 +18,9 @@
         devShells.default = let
           overlays = [ (import inputs.rust-overlay) ];
           rustPkgs = import pkgs.path { inherit system overlays; };
-          rust = rustPkgs.rust-bin.stable."1.79.0".default;
+          rust = rustPkgs.rust-bin.stable."1.79.0".default.override {
+            targets = ["wasm32-unknown-unknown"];
+          };
         in pkgs.mkShell {
           inputsFrom = [ 
             inputs'.p2p-shipyard.devShells.holochainTauriDev 
