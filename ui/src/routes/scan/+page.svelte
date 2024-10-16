@@ -4,7 +4,7 @@
   import { t } from '$lib/translations';
   import { scanStore } from '$store/ScanStore';
   import { setBackgroundColor } from '$lib/background';
-  import { onDestroy, onMount } from 'svelte';
+  import { onDestroy } from 'svelte';
   import SvgIcon from '$lib/SvgIcon.svelte';
 
   let needsPermission = false;
