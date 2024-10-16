@@ -3,6 +3,10 @@ import { platform } from "@tauri-apps/plugin-os";
 import { goto } from "$app/navigation";
 import { page } from '$app/stores';
 
+// tarui-plugin-barcode-scanner launches the scanner as a fullscreen View
+// In order to display our overlay upon it, we must have a fully transparent background.
+// Thus we must navigate to a new page with only the overlay and a transparent background before opening the scanner.
+// This store handles navigation and passing data from the requesting page -> scan page -> requesting page.
 class ScanStore {
   public isSupported: Writable<boolean>;
   public value: Writable<string | null>;
