@@ -30,4 +30,4 @@
   {/if}
 </Header>
 
-<ContactEditor editContactId={agentPubKeyB64} isNewContact={true} />
+<ContactEditor editContactId={agentPubKeyB64} creating={true} />
