@@ -18,12 +18,12 @@
     "@buildyourwebapp/tauri-plugin-sharesheet": "0.0.1",
     "@lightningrodlabs/we-applet": "^0.17.0-dev.2",
     "@tauri-apps/api": "^2.0.2",
+    "@tauri-apps/plugin-barcode-scanner": "^2.0.0",
+    "@tauri-apps/plugin-os": "^2.0.0",
+    "@tauri-apps/plugin-shell": "^2.0.0",
     "bigger-picture": "^1.1.17",
     "p-retry": "^6.2.0",
-    "@tauri-apps/plugin-barcode-scanner": "^2.0.0",
-    "sveltekit-i18n": "^2.4.2",
-    "@tauri-apps/plugin-os": "^2.0.0",
-    "@tauri-apps/plugin-shell": "^2.0.0"
+    "sveltekit-i18n": "^2.4.2"
   },
   "devDependencies": {
     "@holochain-open-dev/elements": "^0.400.0-dev.0",
