@@ -405,13 +405,10 @@ export class ConversationStore {
     this.history.add(newMessage)
   }
 
-  // load all images for a message
-  // NOTE if *any* of the images are not available, then *none* will be included
-  // NOTE if this is called multiple times simultaneously, conversation updates may clobber each other
   async loadImagesForMessage(message: Message) {
     if(message.images?.length === 0) return;
 
-    const images = await Promise.all(message.images.map((image) => this.loadImage(image)));      
+    const images = await Promise.all(message.images.map((image) => this.loadImage(image)));
     this.conversation.update(conversation => {
       conversation.messages[message.hash].images = images;
       return conversation;
