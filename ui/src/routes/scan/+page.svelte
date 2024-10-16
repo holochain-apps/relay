@@ -82,7 +82,7 @@
       <!-- Action Buttons -->
       {#if needsPermission}
         <div class="mt-4">
-          <p class='text-error-500 text-sm mt-2'>{$t('conversations.need_camera_permissions')}</p>
+          <p class='text-error-500 text-sm mt-2'>{$t('common.need_camera_permissions')}</p>
         </div>
       {/if}
 
@@ -102,7 +102,7 @@
               openAppSettings();
             }}
           >
-            <strong>{$t('conversations.open_app_settings')}</strong>
+            <strong>{$t('common.open_app_settings')}</strong>
           </Button>
         {/if}
       </div>
