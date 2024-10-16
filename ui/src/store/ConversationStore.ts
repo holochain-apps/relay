@@ -405,6 +405,9 @@ export class ConversationStore {
     this.history.add(newMessage)
   }
 
+  // load all images for a message
+  // NOTE if *any* of the images are not available, then *none* will be included
+  // NOTE if this is called multiple times simultaneously, conversation updates may clobber each other
   async loadImagesForMessage(message: Message) {
     if(message.images?.length === 0) return;
 
