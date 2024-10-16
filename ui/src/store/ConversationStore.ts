@@ -18,8 +18,11 @@ import {
   type Message,
   type MessageRecord,
   Privacy,
-  type Messages } from '../types';
+  type Messages
+} from '../types';
 import { MsgHistory } from './msgHistory';
+import pRetry from 'p-retry';
+import { fileToDataUrl } from '$lib/utils';
 
 export const MINUTES_IN_BUCKET = 60 * 24 * 1  // 1 day for now
 export const MIN_MESSAGES_LOAD = 20
@@ -145,7 +148,7 @@ export class ConversationStore {
       return Base64.fromUint8Array(msgpck);
     } else {
       alert(get(t)('conversations.unable_to_create_code'))
-      return Promise.resolve('')
+      return ''
     }
   }
 
@@ -402,8 +405,8 @@ export class ConversationStore {
     this.history.add(newMessage)
   }
 
-  async loadImagesForMessage(message: Message, tryCount: number = 0) {
-    if (message.images && message.images.length > 0) {
+  async loadImagesForMessage(message: Message) {
+    if (message.images?.length > 0) {
       // We have to load them all and then update the message otherwise the various updates overwrite each other
       for (const image of message.images) {
         const newImage = await this.loadImage(image)
@@ -420,39 +423,31 @@ export class ConversationStore {
     }
   }
 
-  async loadImage(image: Image, tryCount: number = 0): Promise<Image> {
-    return new Promise(async (resolve, reject) => {
-      try {
-        if (image.status === 'loaded' || !image.storageEntryHash) return resolve(image)
+  async loadImage(image: Image): Promise<Image> {
+    try {
+      if (image.status === 'loaded') return image;
+      if (image.storageEntryHash === undefined) return image;
 
-        const file = await this.fileStorageClient.downloadFile(image.storageEntryHash)
-
-        // read the dataUrl from the image file
-        const reader = new FileReader()
-        reader.readAsDataURL(file)
-        resolve(new Promise((resolve, reject) => {
-          reader.onload = () => {
-            if (typeof reader.result === 'string') {
-              const newImage: Image = { ...image, status: 'loaded', dataURL: reader.result}
-              resolve(newImage)
-            }
-          }
-          reader.onerror = () => {
-            const newImage: Image = { ...image, status: 'error', dataURL: ''}
-            resolve(newImage)
-          }
-        }))
-      } catch(e) {
-        if (tryCount < 10) {
-          setTimeout(() => {
-            resolve(this.loadImage(image, tryCount + 1))
-          }, 3000)
-        } else {
-          console.error("Coulnd't find image after 10 retries", image)
-          resolve({ ...image, status: 'error', dataURL: ''})
+      // Download image file, retrying up to 10 times if download fails
+      const file = await pRetry(
+        () => this.fileStorageClient.downloadFile(image.storageEntryHash as Uint8Array), 
+        {
+          retries: 10,
+          factor: 1,
+          onFailedAttempt: (e) => {
+            console.error(`Failed to download file from hash ${encodeHashToBase64(image.storageEntryHash as Uint8Array)}`, e);
+          },
         }
-      }
-    })
+      );
+      
+      // Convert image blob to data url
+      const dataURL = await fileToDataUrl(file);
+      
+      return {...image, status: 'loaded', dataURL} as Image;      
+    } catch(e) {
+      console.error("Error loading image after 10 retries:", e);
+      return {...image, status: 'error', dataURL: ''} as Image;
+    }
   }
 
   async updateConfig(config: Config) {
