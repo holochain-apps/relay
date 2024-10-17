@@ -1,6 +1,6 @@
 {
   "name": "ui",
-  "version": "0.7.0-beta-rc.3",
+  "version": "0.7.0-beta-rc.4",
   "private": true,
   "scripts": {
     "start": "vite --clearScreen false",
