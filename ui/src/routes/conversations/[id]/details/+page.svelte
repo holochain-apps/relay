@@ -106,7 +106,7 @@
       <div class="flex flex-row items-center justify-center flex-wrap">
         <input
           autofocus
-          class='text-3xl text-center bg-surface-900 border-none outline-none focus:outline-none pl-0.5 pt-0 focus:ring-0'
+          class='grow text-3xl text-center bg-surface-900 border-none outline-none focus:outline-none pl-0.5 pt-0 focus:ring-0'
           type='text'
           placeholder={$t('conversations.enter_name_here')}
           name='title'
@@ -118,6 +118,7 @@
             if (event.key === 'Escape') cancelEditTitle();
           }}
         />
+        <div class="flex flex-none items-center justify-center">
           <Button
             moreClasses="h-6 w-6 rounded-md py-0 !px-0 mb-0 mr-2 bg-primary-100 flex items-center justify-center"
             onClick={() => saveTitle()}
@@ -130,6 +131,7 @@
           >
             <SvgIcon icon='x' color='gray' size='12' />
           </Button>
+        </div>
       </div>
     {:else}
       <div class="flex">
