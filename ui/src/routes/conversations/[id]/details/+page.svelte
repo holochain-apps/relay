@@ -62,7 +62,7 @@
 {#if conversation}
   {@const numMembers = Object.values(conversation.data.agentProfiles).length}
 
-  <div class="container mx-auto flex items-center flex-col flex-1 overflow-hidden w-full pt-10">
+  <div class="container mx-auto flex items-center flex-col flex-1 overflow-hidden relative w-full pt-10">
     {#if conversation.privacy === Privacy.Private}
       <div class='flex gap-4 items-center justify-center'>
         {#each conversation.allMembers.slice(0, 2) as contact, i}
@@ -103,10 +103,10 @@
       {/if}
     {/if}
     {#if editingTitle}
-      <div class="flex flex-row items-center justify-center">
+      <div class="flex flex-row items-center justify-center flex-wrap">
         <input
           autofocus
-          class='text-3xl text-center bg-surface-900 border-none outline-none focus:outline-none pl-0.5 pt-0 focus:ring-0'
+          class='grow text-3xl text-center bg-surface-900 border-none outline-none focus:outline-none pl-0.5 pt-0 focus:ring-0'
           type='text'
           placeholder={$t('conversations.enter_name_here')}
           name='title'
@@ -118,6 +118,7 @@
             if (event.key === 'Escape') cancelEditTitle();
           }}
         />
+        <div class="flex flex-none items-center justify-center">
           <Button
             moreClasses="h-6 w-6 rounded-md py-0 !px-0 mb-0 mr-2 bg-primary-100 flex items-center justify-center"
             onClick={() => saveTitle()}
@@ -130,10 +131,11 @@
           >
             <SvgIcon icon='x' color='gray' size='12' />
           </Button>
+        </div>
       </div>
     {:else}
-      <div class="flex row">
-        <h1 class='text-3xl flex-shrink-0 mb-1 mr-1 text-nowrap text-ellipsis overflow-hidden'>
+      <div class="flex">
+        <h1 class='text-3xl mb-1 mr-1 break-all'>
           {title}
         </h1>
         {#if conversation.privacy !== Privacy.Private}
