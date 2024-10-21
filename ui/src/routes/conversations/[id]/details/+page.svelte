@@ -103,7 +103,7 @@
       {/if}
     {/if}
     {#if editingTitle}
-      <div class="flex flex-row items-center justify-center">
+      <div class="flex flex-row items-center justify-center flex-wrap">
         <input
           autofocus
           class='text-3xl text-center bg-surface-900 border-none outline-none focus:outline-none pl-0.5 pt-0 focus:ring-0'
