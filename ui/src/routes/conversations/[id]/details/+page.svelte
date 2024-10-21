@@ -62,7 +62,7 @@
 {#if conversation}
   {@const numMembers = Object.values(conversation.data.agentProfiles).length}
 
-  <div class="container mx-auto flex items-center flex-col flex-1 overflow-hidden w-full pt-10">
+  <div class="container mx-auto flex items-center flex-col flex-1 overflow-hidden relative w-full pt-10">
     {#if conversation.privacy === Privacy.Private}
       <div class='flex gap-4 items-center justify-center'>
         {#each conversation.allMembers.slice(0, 2) as contact, i}
@@ -132,8 +132,8 @@
           </Button>
       </div>
     {:else}
-      <div class="flex row">
-        <h1 class='text-3xl flex-shrink-0 mb-1 mr-1 text-nowrap text-ellipsis overflow-hidden'>
+      <div class="flex">
+        <h1 class='text-3xl mb-1 mr-1 break-all'>
           {title}
         </h1>
         {#if conversation.privacy !== Privacy.Private}
