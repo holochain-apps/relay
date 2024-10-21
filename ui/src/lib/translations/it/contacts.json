@@ -9,5 +9,5 @@
   "enter_last_name": "Inserire il cognome",
   "error_saving": "Errore {{updating; true:updating; false:creating;}} contatto",
   "invalid_contact_code": "Codice di contatto non valido",
-  "request_contact_code": "Richiedete il codice di contatto unico di Relay del vostro contatto, che potete trovare nel suo profilo personale nell'app Relay."
+  "request_contact_code": "Richiedete il codice di contatto unico di Volla Messages del vostro contatto, che potete trovare nel suo profilo personale nell'app Volla Messages."
 }

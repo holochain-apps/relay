@@ -9,5 +9,5 @@
   "enter_last_name": "Zadajte priezvisko",
   "error_saving": "Chyba {{updating; true:updating; false:creating;}} Kontaktujte nás",
   "invalid_contact_code": "Neplatný kód kontaktu",
-  "request_contact_code": "Vyžiadajte si jedinečný kód kontaktu Relay, ktorý nájdete v jeho osobnom profile v aplikácii Relay."
+  "request_contact_code": "Vyžiadajte si jedinečný kód kontaktu Volla Messages, ktorý nájdete v jeho osobnom profile v aplikácii Volla Messages."
 }
