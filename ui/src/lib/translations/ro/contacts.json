@@ -9,5 +9,5 @@
   "enter_last_name": "Introduceți numele de familie",
   "error_saving": "Eroare {{updating; true:updating; false:creating;}} Contactați-ne",
   "invalid_contact_code": "Cod de contact invalid",
-  "request_contact_code": "Solicitați codul unic de contact Relay al persoanei dvs. de contact, pe care îl puteți găsi în profilul personal al acesteia din aplicația Relay."
+  "request_contact_code": "Solicitați codul unic de contact Volla Messages al persoanei dvs. de contact, pe care îl puteți găsi în profilul personal al acesteia din aplicația Volla Messages."
 }

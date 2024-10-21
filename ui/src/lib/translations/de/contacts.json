@@ -9,5 +9,5 @@
   "enter_last_name": "Geben Sie den Nachnamen ein",
   "error_saving": "Fehler {{updating; true:updating; false:creating;}} Kontakt",
   "invalid_contact_code": "Ungültiger Kontakt-Code",
-  "request_contact_code": "Fordern Sie den eindeutigen Relay-Kontakt-Code Ihres Kontakts an, den Sie in seinem persönlichen Profil in der Relay-App finden."
+  "request_contact_code": "Fordern Sie den eindeutigen Volla Messages-Kontakt-Code Ihres Kontakts an, den Sie in seinem persönlichen Profil in der Volla Messages-App finden."
 }
