@@ -9,7 +9,7 @@
 	import { RelayClient } from '$store/RelayClient';
 	import { RelayStore } from '$store/RelayStore';
 	import { type RoleNameCallZomeRequest } from '@holochain/client';
-  import { Toaster, toast } from 'svelte-sonner'
+	import toast, { Toaster } from 'svelte-french-toast';
 
 	import '../app.postcss';
 
@@ -74,7 +74,7 @@
 			console.log("Connected")
 		} catch(e) {
 			console.error("Failed to init holochain", e);
-			toast.error(`Failed to init holochain ${e.message}`);
+			toast.error(`${$t('common.holochain_connect_error')}: ${e.message}`);
 		}
 	}
 	
@@ -166,7 +166,7 @@
 	{/if}
 </div>
 
-<Toaster />
+<Toaster position="bottom-end" />
 
 <style>
   /* Add this to ensure the page doesn't scroll */
