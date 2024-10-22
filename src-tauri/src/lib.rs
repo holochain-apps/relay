@@ -25,11 +25,6 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_os::init())
-        .plugin(
-            tauri_plugin_log::Builder::default()
-                .level(log::LevelFilter::Warn)
-                .build(),
-        )
         .plugin(tauri_plugin_holochain::async_init(
             vec_to_locked(vec![]).expect("Can't build passphrase"),
             HolochainPluginConfig {
@@ -42,6 +37,19 @@ pub fn run() {
     {
         builder = builder.plugin(tauri_plugin_sharesheet::init());
     }
+
+    // Only enable logging in dev mode
+    // to avoid inconsistent issue where app crashes when unpaused
+    // due to the log plugin being initialized twice
+    // TODO: When bug is resolved, re-enable this plugin in production mode
+    if tauri::is_dev() {
+        builder = builder.plugin(
+            tauri_plugin_log::Builder::default()
+                .level(log::LevelFilter::Warn)
+                .build(),
+        )
+    }
+
     builder
         .setup(|app| {
             let handle = app.handle().clone();
