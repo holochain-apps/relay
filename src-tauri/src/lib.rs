@@ -5,13 +5,13 @@ use std::time::UNIX_EPOCH;
 use std::{collections::HashMap, time::SystemTime};
 use tauri::{AppHandle, Listener};
 #[cfg(desktop)]
-use tauri::{Manager, Window};
+use tauri::Manager;
 use tauri_plugin_holochain::{HolochainExt, HolochainPluginConfig, WANNetworkConfig};
 
 const APP_ID: &'static str = "volla-messages";
 const SIGNAL_URL: &'static str = "wss://sbd.holo.host";
 const BOOTSTRAP_URL: &'static str = "https://bootstrap-0.infra.holochain.org";
-static ICE_URLS: &'static [str] = &[
+static ICE_URLS: &'static [&str] = &[
     "stun:stun-0.main.infra.holo.host:443",
     "stun:stun-1.main.infra.holo.host:443"
 ];
@@ -22,6 +22,7 @@ pub fn happ_bundle() -> anyhow::Result<AppBundle> {
     Ok(bundle)
 }
 
+#[allow(unused_mut)]
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let mut builder = tauri::Builder::default()
@@ -56,7 +57,6 @@ pub fn run() {
                     tauri::async_runtime::spawn(async move {
                         setup(handle.clone()).await.expect("Failed to setup");
 
-                        #[allow(clippy::unused_mut)]
                         let mut window = handle
                             .holochain()
                             .expect("Failed to get holochain")
@@ -152,7 +152,7 @@ fn wan_network_config() -> Option<WANNetworkConfig> {
         Some(WANNetworkConfig {
             signal_url: url2::url2!("{}", SIGNAL_URL),
             bootstrap_url: url2::url2!("{}", BOOTSTRAP_URL),
-            ice_servers_urls: ICE_URLS.as_vec().into_iter().map(|v| url2::url2!(v)).collect()
+            ice_servers_urls: ICE_URLS.into_iter().map(|v| url2::url2!("{}", v)).collect()
         })
     }
 }
