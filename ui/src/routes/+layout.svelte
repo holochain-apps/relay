@@ -9,6 +9,7 @@
 	import { RelayClient } from '$store/RelayClient';
 	import { RelayStore } from '$store/RelayStore';
 	import { type RoleNameCallZomeRequest } from '@holochain/client';
+  import { Toaster, toast } from 'svelte-sonner'
 
 	import '../app.postcss';
 
@@ -32,10 +33,8 @@
 		document.documentElement.style.setProperty('--app-height', `${appHeight}px`);
   }
 
-	onMount(() => {
-		async function initHolochain() {
-			// console.log("FISH", window.__TAURI__)
-
+	async function initHolochain() {
+		try {
 			let tokenResp
 			if (adminPort) {
 				const adminWebsocket = await AdminWebsocket.connect({ url: new URL(`ws://localhost:${adminPort}`) })
@@ -73,10 +72,16 @@
 			await relayStore.initialize()
 			connected = true
 			console.log("Connected")
+		} catch(e) {
+			console.error("Failed to init holochain", e);
+			toast.error(`Failed to init holochain ${e.message}`);
 		}
-
+	}
+	
+	onMount(() => {
+		// Launch and connect to holochain
 		initHolochain()
-
+		
 		// To change from light mode to dark mode based on system settings
 		// XXX: not using the built in skeleton autoModeWatcher() because it doesn't set modeCurrent in JS which we use
 		const mql = window.matchMedia('(prefers-color-scheme: light)');
@@ -160,6 +165,8 @@
 		<slot />
 	{/if}
 </div>
+
+<Toaster />
 
 <style>
   /* Add this to ensure the page doesn't scroll */
