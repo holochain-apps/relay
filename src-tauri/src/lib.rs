@@ -9,8 +9,12 @@ use tauri::{Manager, Window};
 use tauri_plugin_holochain::{HolochainExt, HolochainPluginConfig, WANNetworkConfig};
 
 const APP_ID: &'static str = "volla-messages";
-const SIGNAL_URL: &'static str = "wss://signal.holo.host";
-const BOOTSTRAP_URL: &'static str = "https://bootstrap.holo.host";
+const SIGNAL_URL: &'static str = "wss://sbd.holo.host";
+const BOOTSTRAP_URL: &'static str = "https://bootstrap-0.infra.holochain.org";
+static ICE_URLS: &'static [str] = &[
+    "stun:stun-0.main.infra.holo.host:443",
+    "stun:stun-1.main.infra.holo.host:443"
+];
 
 pub fn happ_bundle() -> anyhow::Result<AppBundle> {
     let bytes = include_bytes!("../../workdir/relay.happ");
@@ -32,11 +36,7 @@ pub fn run() {
         )
         .plugin(tauri_plugin_holochain::async_init(
             vec_to_locked(vec![]).expect("Can't build passphrase"),
-            HolochainPluginConfig {
-                wan_network_config: wan_network_config(),
-                holochain_dir: holochain_dir(),
-                admin_port: None,
-            },
+            HolochainPluginConfig::new(holochain_dir(), wan_network_config()),
         ));
     #[cfg(mobile)]
     {
@@ -113,7 +113,12 @@ async fn setup(handle: AppHandle) -> anyhow::Result<()> {
         .await
         .map_err(|err| tauri_plugin_holochain::Error::ConductorApiError(err))?;
 
-    if installed_apps.len() == 0 {
+    // DeepKey comes preinstalled as the first app
+    if installed_apps
+        .iter()
+        .find(|app| app.installed_app_id.as_str().eq(APP_ID))
+        .is_none()
+    {
         // we do this because we don't want to join everybody into the same dht!
         let random_seed = format!(
             "{}",
@@ -125,6 +130,7 @@ async fn setup(handle: AppHandle) -> anyhow::Result<()> {
                 String::from(APP_ID),
                 happ_bundle()?,
                 HashMap::new(),
+                None,
                 None,
                 Some(random_seed),
             )
@@ -146,6 +152,7 @@ fn wan_network_config() -> Option<WANNetworkConfig> {
         Some(WANNetworkConfig {
             signal_url: url2::url2!("{}", SIGNAL_URL),
             bootstrap_url: url2::url2!("{}", BOOTSTRAP_URL),
+            ice_servers_urls: ICE_URLS.as_vec().into_iter().map(|v| url2::url2!(v)).collect()
         })
     }
 }

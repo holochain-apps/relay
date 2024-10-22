@@ -2,7 +2,7 @@
   description = "Template for Holochain app development";
 
   inputs = {
-    holonix.url = "github:holochain/holonix/main-0.3";
+    holonix.url = "github:holochain/holonix/main-0.4";
 
     nixpkgs.follows = "holonix/nixpkgs";
     flake-parts.follows = "holonix/flake-parts";
@@ -18,7 +18,7 @@
         devShells.default = let
           overlays = [ (import inputs.rust-overlay) ];
           rustPkgs = import pkgs.path { inherit system overlays; };
-          rust = rustPkgs.rust-bin.stable."1.79.0".default.override {
+          rust = rustPkgs.rust-bin.stable."1.81.0".default.override {
             targets = ["wasm32-unknown-unknown"];
           };
         in pkgs.mkShell {
@@ -31,7 +31,7 @@
         devShells.androidDev = let
           overlays = [ (import inputs.rust-overlay) ];
           rustPkgs = import pkgs.path { inherit system overlays; };
-          rust = rustPkgs.rust-bin.stable."1.79.0".default.override {
+          rust = rustPkgs.rust-bin.stable."1.81.0".default.override {
             targets = [
               "armv7-linux-androideabi"
               "x86_64-linux-android"
