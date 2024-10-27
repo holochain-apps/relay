@@ -9253,7 +9253,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-holochain"
 version = "0.0.0"
-source = "git+https://github.com/darksoil-studio/p2p-shipyard?branch=disable-dpki#d7e60b69882322b74b744d79efc4bb24e3a8e210"
+source = "git+https://github.com/mattyg/p2p-shipyard?branch=disable-dpki#12d751a89766b88388273a7d60b22c5da8b0674d"
 dependencies = [
  "anyhow",
  "async-std",
