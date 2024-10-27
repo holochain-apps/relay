@@ -16,8 +16,7 @@
       items: [
         {
           // Because we don't know the original image dimensions,
-          // we scale by 10x and let bigger-picture handle constaining within window
-          // TODO: use the original image dimensions either by publishing to DHT or determining after downloading image
+          // we scale by 10x and let bigger-picture handle constraining within window
           width: targetImg.width * 10,
           height: targetImg.height * 10,
           img: src,
