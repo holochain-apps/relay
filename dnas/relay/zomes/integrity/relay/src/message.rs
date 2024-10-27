@@ -124,7 +124,6 @@ pub fn validate_create_link_all_messages(
                 .to_string())
             ),
         )?;
-    // TODO: add the appropriate validation rules
     Ok(ValidateCallbackResult::Valid)
 }
 pub fn validate_delete_link_all_messages(
@@ -134,6 +133,5 @@ pub fn validate_delete_link_all_messages(
     _target: AnyLinkableHash,
     _tag: LinkTag,
 ) -> ExternResult<ValidateCallbackResult> {
-    // TODO: add the appropriate validation rules
     Ok(ValidateCallbackResult::Valid)
 }
