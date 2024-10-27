@@ -220,7 +220,6 @@ export class ConversationStore {
   }
 
   get title() {
-    // TODO: when invited contacts is stored in HC this can go back to invitedContactKeys
     const numInvited = this.allMembers.length
     if (this.data?.privacy === Privacy.Public) {
       return this.data?.config.title

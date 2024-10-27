@@ -139,7 +139,7 @@ pub fn get_latest_message(
         }
         None => original_message_hash.clone(),
     };
-    // get(latest_message_hash, GetOptions::default())
+
     match get(latest_message_hash, GetOptions::default())? {
         Some(record) => {
             Ok(Some(MessageRecord {
