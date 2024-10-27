@@ -55,6 +55,8 @@ pub fn get_latest_contact(
         }
         None => original_contact_hash.clone(),
     };
+    //get(latest_contact_hash, GetOptions::default())
+    // TODO: is this best practice or should we just return the Record?
     match get(latest_contact_hash, GetOptions::default())? {
         Some(record) => {
             Ok(Some(ContactRecord {

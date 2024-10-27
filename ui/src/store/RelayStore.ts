@@ -187,6 +187,7 @@ export class RelayStore {
 
   async createContact(contact: Contact) {
     if (!this.client) return false
+    // TODO: if adding contact fails we should remove it from the store
     const contactResult = await this.client.createContact(contact)
     if (contactResult) {
       // Immediately add a conversation with the new contact, unless you already have one with them

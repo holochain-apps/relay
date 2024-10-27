@@ -137,7 +137,7 @@ export class ConversationStore {
       }
 
       const invitation: Invitation = {
-        created: this.created,
+        created: this.created, // TODO: put in data
         progenitor: this.data.progenitor,
         privacy: this.data.privacy,
         proof,
@@ -220,6 +220,7 @@ export class ConversationStore {
   }
 
   get title() {
+    // TODO: when invited contacts is stored in HC this can go back to invitedContactKeys
     const numInvited = this.allMembers.length
     if (this.data?.privacy === Privacy.Public) {
       return this.data?.config.title
@@ -356,6 +357,7 @@ export class ConversationStore {
     const id = uuidv4()
     const oldMessage: Message = { authorKey, content, hash: id, status: 'pending', timestamp: now, bucket, images}
     this.addMessage(oldMessage)
+    // TODO: upload these images asynchonously and then add to the message when done
     const imageStructs = await Promise.all(images.filter(i => !!i.file).map(async (image) => {
       const hash = await this.fileStorageClient.uploadFile(image.file!)
       return {

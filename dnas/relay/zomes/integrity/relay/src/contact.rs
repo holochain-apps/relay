@@ -161,6 +161,7 @@ pub fn validate_create_link_all_contacts(
                 .to_string())
             ),
         )?;
+    // TODO: add the appropriate validation rules
     Ok(ValidateCallbackResult::Valid)
 }
 
@@ -171,5 +172,6 @@ pub fn validate_delete_link_all_contacts(
     _target: AnyLinkableHash,
     _tag: LinkTag,
 ) -> ExternResult<ValidateCallbackResult> {
+    // TODO: add the appropriate validation rules
     Ok(ValidateCallbackResult::Valid)
 }

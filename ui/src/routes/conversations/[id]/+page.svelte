@@ -80,12 +80,6 @@
     })
   }
 
-  const checkForData = () => {
-    checkForAgents()
-    checkForConfig()
-    checkForMessages()
-  }
-
   function handleResize() {
     if (scrollAtBottom) {
       scrollToBottom();
@@ -102,7 +96,10 @@
         // messages = c.messages;
         numMembers = Object.values(agentProfiles).length;
       });
-      checkForData();
+      // TODO: do this check in one call of checkForStuff
+      checkForAgents()
+      checkForConfig()
+      checkForMessages()
       conversationContainer.addEventListener('scroll', handleScroll);
       window.addEventListener('resize', debouncedHandleResize);
       newMessageInput.focus();
@@ -133,6 +130,7 @@
 
     messages.forEach(message => {
       // Don't display message if we don't have a profile from the author yet.
+      // TODO: could wait until all profiles have been synced first?
       if (!agentProfiles[message.authorKey]) {
         return;
       }
