@@ -47,8 +47,6 @@
   }
 
   async function addContactsToConversation() {
-    // TODO: update config.title?
-
     if (conversation) {
       conversation.addContacts($selectedContacts)
       goto(`/conversations/${conversation.id}/details`)

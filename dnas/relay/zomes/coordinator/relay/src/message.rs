@@ -2,8 +2,6 @@ use hdk::prelude::*;
 use relay_integrity::*;
 
 use crate::get_entry_for_action;
-// use chrono::{DateTime, Utc, Datelike};
-// use crate::utils::*;
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -22,18 +20,7 @@ pub fn create_message(input: SendMessageInput) -> ExternResult<Record> {
                 .to_string())
             ),
         )?;
-    // let now: DateTime<Utc> = Utc::now();
-    // let year = now.year();
-    // let month = now.month();
-    // let week = now.iso_week().week();
-    // let formatted_date = format!("{}/{}/{}", year, month, week);
-    // let path = Path::from(formatted_date);
-    // create_link_relaxed(
-    //     path.path_entry_hash()?,
-    //     AnyLinkableHash::try_from(record.action_address().clone())?,
-    //     LinkTypes::MessageBlock,
-    //     (),
-    // )?;
+
     let path = messages_path(input.message.bucket);
     debug!("create_message path {:?}", path);
     let link = create_link(
@@ -43,7 +30,6 @@ pub fn create_message(input: SendMessageInput) -> ExternResult<Record> {
         (),
     )?;
 
-    // TODO: handle errors. look for ack, try again on fail
     let _ = send_remote_signal(
         MessageRecord {
             message: Some(input.message),
@@ -56,44 +42,6 @@ pub fn create_message(input: SendMessageInput) -> ExternResult<Record> {
     debug!("create message all messages link: {:?}", link);
     Ok(record)
 }
-
-// pub struct MessageBlock {
-//     week: String,
-//     count: u32,
-//     hashes: SignedActionHashed,
-// }
-
-// pub struct GetMessageHashesForWeekInput {
-//     pub week: String,
-//     pub message_count_already_loaded: u8,
-// }
-// #[hdk_extern]
-// pub fn get_messages_hashes_for_week(
-//     input: GetMessageHashesForWeekInput,
-// ) -> ExternResult<MessageBlock> {
-//     let weekString = input.week;
-//     if (weekString.is_empty()) {
-//         let now: DateTime<Utc> = Utc::now();
-//         let year = now.year();
-//         let month = now.month();
-//         let week = now.iso_week().week();
-//         weekString = format!("{}/{}/{}", year, month, week);
-//     }
-//     let path = Path::from(weekString);
-//     //let links = get_links(path.path_entry_hash()?, LinkTypes::MessageBlock, None)?;
-//     let links = get_links(
-//         GetLinksInputBuilder::try_new(path.path_entry_hash()?, LinkTypes::MessageBlock)?
-//             .build(),
-//     );
-//     let mut results = Vec::new();
-//     for l in links {
-//         let hash = ActionHash::try_from(l.target).map_err(|e| wasm_error!(e))?;
-//         if let Some(r) = get_latest_message(hash)? {
-//             results.push(r);
-//         }
-//     }
-//     Ok(results)
-// }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BucketInput {
@@ -149,7 +97,6 @@ pub fn get_message_entries(hashes: Vec<ActionHash>) -> ExternResult<Vec<MessageR
     Ok(results)
 }
 
-// TODO deprecate
 #[hdk_extern]
 pub fn get_messages_for_buckets(buckets: Vec<u32>) -> ExternResult<Vec<MessageRecord>> {
     let links = get_message_links_for_buckets(buckets)?;
@@ -157,27 +104,7 @@ pub fn get_messages_for_buckets(buckets: Vec<u32>) -> ExternResult<Vec<MessageRe
     for l in links {
         let hash  = ActionHash::try_from(l.target).map_err(|e|wasm_error!(e))?;
         if let Some(r) = get_latest_message(hash)? {
-            // TODO: make a call to the profiles zome to get the agent profile
-            // TODO: why did i think this was necessary ??
-            // let call_input = GetAgenProfileInput {
-            //     agent_key: r.signed_action.hashed.author().clone(),
-            // };
-            // let agent = call(
-            //     CallTargetCell::Local,
-            //     "profiles",
-            //     "get_agent_profile".into(),
-            //     None,
-            //     call_input,
-            // );
-            // if let ZomeCallResponse::Ok(response) = call(CallTargetCell::Local,"profiles",FunctionName::new("get_agent_profile"), None, call_input)? {
-            //     let agent : Record<Profile> = response.decode().map_err(|_e| wasm_error!(WasmErrorInner::Guest(String::from("could not decode agent profile"))))?;
-            //     // let me = agent_info()?.agent_latest_pubkey;
-            //     //let agents = agents.into_iter().filter(|a| a != &me).collect();
-            //     debug!("agent {:?}", agent);
-            //     r.message.unwrap().author_name = agent;
-            // }
-
-            results.push (r);
+            results.push(r);
         }
     }
 
