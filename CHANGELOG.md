@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.7.0-beta] - 2024-10-23
+
+### Fixed
+- Increase initial zome call timeout to avoid hanging on loading page
+- Improve image loading resiliance by increasing retry rate exponential backoff to 2x
+- Ensure image loading placeholder's error icon has contrasting color
+- Fix: Prevent long group names from overflowing layout
+
+### Added
+- display error notice if conductor setup fails
+- Update translations to use Volla Messages
+
 ## [0.7.0-beta-rc.0] - 2024-10-04
 
 - Update name and icons, and splash screen
