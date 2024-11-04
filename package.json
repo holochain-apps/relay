@@ -2,18 +2,16 @@
   "name": "volla_messages",
   "version": "0.7.0-beta",
   "private": true,
-  "workspaces": [
-    "ui"
-  ],
+  "workspaces": ["ui"],
   "scripts": {
-    "start": "AGENTS=2 npm run network",
+    "start": "npm run build:happ && AGENTS=2 npm run network",
     "spin": "AGENTS=2 npm run spin-network",
     "dev": "VITE_ADMIN_PORT=$(port) VITE_APP_PORT=$(port) SIGNAL_PORT=$(port) BOOTSTRAP_PORT=$(port) UI_PORT=8888 npm run x",
     "x": "hc s clean &&  npm run build:happ && UI_PORT=8888 concurrently \"npm start -w ui\" \"npm run start:happ\" \"hc run-local-services -b $BOOTSTRAP_PORT -s $SIGNAL_PORT\"",
     "tool-dev": " UI_PORT=8888 npm run tool-devy",
     "tool-devy": "concurrently \"npm start -w ui\" \"sleep 1 && we-dev-cli --agent-idx 1 --dev-config we_dev/config.ts\" \"sleep 10 && we-dev-cli --agent-idx 2 --dev-config we_dev/config.ts\"",
     "tool-devx": "BPORT=46263 SPORT=46262; concurrently \"hc run-local-services -b $BPORT -s $SPORT\" \"npm start -w ui\" \"./we_dev/we.AppImage  --dev-config we_dev/config.json --agent-num 1 -b http://127.0.0.1:$BPORT -s ws://127.0.0.1:$SPORT\" \"sleep 10 && ./we_dev/we.AppImage --dev-config we_dev/config.json --agent-num 2 -b http://127.0.0.1:$BPORT -s ws://127.0.0.1:$SPORT\"",
-    "network": "npm run build:happ && BOOTSTRAP_PORT=$(port) SIGNAL_PORT=$(port) INTERNAL_IP=$(internal-ip --ipv4) concurrently -k \"npm run local-services\" \"UI_PORT=1420 npm run -w ui start\" \"npm run launch\"",
+    "network": "BOOTSTRAP_PORT=$(port) SIGNAL_PORT=$(port) INTERNAL_IP=$(internal-ip --ipv4) concurrently -k \"npm run local-services\" \"UI_PORT=1420 npm run -w ui start\" \"npm run launch\"",
     "spin-network": "hc s clean && npm run build:happ && UI_PORT=1420 concurrently \"npm start -w ui\" \"npm run spin:happ\" \"holochain-playground\"",
     "test": "npm run build:zomes && hc app pack workdir --recursive && npm t -w tests",
     "launch:happ": "concurrently \"hc run-local-services --bootstrap-port $BOOTSTRAP_PORT --signal-port $SIGNAL_PORT\" \"echo pass | RUST_LOG=warn hc launch --piped -n $AGENTS workdir/relay.happ --ui-port $UI_PORT network --bootstrap http://127.0.0.1:\"$BOOTSTRAP_PORT\" webrtc ws://127.0.0.1:\"$SIGNAL_PORT\"\"",
@@ -26,7 +24,8 @@
     "network:android": "npm run build:happ && BOOTSTRAP_PORT=$(port) SIGNAL_PORT=$(port) INTERNAL_IP=$(internal-ip --ipv4) concurrently -k \"npm run local-services\" \"UI_PORT=1420 npm run -w ui start\" \"npm run tauri android dev\" \"npm run tauri dev\"",
     "start:android": "npm run build:happ && BOOTSTRAP_PORT=$(port) SIGNAL_PORT=$(port) INTERNAL_IP=$(internal-ip --ipv4) concurrently -k \"npm run local-services\" \"UI_PORT=1420 npm run -w ui start\" \"npm run tauri android dev\"",
     "launch": "concurrently-repeat \"npm run tauri dev\" $AGENTS",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "setup:happ-release": "curl -L https://github.com/holochain-apps/relay/releases/download/v0.7.0-beta/relay-0.7.0-beta.happ -o workdir/relay.happ"
   },
   "devDependencies": {
     "@holochain-playground/cli": "^0.2.0",
