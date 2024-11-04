@@ -2,7 +2,7 @@ name: "release-happ"
 on:
   push:
     tags:
-      - 'happ-v[0-9]+.[0-9]+.[0-9]+(-[a-z\-]+)?(.[0-9]+)?'
+      - 'happ-v[0-9]+\.[0-9]+\.[0-9]+(-[a-z\-]+)?(\.[0-9]+)?'
 
 jobs:
   publish-happ:
