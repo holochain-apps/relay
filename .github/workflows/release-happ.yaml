@@ -3,6 +3,7 @@ on:
   push:
     tags:
       - 'happ-v[0-9]+.[0-9]+.[0-9]+'
+      - 'happ-v[0-9]+.[0-9]+.[0-9]+-[a-z-]+'
 
 jobs:
   publish-happ:
