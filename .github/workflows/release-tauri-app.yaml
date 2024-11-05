@@ -7,13 +7,69 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+-[a-z]+.[0-9]+'
 
 jobs:
-  publish-happ:
-    permissions:
-      contents: write
-    runs-on: ubuntu-22.04
+  release-tauri-app-linux:
+    permissions: write-all
     outputs:
-      releaseId: ${{ steps.create-release.outputs.id }}
-      appVersion: ${{ steps.version.outputs.APP_VERSION }}
+      releaseId: ${{ steps.build-app.outputs.releaseId }}
+
+    runs-on: ubuntu-22.04
+    steps:
+
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      # Checks out a copy of your repository on the ubuntu-latest machine
+      - uses: actions/checkout@v3
+
+      - name: setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 20
+
+      - name: install Rust stable
+        uses: actions-rs/toolchain@v1
+        with:
+          override: true
+          toolchain: 1.80.1
+
+      - name: install Go stable
+        uses: actions/setup-go@v4
+        with:
+          go-version: "stable"
+
+      - name: install dependencies (ubuntu only)
+        run: |
+          sudo apt update
+          sudo apt install libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+
+      - name: Install and prepare
+        run: |
+          npm install
+          npm run setup:happ-release
+
+      - id: build-app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: Relay-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
+          releaseName: 'Relay v__VERSION__'
+          releaseBody: 'See the assets to download this version and install.'
+          releaseDraft: true
+          prerelease: false
+
+  release-tauri-app-android:
+    permissions: write-all
+    needs: release-tauri-app-linux
+    environment: Relay Release
+
+    runs-on: 'ubuntu-22.04' 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       # Checks out a copy of your repository on the ubuntu-latest machine
@@ -23,118 +79,132 @@ jobs:
         uses: ./.github/actions/extend-space
 
       - name: Install nix
-        uses: cachix/install-nix-action@v18
+        uses: cachix/install-nix-action@v27
         with:
-          install_url: https://releases.nixos.org/nix/nix-2.13.3/install
-          extra_nix_config: |
-            experimental-features = flakes nix-command
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          nix_path: nixpkgs=channel:nixos-24.05
 
-      - uses: cachix/cachix-action@v12
+      - uses: cachix/cachix-action@v15
         with:
           name: holochain-ci
 
-      - uses: cachix/cachix-action@v12
+      - uses: cachix/cachix-action@v15
+        with:
+          name: holochain-open-dev
+
+      - uses: cachix/cachix-action@v15
         with:
           name: darksoil-studio
 
-      - name: Install and test
+      - name: Install and prepare
         run: |
-          nix-store --gc
-          nix develop --command bash -c "npm i && npm run build:happ"
+          nix develop --no-update-lock-file --command npm install && npm run setup:happ-release
 
-      - name: Retrieve version
+      - name: setup Android signing
         run: |
-          echo "APP_VERSION=$(cat src-tauri/tauri.conf.json | grep -oP '(?<="version": ")[^"]*')" >> $GITHUB_OUTPUT
-        id: version
+          cd src-tauri/gen/android
+          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" > keystore.properties
+          echo "password=${{ secrets.ANDROID_KEY_PASSWORD }}" >> keystore.properties
+          base64 -d <<< "${{ secrets.ANDROID_KEY_BASE64 }}" > $RUNNER_TEMP/keystore.jks
+          echo "storeFile=$RUNNER_TEMP/keystore.jks" >> keystore.properties
 
-      - id: create-release
-        uses: ncipollo/release-action@v1
+      - name: Build android APKs
+        run: |
+          nix develop .#androidDev --no-update-lock-file --command bash -c "npm run tauri android build -- --apk --split-per-abi --target aarch64 --target i686 --target x86_64"
+
+      - uses: AButler/upload-release-assets@v3.0
         with:
-          allowUpdates: true
-          artifacts: "workdir/relay.happ"
-          body: "See assets below to download and install this version."
-          name: Volla Messages v${{ steps.version.outputs.APP_VERSION }}
-          tag: v${{ steps.version.outputs.APP_VERSION }}
-          prerelease: true
-          draft: true
+          files: src-tauri/gen/android/app/build/outputs/apk/*/release/app-*
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          release-id: ${{ needs.release-tauri-app-linux.outputs.releaseId }}
 
-  release-tauri-app:
-    needs: publish-happ
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [windows-2019, macos-11, ubuntu-22.04]
-    env:
-      MACOSX_DEPLOYMENT_TARGET: 10.13
+  release-tauri-app-windows:
+    permissions: write-all
 
-    runs-on: ${{ matrix.platform }}
+    runs-on: windows-latest
     steps:
-      - name: Support longpaths
-        if: matrix.platform != 'ubuntu-22.04'
-        run: git config --system core.longpaths true
 
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       # Checks out a copy of your repository on the ubuntu-latest machine
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: setup node
         uses: actions/setup-node@v1
         with:
           node-version: 20
+
       - name: install Rust stable
         uses: actions-rs/toolchain@v1
         with:
           override: true
-          toolchain: stable
+          toolchain: 1.80.1
 
       - name: install Go stable
         uses: actions/setup-go@v4
         with:
           go-version: "stable"
 
-      - name: install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-22.04'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.0-dev \
-            build-essential \
-            curl \
-            wget \
-            file \
-            libssl-dev \
-            libgtk-3-dev \
-            libayatana-appindicator3-dev \
-            librsvg2-dev \
-            javascriptcoregtk-4.1 \
-            libsoup-3.0 \
-            webkit2gtk-4.1
-
       - name: Install and prepare
         run: |
           npm install
-
-      - name: Print version
-        run: |
-          echo "The Version was: ${{ needs.publish-happ.outputs.appVersion }}"
-        id: print-version
-
-      - name: Download release of the .happ
-        id: release_data
-        uses: KevinRohn/github-full-release-data@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          repository: "holochain-apps/relay"
-          token: ${{ secrets.GITHUB_TOKEN }}
-          version: v${{ needs.publish-happ.outputs.appVersion }}
-          asset-file: '*.happ'
-          asset-output: 'workdir/'
+          npm run setup:happ-release
 
       - name: build the app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          releaseId: ${{ needs.publish-happ.outputs.releaseId }}
+          tagName: Relay-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
+          releaseName: 'Relay v__VERSION__'
+          releaseBody: 'See the assets to download this version and install.'
           releaseDraft: true
-          prerelease: true
+          prerelease: false
+
+  release-tauri-app-macos:
+    permissions: write-all
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'macos-latest' # for Arm based macs (M1 and above).
+          - platform: 'macos-13' # for Intel based macs.
+          # - platform: 'ubuntu-22.04' 
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      # Checks out a copy of your repository on the ubuntu-latest machine
+      - uses: actions/checkout@v3
+
+      - name: setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 20
+
+      - name: install Rust stable
+        uses: actions-rs/toolchain@v1
+        with:
+          override: true
+          toolchain: 1.80.1
+
+      - name: install Go stable
+        uses: actions/setup-go@v4
+        with:
+          go-version: stable
+
+      - name: Install and prepare
+        run: |
+          npm install
+          npm run setup:happ-release
+
+      - name: build the app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: Relay-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
+          releaseName: 'Relay v__VERSION__'
+          releaseBody: 'See the assets to download this version and install.'
+          releaseDraft: true
+          prerelease: false
