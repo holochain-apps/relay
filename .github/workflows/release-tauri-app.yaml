@@ -225,6 +225,13 @@ jobs:
           echo "CERT_ID=$CERT_ID" >> $GITHUB_ENV
           echo "Certificate imported."
 
+      - name: Save Apple Api Key to expected path
+        env:
+          APPLE_API_KEY_PATH_BASE64: ${{ secrets.APPLE_API_KEY_PATH_BASE64 }}
+          APPLE_API_KEY_PATH: ${{ secrets.APPLE_API_KEY_PATH }}
+        run: |
+          echo $APPLE_API_KEY_PATH_BASE64 | base64 --decode > $APPLE_API_KEY_PATH
+
       - name: Build the App
         uses: tauri-apps/tauri-action@v0
         env:
