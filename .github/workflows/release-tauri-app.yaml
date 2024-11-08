@@ -7,7 +7,19 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+-[a-z]+.[0-9]+'
 
 jobs:
+  create-release:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ncipollo/release-action@v1
+        with:
+          name: "Relay ${{ github.ref_name }}"
+          body: "See the assets to download this version and install."
+          prerelease: true
+          draft: true
+
   release-tauri-app-linux:
+    needs: create-release
     permissions: write-all
     outputs:
       releaseId: ${{ steps.build-app.outputs.releaseId }}
@@ -55,16 +67,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: Relay-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
-          releaseName: 'Relay v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
-          releaseDraft: true
-          prerelease: false
+          releaseId: ${{ needs.create-release.outputs.id }}
           args: --verbose
 
   release-tauri-app-android:
     permissions: write-all
-    needs: release-tauri-app-linux
+    needs: 
+      - release-tauri-app-linux
+      - create-release
     environment: Relay Release
 
     runs-on: 'ubuntu-22.04' 
@@ -113,11 +123,11 @@ jobs:
         with:
           files: src-tauri/gen/android/app/build/outputs/apk/*/release/app-*
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          release-id: ${{ needs.release-tauri-app-linux.outputs.releaseId }}
+          releaseId: ${{ needs.create-release.outputs.id }}
 
   release-tauri-app-windows:
+    needs: create-release
     permissions: write-all
-
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
@@ -143,16 +153,21 @@ jobs:
           npm install
           npm run setup:happ-release
 
+      - name: Build the App
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: --verbose
+
       ### Everything below this line is code signing for Windows via azure key vault, following these instructions:
       ### https://melatonin.dev/blog/how-to-code-sign-windows-installers-with-an-ev-cert-on-github-actions/
-      - name: Build and Sign the App
+      - name: Sign the App
         run: |
-        
+
           # read name and version from tauri.conf.json
           $TAURI_CONF = (Get-Content src-tauri\tauri.conf.json | Out-String | ConvertFrom-Json)
           $APP_PRODUCT_NAME_VERSION = "$($TAURI_CONF.productName)_$($TAURI_CONF.version)"
-
-          npm run tauri build -- --verbose # building in verbose mode to get reasonable logging output in case of failure
 
           dotnet tool install --global AzureSignTool
 
@@ -164,20 +179,17 @@ jobs:
           # log hashes before and after code signing to verify that the uploaded assets are the right ones
           CertUtil -hashfile "D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\msi\$($APP_PRODUCT_NAME_VERSION)_x64_en-US.msi" SHA256
           CertUtil -hashfile "D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\nsis\$($APP_PRODUCT_NAME_VERSION)_x64-setup.exe" SHA256
-
-      - name: upload signed .msi, .msi.zip, .msi.zip.sig, .exe, .nsis.zip, .nsis.zip.sig files to github release (Windows only)
-        uses: matthme/tauri-action-ev-signing@upload-only
+        
+      - name: Upload the Signed App
+        uses: xresloader/upload-to-github-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: Relay-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
-          releaseName: 'Relay v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
-          releaseDraft: true
-          prerelease: false
-          args: --verbose
+          release_id: ${{ needs.create-release.outputs.id }}
+          file: "D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\msi\*;D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\nsis\*"
 
   release-tauri-app-macos:
+    needs: create-release
     permissions: write-all
 
     strategy:
@@ -225,9 +237,5 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
 
         with:
-          tagName: Relay-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
-          releaseName: 'Relay v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
-          releaseDraft: true
-          prerelease: false
+          releaseId: ${{ needs.create-release.outputs.id }}
           args: --verbose
