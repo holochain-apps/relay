@@ -180,13 +180,12 @@ jobs:
           CertUtil -hashfile "D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\nsis\$($APP_PRODUCT_NAME_VERSION)_x64-setup.exe" SHA256
         
       - name: Upload the Signed App
-        uses: xresloader/upload-to-github-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: AButler/upload-release-assets@v3.0
         with:
-          release_id: ${{ needs.create-release.outputs.id }}
-          file: D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\**
-
+          files: D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\**
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          release-id: ${{ needs.create-release.outputs.id }}
+          
   release-tauri-app-macos:
     needs: create-release
     permissions: write-all
