@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: ncipollo/release-action@v1
         with:
-          name: "Relay ${{ github.ref_name }}"
+          name: "Volla Messages ${{ github.ref_name }}"
           body: "See the assets to download this version and install."
           prerelease: true
           draft: true
@@ -75,7 +75,6 @@ jobs:
     needs: 
       - release-tauri-app-linux
       - create-release
-    environment: Relay Release
 
     runs-on: 'ubuntu-22.04' 
     steps:
