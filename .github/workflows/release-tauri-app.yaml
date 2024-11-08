@@ -148,9 +148,10 @@ jobs:
       - name: Build and Sign the App
         run: |
           ls D:\a\
+          ls
 
           # read productName and version from tauri.conf.json
-          $TAURI_CONF = (Get-Content src-tauri/tauri.conf.json | Out-String | ConvertFrom-Json)
+          $TAURI_CONF = (Get-Content src-tauri\tauri.conf.json | Out-String | ConvertFrom-Json)
           $APP_PRODUCT_NAME_VERSION = '{0}_{1}' -f $TAURI_CONF.productName, $TAURI_CONF.version
 
           npm run tauri build -- --verbose # building in verbose mode to get reasonable logging output in case of failure
