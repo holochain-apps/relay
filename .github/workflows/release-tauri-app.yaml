@@ -186,7 +186,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           release_id: ${{ needs.create-release.outputs.id }}
-          file: "D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\msi\*;D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\nsis\*"
+          file: D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\**
 
   release-tauri-app-macos:
     needs: create-release
