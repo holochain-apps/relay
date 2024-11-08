@@ -14,9 +14,6 @@ jobs:
 
     runs-on: ubuntu-22.04
     steps:
-
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      # Checks out a copy of your repository on the ubuntu-latest machine
       - uses: actions/checkout@v3
 
       - name: setup node
@@ -72,8 +69,6 @@ jobs:
 
     runs-on: 'ubuntu-22.04' 
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      # Checks out a copy of your repository on the ubuntu-latest machine
       - uses: actions/checkout@v3
 
       - name: Extend space
@@ -125,9 +120,6 @@ jobs:
 
     runs-on: windows-latest
     steps:
-
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      # Checks out a copy of your repository on the ubuntu-latest machine
       - uses: actions/checkout@v3
 
       - name: setup node
@@ -155,21 +147,24 @@ jobs:
       ### https://melatonin.dev/blog/how-to-code-sign-windows-installers-with-an-ev-cert-on-github-actions/
       - name: Build and Sign the App
         run: |
+          ls D:\a\
 
-          $APP_VERSION = (Get-Content src-tarui/tauri.conf.json | Out-String | ConvertFrom-Json).version
+          # read productName and version from tauri.conf.json
+          $TAURI_CONF = (Get-Content src-tauri/tauri.conf.json | Out-String | ConvertFrom-Json)
+          $APP_PRODUCT_NAME_VERSION = '{0}_{1}' -f $TAURI_CONF.productName, $TAURI_CONF.version
 
           npm run tauri build -- --verbose # building in verbose mode to get reasonable logging output in case of failure
 
           dotnet tool install --global AzureSignTool
 
           # sign the .msi file
-          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v 'D:\a\relay\relay\src-tauri\target\release\bundle\msi\Volla Messages_{0}_x64_en-US.msi' -f $APP_VERSION
+          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v 'D:\a\relay\relay\src-tauri\target\release\bundle\msi\{0}_x64_en-US.msi' -f $APP_PRODUCT_NAME_VERSION
           # sign the .exe file
-          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v 'D:\a\relay\relay\src-tauri\target\release\bundle\nsis\Volla Messages_{0}_x64-setup.exe' -f $APP_VERSION
+          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v 'D:\a\relay\relay\src-tauri\target\release\bundle\nsis\{0}_x64-setup.exe' -f $APP_PRODUCT_NAME_VERSION
 
           # log hashes before and after code signing to verify that the uploaded assets are the right ones
-          CertUtil -hashfile 'D:\a\relay\relay\src-tauri\target\release\bundle\msi\Volla Messages_{0}_x64_en-US.msi' -f $APP_VERSION SHA256
-          CertUtil -hashfile 'D:\a\relay\relay\src-tauri\target\release\bundle\nsis\Volla Messages_{0}_x64-setup.exe' -f $APP_VERSION SHA256
+          CertUtil -hashfile 'src-tauri\target\release\bundle\msi\{0}_x64_en-US.msi' -f $APP_PRODUCT_NAME_VERSION SHA256
+          CertUtil -hashfile 'src-tauri\target\release\bundle\nsis\{0}_x64-setup.exe' -f $APP_PRODUCT_NAME_VERSION SHA256
 
       - name: upload signed .msi, .msi.zip, .msi.zip.sig, .exe, .nsis.zip, .nsis.zip.sig files to github release (Windows only)
         uses: matthme/tauri-action-ev-signing@upload-only
@@ -196,8 +191,6 @@ jobs:
     runs-on: ${{ matrix.platform }}
 
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      # Checks out a copy of your repository on the ubuntu-latest machine
       - uses: actions/checkout@v3
 
       - name: setup node
