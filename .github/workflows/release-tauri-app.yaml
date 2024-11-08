@@ -162,8 +162,8 @@ jobs:
           AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v "src-tauri\target\release\bundle\nsis\$($APP_PRODUCT_NAME_VERSION)_x64-setup.exe"
 
           # log hashes before and after code signing to verify that the uploaded assets are the right ones
-          CertUtil -hashfile "D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\src-tauri\target\release\bundle\msi\$($APP_PRODUCT_NAME_VERSION)_x64_en-US.msi" SHA256
-          CertUtil -hashfile "D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\src-tauri\target\release\bundle\nsis\$($APP_PRODUCT_NAME_VERSION)_x64-setup.exe" SHA256
+          CertUtil -hashfile "D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\msi\$($APP_PRODUCT_NAME_VERSION)_x64_en-US.msi" SHA256
+          CertUtil -hashfile "D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\nsis\$($APP_PRODUCT_NAME_VERSION)_x64-setup.exe" SHA256
 
       - name: upload signed .msi, .msi.zip, .msi.zip.sig, .exe, .nsis.zip, .nsis.zip.sig files to github release (Windows only)
         uses: matthme/tauri-action-ev-signing@upload-only
