@@ -10,6 +10,8 @@ jobs:
   create-release:
     permissions: write-all
     runs-on: ubuntu-latest
+    outputs:
+      release-id: ${{ steps.step1.outputs.id }}
     steps:
       - uses: ncipollo/release-action@v1
         with:
