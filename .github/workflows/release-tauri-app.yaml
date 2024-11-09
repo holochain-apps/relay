@@ -26,12 +26,6 @@ jobs:
     permissions: write-all
     runs-on: ubuntu-22.04
     steps:
-
-      - name: print info
-        run: |
-          echo "release Id"
-          echo ${{ needs.create-release.outputs.releaseId }}
-
       - uses: actions/checkout@v3
 
       - name: setup node
@@ -73,7 +67,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          releaseId: ${{ needs.create-release.outputs.id }}
+          releaseId: ${{ needs.create-release.outputs.releaseId }}
           args: --verbose
 
   release-tauri-app-android:
@@ -128,7 +122,7 @@ jobs:
         with:
           files: src-tauri/gen/android/app/build/outputs/apk/*/release/app-*
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          releaseId: ${{ needs.create-release.outputs.id }}
+          releaseId: ${{ needs.create-release.outputs.releaseId }}
 
   release-tauri-app-windows:
     needs: create-release
@@ -190,7 +184,7 @@ jobs:
         with:
           files: D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\**
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          release-id: ${{ needs.create-release.outputs.id }}
+          release-id: ${{ needs.create-release.outputs.releaseId }}
           
   release-tauri-app-macos:
     needs: create-release
@@ -241,5 +235,5 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
 
         with:
-          releaseId: ${{ needs.create-release.outputs.id }}
+          releaseId: ${{ needs.create-release.outputs.releaseId }}
           args: --verbose
