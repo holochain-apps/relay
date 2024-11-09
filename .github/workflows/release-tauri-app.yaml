@@ -11,7 +11,7 @@ jobs:
     permissions: write-all
     runs-on: ubuntu-latest
     outputs:
-      release-id: ${{ steps.step1.outputs.id }}
+      releaseId: ${{ steps.step1.outputs.id }}
     steps:
       - id: step1
         uses: ncipollo/release-action@v1
@@ -24,16 +24,13 @@ jobs:
   release-tauri-app-linux:
     needs: create-release
     permissions: write-all
-    outputs:
-      releaseId: ${{ steps.build-app.outputs.releaseId }}
-
     runs-on: ubuntu-22.04
     steps:
 
       - name: print info
         run: |
           echo "release Id"
-          echo ${{ needs.create-release.outputs.id }}
+          echo ${{ needs.create-release.outputs.releaseId }}
 
       - uses: actions/checkout@v3
 
