@@ -162,8 +162,10 @@ jobs:
       - name: Sign the App
         run: |
 
-          ### Code signing for Windows via azure key vault, following these instructions:
-          ### https://melatonin.dev/blog/how-to-code-sign-windows-installers-with-an-ev-cert-on-github-actions/
+          # Powershell settings to make the script exit on error
+          $ErrorActionPreference = "Stop"
+          Set-StrictMode -Version Latest
+          $PSNativeCommandUseErrorActionPreference = $true
 
           # read name and version from tauri.conf.json
           $TAURI_CONF = (Get-Content src-tauri\tauri.conf.json | Out-String | ConvertFrom-Json)
@@ -172,13 +174,17 @@ jobs:
           $BUNDLE_OUT_PATH_1 = "D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\nsis\$($APP_PRODUCT_NAME_VERSION)_x64-setup.exe"
           $BUNDLE_OUT_PATH_2 = "D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\msi\$($APP_PRODUCT_NAME_VERSION)_x64_en-US.msi"
 
-          dotnet tool install --global AzureSignTool
+          # log hashes before code signing
+          CertUtil -hashfile $BUNDLE_OUT_PATH_1 SHA256
+          CertUtil -hashfile $BUNDLE_OUT_PATH_2 SHA256
 
-          # sign the output bundles
+          # Code sign the output bundles via azure key vault, following these instructions:
+          # https://melatonin.dev/blog/how-to-code-sign-windows-installers-with-an-ev-cert-on-github-actions/          dotnet tool install --global AzureSignTool
+          dotnet tool install --global AzureSignTool
           AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v $BUNDLE_OUT_PATH_1
           AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v $BUNDLE_OUT_PATH_2
 
-          # log hashes before and after code signing to verify that the uploaded assets are the right ones
+          # log hashes after code signing
           CertUtil -hashfile $BUNDLE_OUT_PATH_1 SHA256
           CertUtil -hashfile $BUNDLE_OUT_PATH_2 SHA256
 
