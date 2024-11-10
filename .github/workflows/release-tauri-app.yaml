@@ -182,7 +182,7 @@ jobs:
       - name: Upload the Signed App
         uses: AButler/upload-release-assets@v3.0
         with:
-          files: D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\**
+          files: D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\msi\*;D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\nsis\*
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           release-id: ${{ needs.create-release.outputs.releaseId }}
           
