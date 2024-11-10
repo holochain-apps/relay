@@ -159,10 +159,11 @@ jobs:
         with:
           args: --verbose
 
-      ### Everything below this line is code signing for Windows via azure key vault, following these instructions:
-      ### https://melatonin.dev/blog/how-to-code-sign-windows-installers-with-an-ev-cert-on-github-actions/
       - name: Sign the App
         run: |
+
+          ### Code signing for Windows via azure key vault, following these instructions:
+          ### https://melatonin.dev/blog/how-to-code-sign-windows-installers-with-an-ev-cert-on-github-actions/
 
           # read name and version from tauri.conf.json
           $TAURI_CONF = (Get-Content src-tauri\tauri.conf.json | Out-String | ConvertFrom-Json)
@@ -180,12 +181,6 @@ jobs:
           # log hashes before and after code signing to verify that the uploaded assets are the right ones
           CertUtil -hashfile $BUNDLE_OUT_PATH_1 SHA256
           CertUtil -hashfile $BUNDLE_OUT_PATH_2 SHA256
-
-
-      - name: view output bundle
-        run: |
-          ls D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\msi\*
-          ls D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\nsis\*
 
       - name: Upload the Signed App
         uses: AButler/upload-release-assets@v3.0
