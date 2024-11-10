@@ -192,7 +192,10 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           release-id: ${{ needs.create-release.outputs.releaseId }}
-          files: D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\msi\*;D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\nsis\*
+          # We use forward slashes for glob expressions, even though these are windows paths.
+          # See the docs for the fast-glob library used by this gh action:
+          # https://www.npmjs.com/package/fast-glob#how-to-write-patterns-on-windows
+          files: D:/a/${{ github.event.repository.name }}/${{ github.event.repository.name }}/target/release/bundle/msi/*;D:/a/${{ github.event.repository.name }}/${{ github.event.repository.name }}/target/release/bundle/nsis/*
           
   release-tauri-app-macos:
     needs: create-release
