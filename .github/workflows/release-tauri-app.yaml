@@ -168,23 +168,25 @@ jobs:
           $TAURI_CONF = (Get-Content src-tauri\tauri.conf.json | Out-String | ConvertFrom-Json)
           $APP_PRODUCT_NAME_VERSION = "$($TAURI_CONF.productName)_$($TAURI_CONF.version)"
 
+          $BUNDLE_OUT_PATH_1 = "D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\nsis\$($APP_PRODUCT_NAME_VERSION)_x64-setup.exe"
+          $BUNDLE_OUT_PATH_2 = "D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\msi\$($APP_PRODUCT_NAME_VERSION)_x64_en-US.msi"
+
           dotnet tool install --global AzureSignTool
 
-          # sign the .msi file
-          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v "src-tauri\target\release\bundle\msi\$($APP_PRODUCT_NAME_VERSION)_x64_en-US.msi"
-          # sign the .exe file
-          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v "src-tauri\target\release\bundle\nsis\$($APP_PRODUCT_NAME_VERSION)_x64-setup.exe"
+          # sign the output bundles
+          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v $BUNDLE_OUT_PATH_1
+          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v $BUNDLE_OUT_PATH_2
 
           # log hashes before and after code signing to verify that the uploaded assets are the right ones
-          CertUtil -hashfile "D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\msi\$($APP_PRODUCT_NAME_VERSION)_x64_en-US.msi" SHA256
-          CertUtil -hashfile "D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\nsis\$($APP_PRODUCT_NAME_VERSION)_x64-setup.exe" SHA256
-        
+          CertUtil -hashfile $BUNDLE_OUT_PATH_1 SHA256
+          CertUtil -hashfile $BUNDLE_OUT_PATH_2 SHA256
+
       - name: Upload the Signed App
         uses: AButler/upload-release-assets@v3.0
         with:
-          files: D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\msi\*;D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\nsis\*
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           release-id: ${{ needs.create-release.outputs.releaseId }}
+          files: D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\msi\*;D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\nsis\*
           
   release-tauri-app-macos:
     needs: create-release
