@@ -122,7 +122,7 @@ jobs:
         with:
           files: src-tauri/gen/android/app/build/outputs/apk/*/release/app-*
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          releaseId: ${{ needs.create-release.outputs.releaseId }}
+          release-id: ${{ needs.create-release.outputs.releaseId }}
 
   release-tauri-app-windows:
     needs: create-release
@@ -180,6 +180,12 @@ jobs:
           # log hashes before and after code signing to verify that the uploaded assets are the right ones
           CertUtil -hashfile $BUNDLE_OUT_PATH_1 SHA256
           CertUtil -hashfile $BUNDLE_OUT_PATH_2 SHA256
+
+
+      - name: view output bundle
+        run: |
+          ls D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\msi\*
+          ls D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\nsis\*
 
       - name: Upload the Signed App
         uses: AButler/upload-release-assets@v3.0
