@@ -25,15 +25,6 @@ pub fn happ_bundle() -> anyhow::Result<AppBundle> {
 #[allow(unused_mut)]
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // Workaround for linux webkit issues where screen is blank.
-    // They seem to only arise on the version of webkitgtk
-    // that is included in ubuntu 22.04.
-    #[cfg(all(mobile, target_os = "linux"))]
-    {
-        std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
-        std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
-    }
-
     let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_notification::init())
