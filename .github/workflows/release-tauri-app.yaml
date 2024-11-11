@@ -7,16 +7,25 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+-[a-z]+.[0-9]+'
 
 jobs:
-  release-tauri-app-linux:
+  create-release:
     permissions: write-all
+    runs-on: ubuntu-latest
     outputs:
-      releaseId: ${{ steps.build-app.outputs.releaseId }}
+      releaseId: ${{ steps.step1.outputs.id }}
+    steps:
+      - id: step1
+        uses: ncipollo/release-action@v1
+        with:
+          name: "Volla Messages ${{ github.ref_name }}"
+          body: "See the assets to download this version and install."
+          prerelease: true
+          draft: true
 
+  release-tauri-app-linux:
+    needs: create-release
+    permissions: write-all
     runs-on: ubuntu-22.04
     steps:
-
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      # Checks out a copy of your repository on the ubuntu-latest machine
       - uses: actions/checkout@v3
 
       - name: setup node
@@ -58,21 +67,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: Relay-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
-          releaseName: 'Relay v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
-          releaseDraft: true
-          prerelease: false
+          releaseId: ${{ needs.create-release.outputs.releaseId }}
+          args: --verbose
 
   release-tauri-app-android:
     permissions: write-all
-    needs: release-tauri-app-linux
-    environment: Relay Release
+    needs: 
+      - release-tauri-app-linux
+      - create-release
 
     runs-on: 'ubuntu-22.04' 
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      # Checks out a copy of your repository on the ubuntu-latest machine
       - uses: actions/checkout@v3
 
       - name: Extend space
@@ -117,16 +122,13 @@ jobs:
         with:
           files: src-tauri/gen/android/app/build/outputs/apk/*/release/app-*
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          release-id: ${{ needs.release-tauri-app-linux.outputs.releaseId }}
+          release-id: ${{ needs.create-release.outputs.releaseId }}
 
   release-tauri-app-windows:
+    needs: create-release
     permissions: write-all
-
     runs-on: windows-latest
     steps:
-
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      # Checks out a copy of your repository on the ubuntu-latest machine
       - uses: actions/checkout@v3
 
       - name: setup node
@@ -150,18 +152,54 @@ jobs:
           npm install
           npm run setup:happ-release
 
-      - name: build the app
+      - name: Build the App
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: Relay-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
-          releaseName: 'Relay v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
-          releaseDraft: true
-          prerelease: false
+          args: --verbose
 
+      - name: Sign the App
+        run: |
+
+          # Powershell settings to make the script exit on error
+          $ErrorActionPreference = "Stop"
+          Set-StrictMode -Version Latest
+          $PSNativeCommandUseErrorActionPreference = $true
+
+          # read name and version from tauri.conf.json
+          $TAURI_CONF = (Get-Content src-tauri\tauri.conf.json | Out-String | ConvertFrom-Json)
+          $APP_PRODUCT_NAME_VERSION = "$($TAURI_CONF.productName)_$($TAURI_CONF.version)"
+
+          $BUNDLE_OUT_PATH_1 = "D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\nsis\$($APP_PRODUCT_NAME_VERSION)_x64-setup.exe"
+          $BUNDLE_OUT_PATH_2 = "D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\msi\$($APP_PRODUCT_NAME_VERSION)_x64_en-US.msi"
+
+          # log hashes before code signing
+          CertUtil -hashfile $BUNDLE_OUT_PATH_1 SHA256
+          CertUtil -hashfile $BUNDLE_OUT_PATH_2 SHA256
+
+          # Code sign the output bundles via azure key vault, following these instructions:
+          # https://melatonin.dev/blog/how-to-code-sign-windows-installers-with-an-ev-cert-on-github-actions/          dotnet tool install --global AzureSignTool
+          dotnet tool install --global AzureSignTool
+          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v $BUNDLE_OUT_PATH_1
+          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v $BUNDLE_OUT_PATH_2
+
+          # log hashes after code signing
+          CertUtil -hashfile $BUNDLE_OUT_PATH_1 SHA256
+          CertUtil -hashfile $BUNDLE_OUT_PATH_2 SHA256
+
+      - name: Upload the Signed App
+        uses: AButler/upload-release-assets@v3.0
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          release-id: ${{ needs.create-release.outputs.releaseId }}
+          # We use forward slashes for glob expressions, even though these are windows paths.
+          # See the docs for the fast-glob library used by this gh action:
+          # https://www.npmjs.com/package/fast-glob#how-to-write-patterns-on-windows
+          files: D:/a/${{ github.event.repository.name }}/${{ github.event.repository.name }}/target/release/bundle/msi/*;D:/a/${{ github.event.repository.name }}/${{ github.event.repository.name }}/target/release/bundle/nsis/*
+          
   release-tauri-app-macos:
+    needs: create-release
     permissions: write-all
 
     strategy:
@@ -170,12 +208,10 @@ jobs:
         include:
           - platform: 'macos-latest' # for Arm based macs (M1 and above).
           - platform: 'macos-13' # for Intel based macs.
-          # - platform: 'ubuntu-22.04' 
 
     runs-on: ${{ matrix.platform }}
+
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      # Checks out a copy of your repository on the ubuntu-latest machine
       - uses: actions/checkout@v3
 
       - name: setup node
@@ -199,13 +235,17 @@ jobs:
           npm install
           npm run setup:happ-release
 
-      - name: build the app
+      - name: Build the App
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+
         with:
-          tagName: Relay-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
-          releaseName: 'Relay v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
-          releaseDraft: true
-          prerelease: false
+          releaseId: ${{ needs.create-release.outputs.releaseId }}
+          args: --verbose
