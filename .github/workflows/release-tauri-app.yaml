@@ -9,6 +9,7 @@ on:
 jobs:
   create-release:
     permissions: write-all
+    environment: Relay Release
     runs-on: ubuntu-latest
     outputs:
       releaseId: ${{ steps.step1.outputs.id }}
@@ -24,6 +25,7 @@ jobs:
   release-tauri-app-linux:
     needs: create-release
     permissions: write-all
+    environment: Relay Release
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
@@ -72,10 +74,10 @@ jobs:
 
   release-tauri-app-android:
     permissions: write-all
+    environment: Relay Release
     needs: 
       - release-tauri-app-linux
       - create-release
-    environment: Relay Release
     runs-on: 'ubuntu-22.04' 
     steps:
       - uses: actions/checkout@v3
@@ -127,6 +129,7 @@ jobs:
   release-tauri-app-windows:
     needs: create-release
     permissions: write-all
+    environment: Relay Release
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
@@ -163,10 +166,16 @@ jobs:
         run: |
 
           # Powershell settings to make the script exit on error
-          $ErrorActionPreference = "Stop"
-          Set-StrictMode -Version Latest
-          $PSNativeCommandUseErrorActionPreference = $true
-
+          # If the github env variable IGNORE_WINDOWS_CODESIGNING_ERROR is "true",
+          # then any errors in this script will not be fatal to the job.
+          $IGNORE_WINDOWS_CODESIGNING_ERROR = "${{ vars.IGNORE_WINDOWS_CODESIGNING_ERROR }}"
+          if ( "true" -ne $IGNORE_WINDOWS_CODESIGNING_ERROR )
+          {
+            $ErrorActionPreference = "Stop"
+            Set-StrictMode -Version Latest
+            $PSNativeCommandUseErrorActionPreference = $true
+          }
+          
           # read name and version from tauri.conf.json
           $TAURI_CONF = (Get-Content src-tauri\tauri.conf.json | Out-String | ConvertFrom-Json)
           $APP_PRODUCT_NAME_VERSION = "$($TAURI_CONF.productName)_$($TAURI_CONF.version)"
@@ -201,6 +210,7 @@ jobs:
   release-tauri-app-macos:
     needs: create-release
     permissions: write-all
+    environment: Relay Release
 
     strategy:
       fail-fast: false
