@@ -6,11 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-## [0.7.1] - 2024-11-04
+## [0.7.1] - 2024-11-12
 
 ### Added
 - Automated release builds in CI
-
+- Windows bundle code signing, macOS bundle code signing and notarization in CI
+- Added a github env var IGNORE_WINDOWS_CODESIGNING_ERROR. When set to "true", errors with windows code signing will not be fatal to the build job.
+- All releases except the Android app use a different icon with the Volla logo.
+- Fix: Blank screen on Ubuntu 22.04
 
 ## [0.7.0-beta] - 2024-10-23
 
