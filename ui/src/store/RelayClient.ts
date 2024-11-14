@@ -43,7 +43,7 @@ export class RelayClient {
       fn_name: 'create_profile',
       payload: { nickname: firstName + ' ' + lastName, fields: { avatar, firstName, lastName } }
     };
-    const profile = await this.client.callZome(req, 30000);
+    const profile = await this.client.callZome(req);
     return profile
   }
 
@@ -54,7 +54,7 @@ export class RelayClient {
       fn_name: 'update_profile',
       payload: { nickname: firstName + ' ' + lastName, fields: { avatar, firstName, lastName } }
     };
-    const profile = await this.client.callZome(req, 30000);
+    const profile = await this.client.callZome(req);
 
     // Update profile in every conversation I am a part of
     Object.values(this.conversations).forEach(async (conversation) => {
@@ -64,7 +64,7 @@ export class RelayClient {
         fn_name: 'update_profile',
         payload: { nickname: firstName + ' ' + lastName, fields: { avatar, firstName, lastName } }
       };
-      await this.client.callZome(req, 30000);
+      await this.client.callZome(req);
     })
 
     return profile
@@ -167,7 +167,7 @@ export class RelayClient {
       fn_name: 'get_agents_with_profile',
       payload: null,
     };
-    const agentsResponse = await this.client.callZome(req, 30000);
+    const agentsResponse = await this.client.callZome(req);
 
     return await agentsResponse.reduce(async (resultsPromise: { [key: AgentPubKeyB64]: Profile }, a: any) => {
         const agentRecord = await this.client.callZome({
@@ -175,7 +175,7 @@ export class RelayClient {
           zome_name: 'profiles',
           fn_name: 'get_agent_profile',
           payload: a
-        }, 30000);
+        });
         const results = await resultsPromise;
         results[encodeHashToBase64(a)] = decode(agentRecord.entry.Present.entry) as Profile
         return results
@@ -226,7 +226,7 @@ export class RelayClient {
       fn_name: 'create_profile',
       payload: profile,
     };
-    return await this.client.callZome(req, 30000);
+    return await this.client.callZome(req);
   }
 
   public async inviteAgentToConversation(conversationId: string, forAgent: AgentPubKey, role: number = 0): Promise<MembraneProof | undefined> {
@@ -256,7 +256,7 @@ export class RelayClient {
       fn_name: 'get_all_contact_entries',
       payload: null
     }
-    const result = await this.client.callZome(req, 30000)
+    const result = await this.client.callZome(req)
     return result
   }
 
@@ -272,7 +272,7 @@ export class RelayClient {
         public_key: decodeHashFromBase64(contact.publicKeyB64)
       }
     }
-    const result = await this.client.callZome(req, 30000)
+    const result = await this.client.callZome(req)
     return result
   }
 
@@ -292,7 +292,7 @@ export class RelayClient {
         }
       }
     }
-    const result = await this.client.callZome(req, 30000)
+    const result = await this.client.callZome(req)
     return result
   }
 
@@ -306,6 +306,6 @@ export class RelayClient {
       fn_name,
       payload,
     };
-    return await this.client.callZome(req, 30000);
+    return await this.client.callZome(req);
   }
 }

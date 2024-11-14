@@ -1,7 +1,7 @@
 [package]
-name = "relayapp"
-version = "0.5.0-beta"
-description = "Relay"
+name = "volla_messages"
+version = "0.7.1"
+description = "Volla Messages"
 authors = ["Tibet Sprague", "Eric Harris-Braun"]
 license = ""
 repository = ""
@@ -15,26 +15,26 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "2.0.0-rc", default-features = false , features = [] }
+tauri-build = { version = "2.0.2", default-features = false , features = [] }
 
 [dependencies]
-tauri = { version = "2.0.0-rc", features = [] }
-tauri-plugin-holochain = { git = "https://github.com/darksoil-studio/p2p-shipyard"}
-holochain_types = { version = "0.3.2" }
-lair_keystore = { version = "0.4.0" }
-
-holochain_client = { version = "0.5.0" }
+tauri = { version = "2.0.6", features = [] }
+tauri-plugin-holochain = { git = "https://github.com/mattyg/p2p-shipyard", branch = "disable-dpki", default-features = false, features = ["gossip_arc_full"] }
+holochain_types = { version = "0.4.0-rc" }
+lair_keystore = { version = "0.5.2" }
+holochain_client = { version = "0.6.0-rc" }
 
 log = "0.4"
-tauri-plugin-log = "2.0.0-rc"
-tauri-plugin-notification = "2.0.0-rc"
-tauri-plugin-clipboard-manager = "2.0.0-rc"
-tauri-plugin-sharesheet = "0.0.1"
 tauri-plugin-holochain-foreground-service-consumer = { git = "https://github.com/mattyg/p2p-shipyard.git", branch = "feat/uniffi-bindings-take-2", package = "tauri-plugin-holochain-foreground-service-consumer" }
+tauri-plugin-log = "2.0.1"
+tauri-plugin-notification = "2.0.1"
+tauri-plugin-clipboard-manager = "2.0.1"
+tauri-plugin-sharesheet = "0.0.1"
+tauri-plugin-shell = "2.0.2"
+tauri-plugin-barcode-scanner = "2.0.1"
+tauri-plugin-os = "2.0.1"
 url2 = "0.0.6"
 app_dirs2 = "2.5.5"
 tempdir = "0.3.7"
 anyhow = "1"
-tauri-plugin-shell = "2.0.0-rc"
 serde_json = "1"
-holochain = { git ="https://github.com/holochain/holochain",branch="develop-0.3" }

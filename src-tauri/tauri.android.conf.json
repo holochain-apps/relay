@@ -1,0 +1,11 @@
+{
+  "bundle": {
+    "icon": [
+      "icons/colon/32x32.png",
+      "icons/colon/128x128.png",
+      "icons/colon/128x128@2x.png",
+      "icons/colon/icon.icns",
+      "icons/colon/icon.ico"
+    ]
+  }
+}

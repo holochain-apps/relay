@@ -16,6 +16,7 @@
   import { copyToClipboard, isMobile, linkify, sanitizeHTML, shareText } from '$lib/utils';
   import { RelayStore } from '$store/RelayStore';
   import { Privacy, type Conversation, type Message, type Image } from '../../../types';
+  import LightboxImage from '$lib/LightboxImage.svelte';
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
   const tAny = t as any;
@@ -43,6 +44,7 @@
   let conversationContainer: HTMLElement;
   let scrollAtBottom = true;
   let scrollAtTop = false;
+
   const SCROLL_BOTTOM_THRESHOLD = 100; // How close to the bottom must the user be to consider it "at the bottom"
   const SCROLL_TOP_THRESHOLD = 300; // How close to the top must the user be to consider it "at the top"
 
@@ -78,6 +80,12 @@
     })
   }
 
+  const checkForData = () => {
+    checkForAgents()
+    checkForConfig()
+    checkForMessages()
+  }
+
   function handleResize() {
     if (scrollAtBottom) {
       scrollToBottom();
@@ -94,10 +102,7 @@
         // messages = c.messages;
         numMembers = Object.values(agentProfiles).length;
       });
-      // TODO: do this check in one call of checkForStuff
-      checkForAgents()
-      checkForConfig()
-      checkForMessages()
+      checkForData();
       conversationContainer.addEventListener('scroll', handleScroll);
       window.addEventListener('resize', debouncedHandleResize);
       newMessageInput.focus();
@@ -128,7 +133,6 @@
 
     messages.forEach(message => {
       // Don't display message if we don't have a profile from the author yet.
-      // TODO: could wait until all profiles have been synced first?
       if (!agentProfiles[message.authorKey]) {
         return;
       }
@@ -237,29 +241,29 @@
 </script>
 
 <Header>
-  <a class='pr-5' href={`/conversations${conversation?.archived ? '/archive' : ''}`}><SvgIcon icon='caretLeft' color={$modeCurrent ? '%232e2e2e' : 'white'} size='10' /></a>
+  <a class='flex-none pr-5' href={`/conversations${conversation?.archived ? '/archive' : ''}`}><SvgIcon icon='caretLeft' color={$modeCurrent ? '%232e2e2e' : 'white'} size='10' /></a>
   {#if conversation}
-    <h1 class="flex-1 grow text-center">
-      <a href={`/conversations/${conversationId}/details`} class='pl-5 flex flex-row items-center justify-center'>
+    <h1 class="grow text-center self-center block whitespace-nowrap overflow-hidden text-ellipsis">
+      <a href={`/conversations/${conversationId}/details`} class="w-full">
         {conversation.title}
-        <button class='ml-2' on:click={() => goto(`/conversations/${conversationId}/details`)}>
-          <SvgIcon icon='gear' size='18' color={$modeCurrent ? '%232e2e2e' : 'white'} />
-        </button>
       </a>
     </h1>
+    <button class='self-center pl-2' on:click={() => goto(`/conversations/${conversationId}/details`)}>
+      <SvgIcon icon='gear' size='18' color={$modeCurrent ? '%232e2e2e' : 'white'} />
+    </button>
     {#if conversation.data.privacy === Privacy.Public || encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64}
-      <a class='pl-5' href={`/conversations/${conversation.data.id}/${conversation.data.privacy === Privacy.Public ? 'details' : 'invite'}`}>
+      <a class='pl-5 flex-none' href={`/conversations/${conversation.data.id}/${conversation.data.privacy === Privacy.Public ? 'details' : 'invite'}`}>
         <SvgIcon icon='addPerson' size='24' color={$modeCurrent ? '%232e2e2e' : 'white'} />
       </a>
     {:else}
-      <span class='pl-8'>&nbsp;</span>
+      <span class='pl-8 flex-none'>&nbsp;</span>
     {/if}
   {/if}
 </Header>
 
 {#if conversation && typeof $processedMessages !== 'undefined'}
   <div class="container mx-auto flex justify-center items-center flex-col flex-1 overflow-hidden w-full">
-    <div class='overflow-y-auto flex flex-col grow items-center w-full pt-10' bind:this={conversationContainer} id='message-container'>
+    <div class='relative overflow-y-auto overflow-x-hidden flex flex-col grow items-center w-full pt-10' bind:this={conversationContainer} id='message-container'>
       {#if conversation.privacy === Privacy.Private}
         <div class='flex gap-4 items-center justify-center'>
           {#if encodeHashToBase64(conversation.data.progenitor) !== myPubKeyB64 && numMembers === 1}
@@ -280,7 +284,7 @@
       {:else if conversation.data?.config.image}
         <img src={conversation.data?.config.image} alt='Conversation' class='w-32 h-32 min-h-32 mb-5 rounded-full object-cover' />
       {/if}
-      <h1 class='text-3xl flex-shrink-0 mb-1 text-nowrap text-ellipsis overflow-hidden'>{conversation.title}</h1>
+      <h1 class='text-3xl b-1 break-all'>{conversation.title}</h1>
       <!-- if joining a conversation created by someone else, say still syncing here until there are at least 2 members -->
       <a href={`/conversations/${conversationId}/details`} class='text-sm'>
         {$tAny('conversations.num_members', { count: numMembers })}
@@ -358,20 +362,20 @@
                     </span>
                   {/if}
                   {#if message.images && message.images.length > 0}
-                      {#each message.images as image (image.name + image.lastModified)}
-                        {#if image && image.status === 'loaded' || image.status === 'pending'}
-                          <!-- svelte-ignore a11y-missing-attribute -->
-                          <div class='relative inline {fromMe && 'text-end'}'>
-                            <img src={image.dataURL} class='inline max-w-2/3 object-cover mb-2' />
-                            {#if image.status === 'pending'}
-                              <SvgIcon icon='spinner' color='white' size='10' moreClasses='absolute top-1/2 left-1/2 -mt-1' />
-                            {/if}
-                          </div>
-                        {:else}
-                          <div class='w-20 h-20 bg-tertiary-500 mb-2 flex items-center justify-center'>
-                            <SvgIcon icon='spinner' color='white' size='10' />
-                          </div>
-                        {/if}
+                      {#each message.images as image}
+                        <div class='flex {fromMe ? 'justify-end' : 'justify-start'}'>
+                          {#if image.status === 'loaded'}
+                            <LightboxImage btnClass='inline max-w-2/3 mb-2' src={image.dataURL} alt={image.name} />
+                          {:else if image.status === 'loading' || image.status === 'pending'}
+                            <div class='w-20 h-20 bg-surface-800 mb-2 flex items-center justify-center'>
+                              <SvgIcon icon='spinner' color={$modeCurrent ? '%232e2e2e' : 'white'} size='30' />
+                            </div>
+                          {:else}
+                            <div class='w-20 h-20 bg-surface-800 mb-2 flex items-center justify-center'>
+                              <SvgIcon icon='x' color={$modeCurrent ? '%232e2e2e' : 'white'} size='30' />
+                            </div>
+                          {/if}
+                        </div>
                       {/each}
                   {/if}
                   <div class="message font-light break-words w-full {fromMe && 'text-end'}">

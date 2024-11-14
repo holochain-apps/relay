@@ -1,10 +1,35 @@
 # Changelog
-All notable changes to Relay will be documented in this file.
+All notable changes to Volla Messages will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+## [0.7.1] - 2024-11-12
+
+### Added
+- Automated release builds in CI
+- Windows bundle code signing, macOS bundle code signing and notarization in CI
+- Added a github env var IGNORE_WINDOWS_CODESIGNING_ERROR. When set to "true", errors with windows code signing will not be fatal to the build job.
+- All releases except the Android app use a different icon with the Volla logo.
+- Fix: Blank screen on Ubuntu 22.04
+
+## [0.7.0-beta] - 2024-10-23
+
+### Fixed
+- Increase initial zome call timeout to avoid hanging on loading page
+- Improve image loading resiliance by increasing retry rate exponential backoff to 2x
+- Ensure image loading placeholder's error icon has contrasting color
+- Fix: Prevent long group names from overflowing layout
+
+### Added
+- display error notice if conductor setup fails
+- Update translations to use Volla Messages
+
+## [0.7.0-beta-rc.0] - 2024-10-04
+
+- Update name and icons, and splash screen
 
 ## [0.6.1-beta] - 2024-09-06
 
@@ -55,7 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.5.1-beta] - 2024-08-17
 
 ### Added
-- Localize/Internationalize Relay! Start with englsh and german locales, pending the actual German translations.
+- Localize/Internationalize  Start with english and german locales, pending the actual German translations.
 
 ### Changed
 - Display name and avatar from a local contact first, then from the agent's profile if there is no contact for them

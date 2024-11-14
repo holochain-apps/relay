@@ -4,5 +4,6 @@
   "open_conversation": "{{existingConversation; true:Open; false:Create;}} konversation",
   "page_title": "Skapa",
   "search_placeholder": "Sök efter namn eller kod",
+  "unconfirmed": "Ej bekräftad",
   "view": "Visa"
 }

@@ -2,42 +2,30 @@
   description = "Template for Holochain app development";
 
   inputs = {
-    p2p-shipyard = {
-      url = "github:darksoil-studio/p2p-shipyard";
-      inputs.holochain.follows = "holochain-flake";
-      inputs.versions.follows = "holochain-nix-versions";
-    };
-    holochain-nix-versions.url =
-      "github:holochain/holochain/?dir=versions/0_3";
-    holochain-flake = {
-      url = "github:holochain/holochain";
-      inputs.versions.follows = "holochain-nix-versions";
-    };
+    holonix.url = "github:holochain/holonix/main-0.4";
+    p2p-shipyard.url = "github:darksoil-studio/p2p-shipyard/next";
 
-    nixpkgs.follows = "holochain-flake/nixpkgs";
-    flake-parts.follows = "holochain-flake/flake-parts";
+    nixpkgs.follows = "holonix/nixpkgs";
+    flake-parts.follows = "holonix/flake-parts";
   };
 
-  outputs = inputs@{ flake-parts, holochain-flake, ... }:
-    flake-parts.lib.mkFlake {
-      specialArgs.nonWasmCrates = [ "relay" ];
-      inherit inputs;
-    } {
-      systems = builtins.attrNames holochain-flake.devShells;
+  outputs = inputs@{ flake-parts, holonix, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = builtins.attrNames holonix.devShells;
       perSystem = { config, pkgs, system, inputs', ... }: {
         devShells.default = pkgs.mkShell {
           inputsFrom = [
             inputs'.p2p-shipyard.devShells.holochainTauriDev
-            holochain-flake.devShells.${system}.holonix
+            inputs'.holonix.devShells.default
           ];
-          packages = [ pkgs.nodejs-18_x ];
+          packages = [ pkgs.nodejs_20 ];
         };
         devShells.androidDev = pkgs.mkShell {
           inputsFrom = [
             inputs'.p2p-shipyard.devShells.holochainTauriAndroidDev
-            holochain-flake.devShells.${system}.holonix
+            inputs'.holonix.devShells.default
           ];
-          packages = [ pkgs.nodejs-18_x ];
+          packages = [ pkgs.nodejs_20 ];
         };
       };
     };

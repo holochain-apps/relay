@@ -15,7 +15,7 @@
   $: conversation = store.conversation;
   $: unread = store.unread;
   $: lastMessage = store.lastMessage
-  $: lastMessageAuthor = $lastMessage ? $conversation.agentProfiles[$lastMessage.authorKey].fields.firstName : null
+  $: lastMessageAuthor = $lastMessage ? $conversation.agentProfiles[$lastMessage.authorKey]?.fields.firstName : null
   $: allMembers = store.allMembers
   $: joinedMembers = store.memberList()
 
@@ -214,7 +214,7 @@
     {/if}
   </a>
 
-  <div class="absolute top-0 left-0 w-full h-full py-[1px] flex flex-row">
+  <div class="absolute top-0 left-0 w-full h-full py-[1px] px-[1px] flex flex-row rounded-lg">
     <!-- <div class="flex flex-1 items-center justify-start ml-1  rounded-lg bg-secondary-500">Mark as Unread</div> -->
     <div class="flex flex-1 items-center justify-end mr-1 rounded-lg {store.archived ? 'bg-secondary-900' : 'bg-primary-500'}">
       <button class='flex flex-col mr-2 items-center justify-center text-surface-100 dark:text-tertiary-100 font-bold' on:click={startArchive}>

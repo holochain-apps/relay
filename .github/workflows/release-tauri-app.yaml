@@ -3,88 +3,43 @@ on:
   push:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-[a-z]+'
       - 'v[0-9]+.[0-9]+.[0-9]+-[a-z]+.[0-9]+'
 
 jobs:
-  publish-happ:
-    permissions:
-      contents: write
-    runs-on: ubuntu-22.04
+  create-release:
+    permissions: write-all
+    environment: Relay Release
+    runs-on: ubuntu-latest
     outputs:
-      releaseId: ${{ steps.create-release.outputs.id }}
-      appVersion: ${{ steps.version.outputs.APP_VERSION }}
+      releaseId: ${{ steps.step1.outputs.id }}
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      # Checks out a copy of your repository on the ubuntu-latest machine
-      - uses: actions/checkout@v3
-
-      - name: Extend space
-        uses: ./.github/actions/extend-space
-
-      - name: Install nix
-        uses: cachix/install-nix-action@v18
-        with:
-          install_url: https://releases.nixos.org/nix/nix-2.13.3/install
-          extra_nix_config: |
-            experimental-features = flakes nix-command
-
-      - uses: cachix/cachix-action@v12
-        with:
-          name: holochain-ci
-
-      - uses: cachix/cachix-action@v12
-        with:
-          name: darksoil-studio
-
-      - name: Install and test
-        run: |
-          nix-store --gc
-          nix develop --command bash -c "npm i && npm run build:happ"
-
-      - name: Retrieve version
-        run: |
-          echo "APP_VERSION=$(cat src-tauri/tauri.conf.json | grep -oP '(?<="version": ")[^"]*')" >> $GITHUB_OUTPUT
-        id: version
-
-      - id: create-release
+      - id: step1
         uses: ncipollo/release-action@v1
         with:
-          allowUpdates: true
-          artifacts: "workdir/relay.happ"
-          body: "See assets below to download and install this version."
-          name: Relay v${{ steps.version.outputs.APP_VERSION }}
-          tag: v${{ steps.version.outputs.APP_VERSION }}
+          name: "Volla Messages ${{ github.ref_name }}"
+          body: "See the assets to download this version and install."
           prerelease: true
           draft: true
 
-  release-tauri-app:
-    needs: publish-happ
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [windows-2019, macos-11, ubuntu-22.04]
-    env:
-      MACOSX_DEPLOYMENT_TARGET: 10.13
-
-    runs-on: ${{ matrix.platform }}
+  release-tauri-app-linux:
+    needs: create-release
+    permissions: write-all
+    environment: Relay Release
+    runs-on: ubuntu-22.04
     steps:
-      - name: Support longpaths
-        if: matrix.platform != 'ubuntu-22.04'
-        run: git config --system core.longpaths true
-
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      # Checks out a copy of your repository on the ubuntu-latest machine
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: setup node
         uses: actions/setup-node@v1
         with:
           node-version: 20
+
       - name: install Rust stable
         uses: actions-rs/toolchain@v1
         with:
           override: true
-          toolchain: stable
+          toolchain: 1.80.1
 
       - name: install Go stable
         uses: actions/setup-go@v4
@@ -92,48 +47,215 @@ jobs:
           go-version: "stable"
 
       - name: install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-22.04'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.0-dev \
+          sudo apt update
+          sudo apt install libwebkit2gtk-4.1-dev \
             build-essential \
             curl \
             wget \
             file \
+            libxdo-dev \
             libssl-dev \
-            libgtk-3-dev \
             libayatana-appindicator3-dev \
-            librsvg2-dev \
-            javascriptcoregtk-4.1 \
-            libsoup-3.0 \
-            webkit2gtk-4.1
+            librsvg2-dev
 
       - name: Install and prepare
         run: |
           npm install
+          npm run setup:happ-release
 
-      - name: Print version
-        run: |
-          echo "The Version was: ${{ needs.publish-happ.outputs.appVersion }}"
-        id: print-version
-
-      - name: Download release of the .happ
-        id: release_data
-        uses: KevinRohn/github-full-release-data@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          repository: "holochain-apps/relay"
-          token: ${{ secrets.GITHUB_TOKEN }}
-          version: v${{ needs.publish-happ.outputs.appVersion }}
-          asset-file: '*.happ'
-          asset-output: 'workdir/'
-
-      - name: build the app
+      - id: build-app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          releaseId: ${{ needs.publish-happ.outputs.releaseId }}
-          releaseDraft: true
-          prerelease: true
+          releaseId: ${{ needs.create-release.outputs.releaseId }}
+          args: --verbose
+
+  release-tauri-app-android:
+    permissions: write-all
+    environment: Relay Release
+    needs: 
+      - release-tauri-app-linux
+      - create-release
+    runs-on: 'ubuntu-22.04' 
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Extend space
+        uses: ./.github/actions/extend-space
+
+      - name: Install nix
+        uses: cachix/install-nix-action@v27
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          nix_path: nixpkgs=channel:nixos-24.05
+
+      - uses: cachix/cachix-action@v15
+        with:
+          name: holochain-ci
+
+      - uses: cachix/cachix-action@v15
+        with:
+          name: holochain-open-dev
+
+      - uses: cachix/cachix-action@v15
+        with:
+          name: darksoil-studio
+
+      - name: Install and prepare
+        run: |
+          nix develop --no-update-lock-file --command npm install && npm run setup:happ-release
+
+      - name: setup Android signing
+        run: |
+          cd src-tauri/gen/android
+          base64 -d <<< "${{ secrets.ANDROID_KEY_BASE64 }}" > $RUNNER_TEMP/keystore.jks
+          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" > keystore.properties
+          echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> keystore.properties
+          echo "storeFile=$RUNNER_TEMP/keystore.jks" >> keystore.properties
+          echo "storePassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> keystore.properties
+
+      - name: Build android APKs
+        run: |
+          nix develop .#androidDev --no-update-lock-file --command bash -c "npm run tauri android build -- --apk --split-per-abi --target aarch64 --target i686 --target x86_64"
+
+      - uses: AButler/upload-release-assets@v3.0
+        with:
+          files: src-tauri/gen/android/app/build/outputs/apk/*/release/app-*
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          release-id: ${{ needs.create-release.outputs.releaseId }}
+
+  release-tauri-app-windows:
+    needs: create-release
+    permissions: write-all
+    environment: Relay Release
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 20
+
+      - name: install Rust stable
+        uses: actions-rs/toolchain@v1
+        with:
+          override: true
+          toolchain: 1.80.1
+
+      - name: install Go stable
+        uses: actions/setup-go@v4
+        with:
+          go-version: "stable"
+
+      - name: Install and prepare
+        run: |
+          npm install
+          npm run setup:happ-release
+
+      - name: Build the App
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: --verbose
+
+      - name: Sign the App
+        run: |
+
+          # Powershell settings to make the script exit on error
+          # If the github env variable IGNORE_WINDOWS_CODESIGNING_ERROR is "true",
+          # then any errors in this script will not be fatal to the job.
+          $IGNORE_WINDOWS_CODESIGNING_ERROR = "${{ vars.IGNORE_WINDOWS_CODESIGNING_ERROR }}"
+          if ( "true" -ne $IGNORE_WINDOWS_CODESIGNING_ERROR )
+          {
+            $ErrorActionPreference = "Stop"
+            Set-StrictMode -Version Latest
+            $PSNativeCommandUseErrorActionPreference = $true
+          }
+          
+          # read name and version from tauri.conf.json
+          $TAURI_CONF = (Get-Content src-tauri\tauri.conf.json | Out-String | ConvertFrom-Json)
+          $APP_PRODUCT_NAME_VERSION = "$($TAURI_CONF.productName)_$($TAURI_CONF.version)"
+
+          $BUNDLE_OUT_PATH_1 = "D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\nsis\$($APP_PRODUCT_NAME_VERSION)_x64-setup.exe"
+          $BUNDLE_OUT_PATH_2 = "D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\target\release\bundle\msi\$($APP_PRODUCT_NAME_VERSION)_x64_en-US.msi"
+
+          # log hashes before code signing
+          CertUtil -hashfile $BUNDLE_OUT_PATH_1 SHA256
+          CertUtil -hashfile $BUNDLE_OUT_PATH_2 SHA256
+
+          # Code sign the output bundles via azure key vault, following these instructions:
+          # https://melatonin.dev/blog/how-to-code-sign-windows-installers-with-an-ev-cert-on-github-actions/          dotnet tool install --global AzureSignTool
+          dotnet tool install --global AzureSignTool
+          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v $BUNDLE_OUT_PATH_1
+          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v $BUNDLE_OUT_PATH_2
+
+          # log hashes after code signing
+          CertUtil -hashfile $BUNDLE_OUT_PATH_1 SHA256
+          CertUtil -hashfile $BUNDLE_OUT_PATH_2 SHA256
+
+      - name: Upload the Signed App
+        uses: AButler/upload-release-assets@v3.0
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          release-id: ${{ needs.create-release.outputs.releaseId }}
+          # We use forward slashes for glob expressions, even though these are windows paths.
+          # See the docs for the fast-glob library used by this gh action:
+          # https://www.npmjs.com/package/fast-glob#how-to-write-patterns-on-windows
+          files: D:/a/${{ github.event.repository.name }}/${{ github.event.repository.name }}/target/release/bundle/msi/*;D:/a/${{ github.event.repository.name }}/${{ github.event.repository.name }}/target/release/bundle/nsis/*
+          
+  release-tauri-app-macos:
+    needs: create-release
+    permissions: write-all
+    environment: Relay Release
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'macos-latest' # for Arm based macs (M1 and above).
+          - platform: 'macos-13' # for Intel based macs.
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 20
+
+      - name: install Rust stable
+        uses: actions-rs/toolchain@v1
+        with:
+          override: true
+          toolchain: 1.80.1
+
+      - name: install Go stable
+        uses: actions/setup-go@v4
+        with:
+          go-version: stable
+
+      - name: Install and prepare
+        run: |
+          npm install
+          npm run setup:happ-release
+
+      - name: Build the App
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+
+        with:
+          releaseId: ${{ needs.create-release.outputs.releaseId }}
+          args: --verbose

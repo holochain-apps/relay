@@ -18,49 +18,52 @@
 	let relayStore = relayStoreContext.getStore()
 
   export let editContactId : string | null = null
+  export let creating = false;
+  
   let contact = editContactId ? relayStore.getContact(editContactId) : null
-
   let firstName = contact?.data.firstName || ''
   let lastName = contact?.data.lastName || ''
   let publicKeyB64 = editContactId || ''
   let imageUrl = writable(contact?.data.avatar || '')
 
-  let editing = !editContactId
+  let editing = !editContactId || creating;
   let pendingSave = false
   let valid = false
   let error = writable('')
   let decodedPublicKey: HoloHash
 
   $: contacts = relayStore.contacts
-  $: try {
-    decodedPublicKey = decodeHashFromBase64(publicKeyB64)
-    if (firstName.trim().length === 0 || publicKeyB64.trim().length === 0) {
-      valid = false
-      error.set('')
-    } else if (decodedPublicKey.length !== 39) {
-      valid = false
-      error.set($t('contacts.invalid_contact_code'))
-    } else if (!editContactId && $contacts.find(c => c.data.publicKeyB64 === publicKeyB64)) {
-      valid = false
-      error.set($t('contacts.contact_already_exist'))
-    } else if (relayStore.client.myPubKeyB64 === publicKeyB64) {
-      valid = false
-      error.set($t('contacts.cant_add_yourself'))
-    } else {
-      valid = true
-      error.set('')
-    }
-  } catch (e) {
-    valid = false
-    error.set($t('contacts.invalid_contact_code'))
+  $: if(!pendingSave) {
+      try {
+        decodedPublicKey = decodeHashFromBase64(publicKeyB64)
+        if (firstName.trim().length === 0 || publicKeyB64.trim().length === 0) {
+          valid = false
+          error.set('')
+        } else if (decodedPublicKey.length !== 39) {
+          valid = false
+          error.set($t('contacts.invalid_contact_code'))
+        } else if (!editContactId && $contacts.find(c => c.data.publicKeyB64 === publicKeyB64)) {
+          valid = false
+          error.set($t('contacts.contact_already_exist'))
+        } else if (relayStore.client.myPubKeyB64 === publicKeyB64) {
+          valid = false
+          error.set($t('contacts.cant_add_yourself'))
+        } else {
+          valid = true
+          error.set('')
+        }
+      } catch (e) {
+        valid = false
+        error.set($t('contacts.invalid_contact_code'))
+      }
   }
-
+  
   async function saveContact(e: Event) {
     pendingSave = true
     e.preventDefault()
     try {
       const newContactData = { avatar: get(imageUrl), firstName, lastName, publicKeyB64 }
-      const newContact = editContactId ? await relayStore.updateContact({...contact, ...newContactData }) : await relayStore.createContact(newContactData)
+      const newContact = contact ? await relayStore.updateContact({...contact, ...newContactData }) : await relayStore.createContact(newContactData)
       if (newContact) {
         if (!editContactId) {
           if (newContact.privateConversation) {
@@ -84,10 +87,11 @@
 
   function cancel(e: Event) {
     e.preventDefault()
-    if (!editContactId) {
+    if (!editContactId || creating) {
       history.back()
+    } else {
+      editing = false
     }
-    editing = false
   }
 
 </script>
