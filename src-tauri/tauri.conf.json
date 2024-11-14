@@ -33,6 +33,9 @@
       "icons/squiggle/128x128@2x.png",
       "icons/squiggle/icon.icns",
       "icons/squiggle/icon.ico"
-    ]
+    ],
+    "macOS": {
+      "entitlements": "entitlements.plist"
+    }
   }
 }
