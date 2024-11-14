@@ -33,37 +33,15 @@ pub fn run() {
         .plugin(
             tauri_plugin_log::Builder::default()
                 .level(log::LevelFilter::Warn)
-                .build(),    
-        )
-        .plugin(tauri_plugin_holochain::async_init(
-            vec_to_locked(vec![]).expect("Can't build passphrase"),
-            HolochainPluginConfig::new(holochain_dir(), wan_network_config()),
-        ));
-        
-    #[cfg(mobile)]
-    {
-        use tauri_plugin_holochain_foreground_service_consumer::InstallAppRequestArgs;
-        use tauri_plugin_holochain_foreground_service_consumer::HolochainForegroundServiceConsumerExt;
+                .build(),
+        );
 
-        builder = builder
-            .plugin(tauri_plugin_sharesheet::init())
-            .plugin(tauri_plugin_holochain_foreground_service_consumer::init())
-            .setup(|app| {
-                // Load barcode scanner plugin if on supported platform
-                // It is necessary to load this after we have created the new 'main' webview
-                //  which will be calling into it
-                app.handle()
-                    .plugin(tauri_plugin_barcode_scanner::init())
-                    .expect("Failed to initiailze tauri_plugin_barcode_scanner");
-                Ok(())
-            });
-    }
-    #[cfg(desktop)]
+    #[cfg(feature="bundle_holochain")]
     {
         builder = builder
             .plugin(tauri_plugin_holochain::async_init(
                 vec_to_locked(vec![]).expect("Can't build passphrase"),
-                HolochainPluginConfig::new(holochain_dir(), wan_network_config())
+                HolochainPluginConfig::new(holochain_dir(), wan_network_config()),
             ))
             .setup(|app| {
                 let handle = app.handle().clone();
@@ -92,16 +70,30 @@ pub fn run() {
                                 .title(String::from("Volla Messages"))
                                 .build()
                                 .expect("Failed to open main window");
-
-                            // After it's done, close the splashscreen and display the main window
-                            let splashscreen_window = handle.get_webview_window("splashscreen").unwrap();
-                            splashscreen_window.close().unwrap();
+                            
+                            post_setup(handle.clone()).expect("Failed to complete post setup.");
                         });
                     });
     
                 Ok(())
             });
     }
+
+    // Do not bundle a holochain conductor.
+    // i.e. rely on the holochain foreground service being available on the device.
+    // Only android mobile target is supported.
+    #[cfg(all(mobile, target_os="android", not(feature="bundle_holochain")))]
+    {
+        use tauri_plugin_holochain_foreground_service_consumer::InstallAppRequestArgs;
+        use tauri_plugin_holochain_foreground_service_consumer::HolochainForegroundServiceConsumerExt;
+
+        builder = builder
+            .plugin(tauri_plugin_sharesheet::init())
+            .plugin(tauri_plugin_holochain_foreground_service_consumer::init());
+        
+        post_setup(handle.clone()).expect("Failed to complete post setup.");
+    }
+    
 
     builder
         .run(tauri::generate_context!())
@@ -151,6 +143,28 @@ async fn setup(handle: AppHandle) -> anyhow::Result<()> {
             .holochain()?
             .update_app_if_necessary(String::from(APP_ID), happ_bundle()?)
             .await?;
+    }
+    Ok(())
+}
+
+/// Steps to take after setup hash completed and main window has been created
+fn post_setup(handle: AppHandle) -> anyhow::Result<()> {
+    // Close the splashscreen and display the main window
+    // Tauri only supports closing windows on desktop.
+    // On mobile, the new window simply overlaps the old one.
+    #[cfg(desktop)]
+    {
+        let splashscreen_window = handle.get_webview_window("splashscreen")
+            .ok_or(anyhow::anyhow!("Failed to get webview window 'splashscreen'"))?;
+        splashscreen_window.close()?;
+    }
+
+    // Load barcode scanner plugin if on supported platform.
+    // It is necessary to load this after we have created the new 'main' webview
+    // which will be calling into it.
+    #[cfg(mobile)]
+    {
+        handle.plugin(tauri_plugin_barcode_scanner::init())?;
     }
     Ok(())
 }
