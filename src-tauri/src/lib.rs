@@ -36,6 +36,7 @@ pub fn run() {
                 .build(),
         );
 
+    // Bundle a holochain conductor in the app itself.
     #[cfg(feature="bundle_holochain")]
     {
         builder = builder
@@ -80,7 +81,7 @@ pub fn run() {
     }
 
     // Do not bundle a holochain conductor.
-    // i.e. rely on the holochain foreground service being available on the device.
+    // Instead, rely on the holochain foreground service being available on the device.
     // Only android mobile target is supported.
     #[cfg(all(mobile, target_os="android", not(feature="bundle_holochain")))]
     {
@@ -93,7 +94,6 @@ pub fn run() {
         
         post_setup(handle.clone()).expect("Failed to complete post setup.");
     }
-    
 
     builder
         .run(tauri::generate_context!())
