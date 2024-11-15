@@ -37,7 +37,7 @@ pub fn run() {
         );
 
     // Bundle a holochain conductor in the app itself.
-    #[cfg(feature="bundle_holochain")]
+    #[cfg(feature="holochain_bundled")]
     {
         builder = builder
             .plugin(tauri_plugin_holochain::async_init(
@@ -83,7 +83,7 @@ pub fn run() {
     // Do not bundle a holochain conductor.
     // Instead, rely on the holochain foreground service being available on the device.
     // Only android mobile target is supported.
-    #[cfg(all(mobile, target_os="android", not(feature="bundle_holochain")))]
+    #[cfg(all(mobile, target_os="android", feature="holochain_service", not(feature="holochain_bundled")))]
     {
         use tauri_plugin_holochain_foreground_service_consumer::InstallAppRequestArgs;
         use tauri_plugin_holochain_foreground_service_consumer::HolochainForegroundServiceConsumerExt;

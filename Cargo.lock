@@ -9106,9 +9106,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "tauri-plugin-holochain-foreground-service-consumer"
+name = "tauri-plugin-holochain-service-consumer"
 version = "0.1.0"
-source = "git+https://github.com/mattyg/p2p-shipyard.git?branch=feat/uniffi-bindings-take-2#c4a39976b4660e5e32bf8838a8e759d93a4e15f5"
+source = "git+https://github.com/mattyg/p2p-shipyard.git?branch=feat/foreground-service#b32ed20f7a2276c09ddadf3efc425414fcc20ceb"
 dependencies = [
  "serde",
  "tauri",
@@ -10291,7 +10291,7 @@ dependencies = [
  "tauri-plugin-barcode-scanner",
  "tauri-plugin-clipboard-manager",
  "tauri-plugin-holochain",
- "tauri-plugin-holochain-foreground-service-consumer",
+ "tauri-plugin-holochain-service-consumer",
  "tauri-plugin-log",
  "tauri-plugin-notification",
  "tauri-plugin-os",
