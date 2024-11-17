@@ -6,7 +6,6 @@ use std::{collections::HashMap, time::SystemTime};
 use tauri::{AppHandle, Listener, WebviewWindowBuilder, WebviewUrl};
 #[cfg(desktop)]
 use tauri::Manager;
-use tauri_plugin_holochain::{HolochainExt, HolochainPluginConfig, WANNetworkConfig};
 
 const APP_ID: &'static str = "volla-messages";
 const SIGNAL_URL: &'static str = "wss://sbd.holo.host";
@@ -39,6 +38,8 @@ pub fn run() {
     // Bundle a holochain conductor in the app itself.
     #[cfg(feature="holochain_bundled")]
     {
+        use tauri_plugin_holochain::{HolochainExt, HolochainPluginConfig, WANNetworkConfig};
+
         builder = builder
             .plugin(tauri_plugin_holochain::async_init(
                 vec_to_locked(vec![]).expect("Can't build passphrase"),
@@ -81,18 +82,20 @@ pub fn run() {
     }
 
     // Do not bundle a holochain conductor.
-    // Instead, rely on the holochain foreground service being available on the device.
+    // Instead, rely on the holochain service being available on the device.
     // Only android mobile target is supported.
     #[cfg(all(mobile, target_os="android", feature="holochain_service", not(feature="holochain_bundled")))]
     {
-        use tauri_plugin_holochain_foreground_service_consumer::InstallAppRequestArgs;
-        use tauri_plugin_holochain_foreground_service_consumer::HolochainForegroundServiceConsumerExt;
+        use tauri_plugin_holochain_service_consumer::InstallAppRequestArgs;
+        use tauri_plugin_holochain_service_consumer::HolochainServiceConsumerExt;
 
         builder = builder
             .plugin(tauri_plugin_sharesheet::init())
-            .plugin(tauri_plugin_holochain_foreground_service_consumer::init());
-        
-        post_setup(handle.clone()).expect("Failed to complete post setup.");
+            .plugin(tauri_plugin_holochain_service_consumer::init())
+            .setup(|app| {
+                post_setup(app.handle().clone()).expect("Failed to complete post setup.");
+                Ok(())
+            });
     }
 
     builder
@@ -108,6 +111,7 @@ pub fn run() {
 //       - And do so if it is
 //
 // You can modify this function to suit your needs if they become more complex
+#[cfg(feature="holochain_bundled")]
 async fn setup(handle: AppHandle) -> anyhow::Result<()> {
     let admin_ws = handle.holochain()?.admin_websocket().await?;
 
@@ -169,6 +173,7 @@ fn post_setup(handle: AppHandle) -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(feature="holochain_bundled")]
 fn wan_network_config() -> Option<WANNetworkConfig> {
     // Resolved at compile time to be able to point to local services
     if tauri::is_dev() {
@@ -182,6 +187,7 @@ fn wan_network_config() -> Option<WANNetworkConfig> {
     }
 }
 
+#[cfg(feature="holochain_bundled")]
 fn holochain_dir() -> PathBuf {
     if tauri::is_dev() {
         #[cfg(target_os = "android")]
@@ -219,6 +225,7 @@ fn holochain_dir() -> PathBuf {
     }
 }
 
+#[cfg(feature="holochain_bundled")]
 fn vec_to_locked(mut pass_tmp: Vec<u8>) -> std::io::Result<BufRead> {
     match BufWrite::new_mem_locked(pass_tmp.len()) {
         Err(e) => {
@@ -236,6 +243,7 @@ fn vec_to_locked(mut pass_tmp: Vec<u8>) -> std::io::Result<BufRead> {
     }
 }
 
+#[cfg(feature="holochain_bundled")]
 fn get_version() -> String {
     let semver = std::env!("CARGO_PKG_VERSION");
 
