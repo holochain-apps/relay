@@ -13,8 +13,6 @@
 
 	import '../app.postcss';
 
-	//	export let data: LayoutData;
-
 	const appId = import.meta.env.VITE_APP_ID ? import.meta.env.VITE_APP_ID : 'volla-messages'
 	const appPort = import.meta.env.VITE_APP_PORT ? import.meta.env.VITE_APP_PORT : undefined;
 	const adminPort = import.meta.env.VITE_ADMIN_PORT
