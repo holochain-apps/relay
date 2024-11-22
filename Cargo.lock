@@ -3660,7 +3660,7 @@ dependencies = [
 [[package]]
 name = "holochain_runtime"
 version = "0.1.0"
-source = "git+https://github.com/darksoil-studio/p2p-shipyard?branch=main-0.3#13f9f66a7a07f836e2e82b1914dc20fec1d7fa80"
+source = "git+https://github.com/darksoil-studio/p2p-shipyard?branch=main-0.3#2574eaaca8d677568ba004cca38c23cc494e1252"
 dependencies = [
  "anyhow",
  "async-std",
@@ -9037,7 +9037,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-holochain"
 version = "0.0.0"
-source = "git+https://github.com/darksoil-studio/p2p-shipyard?branch=main-0.3#13f9f66a7a07f836e2e82b1914dc20fec1d7fa80"
+source = "git+https://github.com/darksoil-studio/p2p-shipyard?branch=main-0.3#2574eaaca8d677568ba004cca38c23cc494e1252"
 dependencies = [
  "anyhow",
  "bzip2",
