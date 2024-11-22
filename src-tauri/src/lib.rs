@@ -6,7 +6,7 @@ use std::{collections::HashMap, time::SystemTime};
 use tauri::{AppHandle, Listener};
 #[cfg(desktop)]
 use tauri::Manager;
-use tauri_plugin_holochain::{HolochainExt, HolochainPluginConfig, WANNetworkConfig};
+use tauri_plugin_holochain::{GossipArcClamp, HolochainExt, HolochainPluginConfig, WANNetworkConfig};
 
 const APP_ID: &'static str = "volla-messages";
 const SIGNAL_URL: &'static str = "wss://sbd.holo.host";
@@ -37,7 +37,7 @@ pub fn run() {
         )
         .plugin(tauri_plugin_holochain::async_init(
             vec_to_locked(vec![]).expect("Can't build passphrase"),
-            HolochainPluginConfig::new(holochain_dir(), wan_network_config()),
+            HolochainPluginConfig::new(holochain_dir(), wan_network_config()).gossip_arc_clamp(GossipArcClamp::Full),
         ));
     #[cfg(mobile)]
     {
