@@ -17,6 +17,6 @@ fn main() {
     #[cfg(all(desktop, target_os = "linux"))]
     {
         std::env::remove_var("WEBKIT_DISABLE_COMPOSITING_MODE");
-        std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER");
+        std::env::remove_var("WEBKIT_DISABLE_DMABUF_RENDERER");
     }
 }
