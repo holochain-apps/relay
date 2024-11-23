@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.7.3] - 2024-11-23
 - Fix: Blank screen on Ubuntu 22.04 was not actually fixed in 0.7.1. Now it is fixed.
 
 ## [0.7.2] - 2024-11-22
