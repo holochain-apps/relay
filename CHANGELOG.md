@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.7.2] - 2024-11-22
+- Fix: macOS x64 builds no longer crash on launch
+- Fix: Windows releases are now code signed
+
 ## [0.7.1] - 2024-11-12
 
 ### Added
