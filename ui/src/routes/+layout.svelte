@@ -10,7 +10,8 @@
 	import { RelayStore } from '$store/RelayStore';
 	import { type RoleNameCallZomeRequest } from '@holochain/client';
 	import toast, { Toaster } from 'svelte-french-toast';
-
+	import { isAppInstalled, installApp, appWebsocketAuth } from "tauri-plugin-holochain-service-consumer-api";
+	import { v7 as uuidv7 } from 'uuid';
 	import '../app.postcss';
 
 	const appId = import.meta.env.VITE_APP_ID ? import.meta.env.VITE_APP_ID : 'volla-messages'
@@ -31,6 +32,27 @@
 		document.documentElement.style.setProperty('--app-height', `${appHeight}px`);
   }
 
+	import happUrl from '../../../workdir/relay.happ?url';
+	async function setupHapp() {
+		const appBundleBytes = new Uint8Array(await (await fetch(happUrl)).arrayBuffer())
+		
+		// Install happ if needed
+		const installed = await isAppInstalled(appId);
+		if(!installed) {
+			await installApp({
+				appId,
+				appBundleBytes,
+				membraneProofs: new Map(),
+				networkSeed: uuidv7(),
+			});
+		}
+
+		// Setup app websocket with authentication
+		// This also sets __HC_LAUNCHER_ENV__ for the current webview,
+		// so no other work is needed.
+		await appWebsocketAuth(appId);
+	}
+
 	async function initHolochain() {
 		try {
 			let tokenResp
@@ -41,6 +63,11 @@
 				const cellIds = await adminWebsocket.listCellIds()
 				await adminWebsocket.authorizeSigningCredentials(cellIds[0])
 			}
+
+			if(!window.__HC_LAUNCHER_ENV__) {
+				await setupHapp();
+			}
+			
 			console.log("appPort and Id is", appPort, appId)
 			console.log("__HC_LAUNCHER_ENV__ is", window.__HC_LAUNCHER_ENV__)
 			const params: AppWebsocketConnectionOptions = {url, defaultTimeout: 15000}
