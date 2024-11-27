@@ -51,7 +51,8 @@
         // 5m timeout
         5 * 60 * 1000,
       );
-      console.log("Relay cell ready.");
+      const appInfo = await client.appInfo();
+      console.log("Relay cell ready. App Info is ", appInfo);
 
       // Setup stores
       let profilesClient = new ProfilesClient(client, ROLE_NAME);
