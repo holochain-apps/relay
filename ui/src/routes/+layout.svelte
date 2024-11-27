@@ -1,8 +1,6 @@
 <script lang="ts">
   import {
     AppWebsocket,
-    AdminWebsocket,
-    type AppWebsocketConnectionOptions,
   } from "@holochain/client";
   import { ProfilesClient, ProfilesStore } from "@holochain-open-dev/profiles";
   import { modeCurrent, setModeCurrent } from "@skeletonlabs/skeleton";
@@ -17,12 +15,7 @@
   import "../app.postcss";
 
   const ROLE_NAME = "relay";
-  const ZOME_NAME = ROLE_NAME;
-
-  const appId = import.meta.env.VITE_APP_ID ? import.meta.env.VITE_APP_ID : "volla-messages";
-  const appPort = import.meta.env.VITE_APP_PORT ? import.meta.env.VITE_APP_PORT : undefined;
-  const adminPort = import.meta.env.VITE_ADMIN_PORT;
-  const url = appPort ? new URL(`wss://localhost:${appPort}`) : undefined;
+  const ZOME_NAME = "relay";
 
   let client: AppWebsocket;
   let relayClient: RelayClient;
@@ -39,21 +32,10 @@
 
   async function initHolochain() {
     try {
-      let tokenResp;
-      if (adminPort) {
-        const adminWebsocket = await AdminWebsocket.connect({
-          url: new URL(`ws://localhost:${adminPort}`),
-        });
-        tokenResp = await adminWebsocket.issueAppAuthenticationToken({ installed_app_id: appId });
-        const x = await adminWebsocket.listApps({});
-        const cellIds = await adminWebsocket.listCellIds();
-        await adminWebsocket.authorizeSigningCredentials(cellIds[0]);
-      }
-      console.log("appPort and Id is", appPort, appId);
-      console.log("__HC_LAUNCHER_ENV__ is", window.__HC_LAUNCHER_ENV__);
-      const params: AppWebsocketConnectionOptions = { url, defaultTimeout: 15000 };
-      if (tokenResp) params.token = tokenResp.token;
-      client = await AppWebsocket.connect(params);
+      console.log("__HC_LAUNCHER_ENV__ is", (window as any).__HC_LAUNCHER_ENV__);
+      
+      // Connect to holochain
+      client = await AppWebsocket.connect({ defaultTimeout: 15000 });
 
       // Call 'ping' with very long timeout
       // This should be the first zome call after the client connects,
@@ -72,11 +54,13 @@
       );
       console.log("Relay cell ready.");
 
+      // Setup stores
       let profilesClient = new ProfilesClient(client, ROLE_NAME);
       profilesStore = new ProfilesStore(profilesClient);
       relayClient = new RelayClient(client, profilesStore, ROLE_NAME, ZOME_NAME);
       relayStore = new RelayStore(relayClient);
       await relayStore.initialize();
+
       connected = true;
       console.log("Connected");
     } catch (e) {
