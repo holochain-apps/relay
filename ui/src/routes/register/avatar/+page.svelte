@@ -9,7 +9,7 @@
   import { t } from "$lib/translations";
   import { RelayClient } from "$store/RelayClient";
   import { UserStore } from "$store/UserStore";
-  import { handleFileChange, resizeAndExportAvatar } from "$lib/utils";
+  import { handleFileChange } from "$lib/utils";
 
   const relayClientContext: { getClient: () => RelayClient } = getContext("relayClient");
   let relayClient = relayClientContext.getClient();
