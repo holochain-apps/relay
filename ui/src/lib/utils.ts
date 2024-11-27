@@ -1,9 +1,13 @@
-import DOMPurify from 'dompurify';
+import DOMPurify from "dompurify";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
-import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
+import {
+  isPermissionGranted,
+  requestPermission,
+  sendNotification,
+} from "@tauri-apps/plugin-notification";
 import { shareText as sharesheetShareText } from "@buildyourwebapp/tauri-plugin-sharesheet";
-import { type Image } from '../types';
-import { platform } from '@tauri-apps/plugin-os';
+import { type Image } from "../types";
+import { platform } from "@tauri-apps/plugin-os";
 
 export const MIN_TITLE_LENGTH = 3;
 
@@ -12,21 +16,22 @@ export function sanitizeHTML(html: string) {
 }
 
 export function linkify(text: string) {
-  const urlPattern = /(?:https?:(?:\/\/)?)?(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
+  const urlPattern =
+    /(?:https?:(?:\/\/)?)?(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
   return text.replace(urlPattern, (match) => {
     // XXX: not quite sure why this is needed, but if i dont do this sveltekit navigates internally and externally at the same time
-    const href = match.includes('://') ? match : `https://${match}`
-    return `<a href="${href}" target="_blank" rel="noopener noreferrer">${match}</a>`
-  })
+    const href = match.includes("://") ? match : `https://${match}`;
+    return `<a href="${href}" target="_blank" rel="noopener noreferrer">${match}</a>`;
+  });
 }
 
 export function shareText(text: string | Promise<string>) {
-  if (typeof text === 'string') {
+  if (typeof text === "string") {
     if (text && text.trim().length > 0) {
       return sharesheetShareText(text);
     }
   } else {
-    return text.then(t => sharesheetShareText(t));
+    return text.then((t) => sharesheetShareText(t));
   }
 }
 
@@ -34,7 +39,7 @@ export function copyToClipboard(text: string | Promise<string>) {
   // @ts-ignore
   // if (window.__TAURI_PLUGIN_CLIPBOARD_MANAGER__) return window.__TAURI_PLUGIN_CLIPBOARD_MANAGER__.writeText(text);
   // return writeText(text);
-  if (typeof text === 'string') {
+  if (typeof text === "string") {
     if (text && text.trim().length > 0) {
       console.log("Copying to clipboard", text);
       return navigator.clipboard.writeText(text);
@@ -42,15 +47,15 @@ export function copyToClipboard(text: string | Promise<string>) {
   } else {
     if (typeof ClipboardItem && navigator.clipboard.write) {
       const item = new ClipboardItem({
-        "text/plain": text.then(t => {
-          console.log("Copying to clipboard", t)
-          return new Blob([t], { type: "text/plain" })
-        })
-      })
-      return navigator.clipboard.write([item])
+        "text/plain": text.then((t) => {
+          console.log("Copying to clipboard", t);
+          return new Blob([t], { type: "text/plain" });
+        }),
+      });
+      return navigator.clipboard.write([item]);
     } else {
       console.log("Copying to clipboard", text);
-      return text.then(t => navigator.clipboard.writeText(t));
+      return text.then((t) => navigator.clipboard.writeText(t));
     }
   }
 }
@@ -96,14 +101,14 @@ export function handleFileChange(event: Event, callback: (imageData: string) => 
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.onload = () => {
-        const imageData = resizeAndExportAvatar(img)
-        callback(imageData)
+        const imageData = resizeAndExportAvatar(img);
+        callback(imageData);
       };
       img.src = e.target?.result as string;
     };
 
     reader.onerror = (e): void => {
-      console.error('Error reading file:', e);
+      console.error("Error reading file:", e);
       reader.abort();
     };
 
@@ -113,7 +118,7 @@ export function handleFileChange(event: Event, callback: (imageData: string) => 
 
 async function checkPermission() {
   if (!(await isPermissionGranted())) {
-    return (await requestPermission()) === 'granted';
+    return (await requestPermission()) === "granted";
   }
   return true;
 }
@@ -126,31 +131,31 @@ export async function enqueueNotification(title: string, body: string) {
 }
 
 export function isLinux(): boolean {
-  return platform() === 'linux';
+  return platform() === "linux";
 }
 
 export function isWindows(): boolean {
-  return platform() === 'windows';
+  return platform() === "windows";
 }
 
 export function isMacOS(): boolean {
-  return platform() === 'macos';
+  return platform() === "macos";
 }
 
 export function isDesktop(): boolean {
-  return isMacOS() || isLinux() || isWindows()
+  return isMacOS() || isLinux() || isWindows();
 }
 
 export function isAndroid(): boolean {
-  return platform() === 'android';
+  return platform() === "android";
 }
 
 export function isIOS(): boolean {
-  return platform() === 'ios';
+  return platform() === "ios";
 }
 
 export function isMobile(): boolean {
-  return isAndroid() || isIOS()
+  return isAndroid() || isIOS();
 }
 
 export async function fileToDataUrl(file: File): Promise<string> {
@@ -159,8 +164,8 @@ export async function fileToDataUrl(file: File): Promise<string> {
 
   return new Promise((resolve, reject) => {
     reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        resolve(reader.result)
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
       } else {
         reject("Failed to convert File to Image: File contents are not a string");
       }

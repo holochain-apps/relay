@@ -1,5 +1,3 @@
-import type { PageLoad } from './$types';
+import type { PageLoad } from "./$types";
 
-export const load: PageLoad = ({ params }) => {
-
-};
+export const load: PageLoad = ({ params }) => {};
