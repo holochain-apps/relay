@@ -226,7 +226,11 @@ export class RelayClient {
           payload: a,
         });
         const results = await resultsPromise;
-        results[encodeHashToBase64(a)] = decode(agentRecord.entry.Present.entry) as Profile;
+
+        if (!!agentRecord?.entry?.Present?.entry) {
+          results[encodeHashToBase64(a)] = decode(agentRecord.entry.Present.entry) as Profile;
+        }
+
         return results;
       },
       Promise.resolve<{ [key: AgentPubKeyB64]: Profile }>({}),
