@@ -13,6 +13,6 @@
   "invalid_contact_code": "Ugyldig kode",
   "pending_connection_description": "{{name}} skal indtaste din kode for at skabe en forbindelse.",
   "pending_connection_header": "Kontakt skal bekræfte",
-  "request_contact_code": "En kontakts unikke kode finder du ved at besøge deres personlige profil.",  
+  "request_contact_code": "En kontakts unikke kode finder du ved at besøge deres personlige profil.",
   "send_message": "Send besked"
 }

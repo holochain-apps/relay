@@ -1,14 +1,13 @@
 {
-  "nixEnvSelector.nixFile": "${workspaceFolder}/flake.nix",
   "[rust]": {
-    "editor.defaultFormatter": "rust-lang.rust-analyzer",
-    "editor.formatOnSave": true
+    "editor.defaultFormatter": "rust-lang.rust-analyzer"
   },
   "[svelte]": {
     "editor.defaultFormatter": "svelte.svelte-vscode"
   },
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
   "eslint.validate": ["javascript", "svelte"],
-  "editor.formatOnSave": true,
-  "git.detectSubmodules": false
 }

@@ -29,7 +29,7 @@ export class Bucket {
 
   private initAsHashes(hashes: Array<ActionHashB64>) {
     this.type = BucketType.Hashes;
-    this.hashes.set(new Set(hashes))
+    this.hashes.set(new Set(hashes));
   }
 
   private initAsCount(count: number) {
@@ -44,9 +44,7 @@ export class Bucket {
 
   toJSON(): string {
     const sb =
-      this.type === BucketType.Hashes
-        ? Array.from(get(this.hashes)!.keys())
-        : get(this._count);
+      this.type === BucketType.Hashes ? Array.from(get(this.hashes)!.keys()) : get(this._count);
     return JSON.stringify(sb);
   }
 
@@ -57,13 +55,13 @@ export class Bucket {
         this.type = BucketType.Hashes;
         this.hashes.set(new Set(hashes));
       } else {
-        this._count.update(c => c + hashes.length);
+        this._count.update((c) => c + hashes.length);
       }
     } else {
       this.hashes.update((old) => {
         hashes.forEach((item) => old.add(item));
         return new Set(old);
-      })
+      });
     }
     return countBefore != this.count;
   }

@@ -12,52 +12,57 @@ import type {
   DeleteLink,
   MembraneProof,
   ClonedCell,
-} from '@holochain/client';
+} from "@holochain/client";
 
-import type { Profile } from '@holochain-open-dev/profiles'
+import type { Profile } from "@holochain-open-dev/profiles";
 
-export type RelaySignal = {
-  type: 'Message';
-  action: SignedActionHashed<Create>;
-  message: Message;
-  from: AgentPubKey;
-} | {
-  type: 'EntryCreated';
-  action: SignedActionHashed<Create>;
-  app_entry: EntryTypes;
-} | {
-  type: 'EntryUpdated';
-  action: SignedActionHashed<Update>;
-  app_entry: EntryTypes;
-  original_app_entry: EntryTypes;
-} | {
-  type: 'EntryDeleted';
-  action: SignedActionHashed<Delete>;
-  original_app_entry: EntryTypes;
-} | {
-  type: 'LinkCreated';
-  action: SignedActionHashed<CreateLink>;
-  link_type: string;
-} | {
-  type: 'LinkDeleted';
-  action: SignedActionHashed<DeleteLink>;
-  link_type: string;
-};
+export type RelaySignal =
+  | {
+      type: "Message";
+      action: SignedActionHashed<Create>;
+      message: Message;
+      from: AgentPubKey;
+    }
+  | {
+      type: "EntryCreated";
+      action: SignedActionHashed<Create>;
+      app_entry: EntryTypes;
+    }
+  | {
+      type: "EntryUpdated";
+      action: SignedActionHashed<Update>;
+      app_entry: EntryTypes;
+      original_app_entry: EntryTypes;
+    }
+  | {
+      type: "EntryDeleted";
+      action: SignedActionHashed<Delete>;
+      original_app_entry: EntryTypes;
+    }
+  | {
+      type: "LinkCreated";
+      action: SignedActionHashed<CreateLink>;
+      link_type: string;
+    }
+  | {
+      type: "LinkDeleted";
+      action: SignedActionHashed<DeleteLink>;
+      link_type: string;
+    };
 
 export enum Privacy {
   Private,
-  Public
+  Public,
 }
 
 // DNA modifier properties for a conversation
 export interface Properties {
-  created: number,
+  created: number;
   privacy: Privacy;
   progenitor: AgentPubKeyB64;
 }
 
-export type EntryTypes =
-  | ({ type: 'Message'; } & MessageInput);
+export type EntryTypes = { type: "Message" } & MessageInput;
 
 export interface Contact {
   currentActionHash?: ActionHash;
@@ -74,7 +79,7 @@ export interface MessageInput {
   bucket: number;
 }
 
-export type Messages = { [key: string]: Message }
+export type Messages = { [key: string]: Message };
 
 export interface Conversation {
   id: string; // the network seed
@@ -101,7 +106,7 @@ export interface MembraneProofData {
 }
 
 export interface Invitation {
-  created: number,
+  created: number;
   networkSeed: string;
   privacy: Privacy;
   progenitor: AgentPubKey;
@@ -126,7 +131,7 @@ export interface Image {
   lastModified: number;
   size: number;
   storageEntryHash?: EntryHash;
-  status?: 'loading' | 'loaded' | 'pending' | 'error'; // Pending = not yet sent to holochain, loading = loading from holochain, loaded = loaded from holochain, error = failed to load
+  status?: "loading" | "loaded" | "pending" | "error"; // Pending = not yet sent to holochain, loading = loading from holochain, loaded = loaded from holochain, error = failed to load
 }
 
 export interface Message {
@@ -138,15 +143,15 @@ export interface Message {
   header?: string; // an optional header to display above this message in the conversation UI
   images: Image[];
   hideDetails?: boolean; // Used in the UI to toggle the display of the message details
-  status?: 'pending' | 'confirmed' | 'delivered' | 'read'; // status of the message
+  status?: "pending" | "confirmed" | "delivered" | "read"; // status of the message
   timestamp: Date;
   bucket: number;
 }
 
 export type BucketInput = {
-  bucket: number,
-  count: number,
-}
+  bucket: number;
+  count: number;
+};
 
 export interface MessageRecord {
   original_action: ActionHash;
@@ -155,11 +160,11 @@ export interface MessageRecord {
 }
 
 export interface Config {
-  title: string,
-  image: string,
+  title: string;
+  image: string;
 }
 
 export interface ConversationCellAndConfig {
-  cell: ClonedCell,
-  config: Config,
+  cell: ClonedCell;
+  config: Config;
 }

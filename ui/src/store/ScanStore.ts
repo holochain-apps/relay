@@ -1,7 +1,7 @@
 import { get, writable, type Writable } from "svelte/store";
 import { platform } from "@tauri-apps/plugin-os";
 import { goto } from "$app/navigation";
-import { page } from '$app/stores';
+import { page } from "$app/stores";
 
 // tarui-plugin-barcode-scanner launches the scanner as a fullscreen View
 // In order to display our overlay upon it, we must have a fully transparent background.
@@ -14,7 +14,9 @@ class ScanStore {
 
   constructor() {
     const currentPlatform = platform();
-    this.isSupported = writable(Boolean(currentPlatform === "ios" || currentPlatform === "android"));
+    this.isSupported = writable(
+      Boolean(currentPlatform === "ios" || currentPlatform === "android"),
+    );
     this.value = writable(null);
     this.onCompleteGoto = writable(null);
   }
@@ -27,7 +29,7 @@ class ScanStore {
     this.onCompleteGoto.set(currentPath);
 
     // Goto scan page
-    goto('/scan', { replaceState: true });
+    goto("/scan", { replaceState: true });
   }
 
   complete() {

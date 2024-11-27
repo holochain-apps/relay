@@ -1,8 +1,8 @@
 import { type ActionHash, type AgentPubKeyB64 } from "@holochain/client";
-import { writable, get, type Writable } from 'svelte/store';
-import LocalStorageStore from '$store/LocalStorageStore';
-import { RelayStore } from '$store/RelayStore'
-import { type Contact } from '../types';
+import { writable, get, type Writable } from "svelte/store";
+import LocalStorageStore from "$store/LocalStorageStore";
+import { RelayStore } from "$store/RelayStore";
+import { type Contact } from "../types";
 
 export class ContactStore {
   private contact: Writable<Contact>;
@@ -15,10 +15,21 @@ export class ContactStore {
     public lastName: string,
     public originalActionHash: ActionHash | undefined,
     public publicKeyB64: AgentPubKeyB64,
-    public conversationId?: string | undefined
+    public conversationId?: string | undefined,
   ) {
-    const privateConversationId = get(LocalStorageStore(`contact_${publicKeyB64}_private_conversation`, conversationId))
-    this.contact = writable({ avatar, confirmed: false, currentActionHash, firstName, lastName, originalActionHash, publicKeyB64, privateConversationId })
+    const privateConversationId = get(
+      LocalStorageStore(`contact_${publicKeyB64}_private_conversation`, conversationId),
+    );
+    this.contact = writable({
+      avatar,
+      confirmed: false,
+      currentActionHash,
+      firstName,
+      lastName,
+      originalActionHash,
+      publicKeyB64,
+      privateConversationId,
+    });
   }
 
   subscribe(run: any) {
@@ -30,23 +41,27 @@ export class ContactStore {
   }
 
   get name() {
-    return this.data.firstName + ' ' + this.data.lastName
+    return this.data.firstName + " " + this.data.lastName;
   }
 
   get privateConversation() {
-    return this.data.privateConversationId ? this.relayStore.getConversation(this.data.privateConversationId) : null
+    return this.data.privateConversationId
+      ? this.relayStore.getConversation(this.data.privateConversationId)
+      : null;
   }
 
   // Check if the contact has joined the private conversation between you yet
   get pendingConnection() {
-    const conversationAgents = this.data.privateConversationId && this.relayStore.getConversation(this.data.privateConversationId)?.data.agentProfiles
-    return conversationAgents && Object.keys(conversationAgents).length === 1
+    const conversationAgents =
+      this.data.privateConversationId &&
+      this.relayStore.getConversation(this.data.privateConversationId)?.data.agentProfiles;
+    return conversationAgents && Object.keys(conversationAgents).length === 1;
   }
 
   update(newData: any) {
-    this.contact.update(c => {
-      return { ...c, ...newData }
-    })
+    this.contact.update((c) => {
+      return { ...c, ...newData };
+    });
   }
 
   // async getContact() {
