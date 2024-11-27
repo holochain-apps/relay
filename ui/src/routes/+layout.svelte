@@ -12,12 +12,12 @@
   import { t } from "$lib/translations";
   import { RelayClient } from "$store/RelayClient";
   import { RelayStore } from "$store/RelayStore";
-  import { type RoleNameCallZomeRequest } from "@holochain/client";
   import toast, { Toaster } from "svelte-french-toast";
 
   import "../app.postcss";
 
-  //	export let data: LayoutData;
+  const ROLE_NAME = "relay";
+  const ZOME_NAME = ROLE_NAME;
 
   const appId = import.meta.env.VITE_APP_ID ? import.meta.env.VITE_APP_ID : "volla-messages";
   const appPort = import.meta.env.VITE_APP_PORT ? import.meta.env.VITE_APP_PORT : undefined;
@@ -61,19 +61,20 @@
       console.log("Awaiting relay cell launch");
       await client.callZome(
         {
-          role_name: "relay",
-          zome_name: "relay",
+          role_name: ROLE_NAME,
+          zome_name: ZOME_NAME,
           fn_name: "ping",
-        } as RoleNameCallZomeRequest,
+          payload: null,
+        },
 
         // 5m timeout
         5 * 60 * 1000,
       );
       console.log("Relay cell ready.");
 
-      let profilesClient = new ProfilesClient(client, "relay");
+      let profilesClient = new ProfilesClient(client, ROLE_NAME);
       profilesStore = new ProfilesStore(profilesClient);
-      relayClient = new RelayClient(client, "relay", profilesStore);
+      relayClient = new RelayClient(client, profilesStore, ROLE_NAME, ZOME_NAME);
       relayStore = new RelayStore(relayClient);
       await relayStore.initialize();
       connected = true;

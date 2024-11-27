@@ -76,7 +76,7 @@ export class ConversationStore {
     this.client = relayStore.client;
     this.fileStorageClient = new FileStorageClient(
       this.client.client,
-      "relay",
+      "UNUSED ROLE NAME", // this is not used when cellId is specified, but the FileStorageClient still requires the parameter
       "file_storage",
       cellId,
     );
