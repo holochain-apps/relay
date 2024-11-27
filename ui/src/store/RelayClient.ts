@@ -5,10 +5,8 @@ import {
   encodeHashToBase64,
   type AgentPubKey,
   type AppClient,
-  type AppCreateCloneCellRequest,
   type CellId,
   type CellInfo,
-  type RoleName,
   type MembraneProof,
   type AgentPubKeyB64,
   type ActionHash,
@@ -27,7 +25,6 @@ import type {
   Message,
   MessageRecord,
   Privacy,
-  Properties,
 } from "../types";
 
 export class RelayClient {
@@ -49,13 +46,12 @@ export class RelayClient {
   }
 
   async createProfile(firstName: string, lastName: string, avatar: string): Promise<Profile> {
-    const profile = await this.client.callZome({
+    return this.client.callZome({
       role_name: this.roleName,
       zome_name: "profiles",
       fn_name: "create_profile",
       payload: { nickname: firstName + " " + lastName, fields: { avatar, firstName, lastName } },
     });
-    return profile;
   }
 
   async updateProfile(firstName: string, lastName: string, avatar: string): Promise<Profile> {
@@ -112,20 +108,18 @@ export class RelayClient {
     image: string,
     privacy: Privacy,
   ): Promise<ConversationCellAndConfig | null> {
-    return this._createConversation(
+    return this._cloneConversation(
       new Date().getTime(),
       title,
       image,
       privacy,
       this.client.myPubKey,
-      undefined,
-      undefined,
     );
   }
 
   async joinConversation(invitation: Invitation): Promise<ConversationCellAndConfig | null> {
     // we don't have the image at join time, it get's loaded later
-    return this._createConversation(
+    return this._cloneConversation(
       invitation.created,
       invitation.title,
       "",
@@ -136,41 +130,37 @@ export class RelayClient {
     );
   }
 
-  async _createConversation(
+  async _cloneConversation(
     created: number,
     title: string,
     image: string,
     privacy: Privacy,
     progenitor: AgentPubKey,
-    membrane_proof: MembraneProof | undefined,
-    networkSeed: string | undefined,
+    membrane_proof?: MembraneProof,
+    networkSeed?: string,
   ): Promise<ConversationCellAndConfig | null> {
     const conversationId = networkSeed || uuidv4();
 
-    const properties: Properties = {
-      created,
-      privacy,
-      progenitor: encodeHashToBase64(progenitor),
-    };
-
-    const cloneReq: AppCreateCloneCellRequest = {
-      role_name: this.roleName,
-      name: title,
-      membrane_proof,
-      modifiers: {
-        network_seed: conversationId,
-        properties,
-      },
-    };
-
     try {
-      const cell = await this.client.createCloneCell(cloneReq);
-      let config: Config = { title, image };
+      const cell = await this.client.createCloneCell({
+        role_name: this.roleName,
+        name: title,
+        membrane_proof,
+        modifiers: {
+          network_seed: conversationId,
+          properties: {
+            created,
+            privacy,
+            progenitor: encodeHashToBase64(progenitor),
+          },
+        },
+      });
+
       if (!networkSeed) {
-        await this._setConfig(config, cell.cell_id);
+        await this._setConfig({ title, image }, cell.cell_id);
       }
 
-      await this.setMyProfileForConversation(cell.cell_id);
+      await this._setMyProfileForConversation(cell.cell_id);
       const convoCellAndConfig: ConversationCellAndConfig = { cell, config };
       this.conversations[conversationId] = convoCellAndConfig;
       return convoCellAndConfig;
@@ -184,13 +174,12 @@ export class RelayClient {
     conversationId: string,
     buckets: Array<number>,
   ): Promise<Array<MessageRecord>> {
-    const messages = await this.client.callZome({
+    return this.client.callZome({
       cell_id: this.conversations[conversationId].cell.cell_id,
       zome_name: this.zomeName,
       fn_name: "get_messages_for_buckets",
       payload: buckets,
     });
-    return messages;
   }
 
   public async getMessageHashes(
@@ -198,26 +187,24 @@ export class RelayClient {
     bucket: number,
     count: number,
   ): Promise<Array<ActionHash>> {
-    const hashes = await this.client.callZome({
+    return this.client.callZome({
       cell_id: this.conversations[conversationId].cell.cell_id,
       zome_name: this.zomeName,
       fn_name: "get_message_hashes",
       payload: { bucket, count },
     });
-    return hashes;
   }
 
   public async getMessageEntries(
     conversationId: string,
     hashes: Array<ActionHash>,
   ): Promise<Array<MessageRecord>> {
-    const messages = await this.client.callZome({
+    return this.client.callZome({
       cell_id: this.conversations[conversationId].cell.cell_id,
       zome_name: this.zomeName,
       fn_name: "get_message_entries",
       payload: hashes,
     });
-    return messages;
   }
 
   public async getAllAgents(conversationId: string): Promise<{ [key: AgentPubKeyB64]: Profile }> {
@@ -286,7 +273,7 @@ export class RelayClient {
     return new EntryRecord(message);
   }
 
-  public async setMyProfileForConversation(cellId: CellId): Promise<null> {
+  async _setMyProfileForConversation(cellId: CellId): Promise<null> {
     const myProfile = get(this.profilesStore.myProfile);
     const myProfileValue =
       myProfile && myProfile.status === "complete" && (myProfile.value as EntryRecord<Profile>);
@@ -330,17 +317,16 @@ export class RelayClient {
   /********* Contacts **********/
 
   public async getAllContacts() {
-    const result = await this.client.callZome({
+    return this.client.callZome({
       role_name: this.roleName,
       zome_name: this.zomeName,
       fn_name: "get_all_contact_entries",
       payload: null,
     });
-    return result;
   }
 
   public async createContact(contact: Contact) {
-    const result = await this.client.callZome({
+    return this.client.callZome({
       role_name: this.roleName,
       zome_name: this.zomeName,
       fn_name: "create_contact",
@@ -351,11 +337,10 @@ export class RelayClient {
         public_key: decodeHashFromBase64(contact.publicKeyB64),
       },
     });
-    return result;
   }
 
   public async updateContact(contact: Contact) {
-    const result = await this.client.callZome({
+    return this.client.callZome({
       role_name: this.roleName,
       zome_name: this.zomeName,
       fn_name: "update_contact",
@@ -370,6 +355,5 @@ export class RelayClient {
         },
       },
     });
-    return result;
   }
 }
