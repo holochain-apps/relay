@@ -46,7 +46,7 @@ export class Bucket {
     const sb =
       this.type === BucketType.Hashes
         ? Array.from(get(this.hashes)!.keys())
-        : this._count;
+        : get(this._count);
     return JSON.stringify(sb);
   }
 

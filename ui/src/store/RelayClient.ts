@@ -24,7 +24,7 @@ const ZOME_NAME = 'relay'
 
 export class RelayClient {
   // conversations is a map of string to ClonedCell
-  conversations: {[key: string]: ConversationCellAndConfig} = {}
+  conversations: { [key: string]: ConversationCellAndConfig } = {}
   zomeName = ZOME_NAME
   myPubKeyB64: AgentPubKeyB64
 
@@ -32,11 +32,11 @@ export class RelayClient {
     this.myPubKeyB64 = encodeHashToBase64(this.client.myPubKey)
   }
 
-  get myPubKey() : AgentPubKey {
+  get myPubKey(): AgentPubKey {
     return this.client.myPubKey
   }
 
-  async createProfile(firstName: string, lastName: string, avatar: string) : Promise<Profile> {
+  async createProfile(firstName: string, lastName: string, avatar: string): Promise<Profile> {
     const req: AppCallZomeRequest = {
       role_name: 'relay',
       zome_name: 'profiles',
@@ -47,7 +47,7 @@ export class RelayClient {
     return profile
   }
 
-  async updateProfile(firstName: string, lastName: string, avatar: string) : Promise<Profile> {
+  async updateProfile(firstName: string, lastName: string, avatar: string): Promise<Profile> {
     const req: AppCallZomeRequest = {
       role_name: 'relay',
       zome_name: 'profiles',
@@ -86,28 +86,28 @@ export class RelayClient {
         try {
           const configRecord = await this._getConfig(cell.cell_id)
 
-          const config = configRecord? configRecord.entry : { title: cell.name, image: "" }
+          const config = configRecord ? configRecord.entry : { title: cell.name, image: "" }
 
           const convoCellAndConfig: ConversationCellAndConfig = { cell, config }
 
           this.conversations[cell.dna_modifiers.network_seed] = convoCellAndConfig
-        } catch(e) {
+        } catch (e) {
           console.error("Unable to get config for cell:", cell, e)
         }
       }
     }
   }
 
-  async createConversation(title: string, image: string, privacy: Privacy) : Promise<ConversationCellAndConfig | null> {
+  async createConversation(title: string, image: string, privacy: Privacy): Promise<ConversationCellAndConfig | null> {
     return this._createConversation(new Date().getTime(), title, image, privacy, this.client.myPubKey, undefined, undefined)
   }
 
-  async joinConversation(invitation: Invitation) : Promise<ConversationCellAndConfig | null> {
+  async joinConversation(invitation: Invitation): Promise<ConversationCellAndConfig | null> {
     // we don't have the image at join time, it get's loaded later
     return this._createConversation(invitation.created, invitation.title, "", invitation.privacy, invitation.progenitor, invitation.proof, invitation.networkSeed)
   }
 
-  async _createConversation(created: number, title: string, image: string, privacy: Privacy, progenitor: AgentPubKey, membrane_proof: MembraneProof|undefined, networkSeed: string|undefined) : Promise<ConversationCellAndConfig | null> {
+  async _createConversation(created: number, title: string, image: string, privacy: Privacy, progenitor: AgentPubKey, membrane_proof: MembraneProof | undefined, networkSeed: string | undefined): Promise<ConversationCellAndConfig | null> {
     const conversationId = networkSeed || uuidv4()
 
     const properties: Properties = {
@@ -116,7 +116,7 @@ export class RelayClient {
       progenitor: encodeHashToBase64(progenitor),
     }
 
-    const cloneReq : AppCreateCloneCellRequest = {
+    const cloneReq: AppCreateCloneCellRequest = {
       role_name: this.roleName,
       name: title,
       membrane_proof,
@@ -134,31 +134,31 @@ export class RelayClient {
       }
 
       await this.setMyProfileForConversation(cell.cell_id)
-      const convoCellAndConfig: ConversationCellAndConfig = {cell, config}
+      const convoCellAndConfig: ConversationCellAndConfig = { cell, config }
       this.conversations[conversationId] = convoCellAndConfig
       return convoCellAndConfig
-    } catch(e) {
+    } catch (e) {
       console.error("Error creating conversation", e)
       return null
     }
   }
 
-  public async getAllMessages(conversationId: string, buckets: Array<number>) : Promise<Array<MessageRecord>> {
+  public async getAllMessages(conversationId: string, buckets: Array<number>): Promise<Array<MessageRecord>> {
     const messages = await this.callZomeForCell("get_messages_for_buckets", buckets, this.conversations[conversationId].cell.cell_id);
     return messages
   }
 
-  public async getMessageHashes(conversationId: string, bucket: number, count: number) : Promise<Array<ActionHash>> {
-    const hashes = await this.callZomeForCell("get_message_hashes", {bucket, count}, this.conversations[conversationId].cell.cell_id);
+  public async getMessageHashes(conversationId: string, bucket: number, count: number): Promise<Array<ActionHash>> {
+    const hashes = await this.callZomeForCell("get_message_hashes", { bucket, count }, this.conversations[conversationId].cell.cell_id);
     return hashes
   }
 
-  public async getMessageEntries(conversationId: string, hashes: Array<ActionHash>) : Promise<Array<MessageRecord>> {
+  public async getMessageEntries(conversationId: string, hashes: Array<ActionHash>): Promise<Array<MessageRecord>> {
     const messages = await this.callZomeForCell("get_message_entries", hashes, this.conversations[conversationId].cell.cell_id);
     return messages
   }
 
-  public async getAllAgents(conversationId: string) : Promise<{ [key: AgentPubKeyB64]: Profile }> {
+  public async getAllAgents(conversationId: string): Promise<{ [key: AgentPubKeyB64]: Profile }> {
     const cellId = this.conversations[conversationId].cell.cell_id;
 
     const req: AppCallZomeRequest = {
@@ -170,20 +170,20 @@ export class RelayClient {
     const agentsResponse = await this.client.callZome(req);
 
     return await agentsResponse.reduce(async (resultsPromise: { [key: AgentPubKeyB64]: Profile }, a: any) => {
-        const agentRecord = await this.client.callZome({
-          cell_id: cellId,
-          zome_name: 'profiles',
-          fn_name: 'get_agent_profile',
-          payload: a
-        });
-        const results = await resultsPromise;
-        results[encodeHashToBase64(a)] = decode(agentRecord.entry.Present.entry) as Profile
-        return results
-      }, Promise.resolve<{ [key: AgentPubKeyB64]: Profile }>({})
+      const agentRecord = await this.client.callZome({
+        cell_id: cellId,
+        zome_name: 'profiles',
+        fn_name: 'get_agent_profile',
+        payload: a
+      });
+      const results = await resultsPromise;
+      results[encodeHashToBase64(a)] = decode(agentRecord.entry.Present.entry) as Profile
+      return results
+    }, Promise.resolve<{ [key: AgentPubKeyB64]: Profile }>({})
     )
   }
 
-  async _setConfig(config: Config, cellId: CellId) : Promise<null> {
+  async _setConfig(config: Config, cellId: CellId): Promise<null> {
     return this.callZomeForCell(
       'set_config',
       config,
@@ -191,7 +191,7 @@ export class RelayClient {
     )
   }
 
-  async _getConfig(id: CellId | string) : Promise<EntryRecord<Config>|undefined> {
+  async _getConfig(id: CellId | string): Promise<EntryRecord<Config> | undefined> {
     const cellId = typeof id === 'string' ? this.conversations[id].cell.cell_id : id;
 
     const config = await this.callZomeForCell(
@@ -214,7 +214,7 @@ export class RelayClient {
     return new EntryRecord(message)
   }
 
-  public async setMyProfileForConversation(cellId: CellId) : Promise<null> {
+  public async setMyProfileForConversation(cellId: CellId): Promise<null> {
     const myProfile = get(this.profilesStore.myProfile)
     const myProfileValue = myProfile && myProfile.status === 'complete' && myProfile.value as EntryRecord<Profile>
     const profile = myProfileValue ? myProfileValue.entry : undefined
@@ -241,7 +241,7 @@ export class RelayClient {
 
       const r = await this.callZomeForCell("generate_membrane_proof", data, conversation.cell.cell_id);
       return r
-    } catch(e) {
+    } catch (e) {
       console.error("Error generating membrane proof", e)
     }
     return undefined

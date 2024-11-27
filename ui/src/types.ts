@@ -21,7 +21,7 @@ export type RelaySignal = {
   action: SignedActionHashed<Create>;
   message: Message;
   from: AgentPubKey;
-} |{
+} | {
   type: 'EntryCreated';
   action: SignedActionHashed<Create>;
   app_entry: EntryTypes;
@@ -57,7 +57,7 @@ export interface Properties {
 }
 
 export type EntryTypes =
- | ({ type: 'Message'; } & MessageInput);
+  | ({ type: 'Message'; } & MessageInput);
 
 export interface Contact {
   currentActionHash?: ActionHash;

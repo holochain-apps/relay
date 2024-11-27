@@ -37,7 +37,7 @@ export class RelayStore {
 
     this.client.client.on('signal', async (signal: Signal) => {
       if (!(SignalType.App in signal)) return;
-      
+
       console.log("Got App Signal:", signal)
 
       const payload: RelaySignal = signal[SignalType.App].payload as RelaySignal
@@ -51,7 +51,7 @@ export class RelayStore {
           authorKey: encodeHashToBase64(from),
           content: payload.message.content,
           bucket: payload.message.bucket,
-          images: payload.message.images.map((i: any) => ({ ...mapKeys(i, (v, k) => camelCase(k)) as Image, status: 'loading'  }) as Image), // convert snake_case to camelCase
+          images: payload.message.images.map((i: any) => ({ ...mapKeys(i, (v, k) => camelCase(k)) as Image, status: 'loading' }) as Image), // convert snake_case to camelCase
           status: 'confirmed',
           timestamp: new Date(payload.action.hashed.content.timestamp / 1000)
         }
@@ -60,11 +60,11 @@ export class RelayStore {
           const sender = conversation.allMembers.find(m => m.publicKeyB64 == message.authorKey)
           conversation.addMessage(message)
           if (!conversation.archived) {
-            const msgShort = message.content.length > 125 ? message.content.slice(0,50)+"...":  message.content
+            const msgShort = message.content.length > 125 ? message.content.slice(0, 50) + "..." : message.content
             if (isMobile()) {
-              enqueueNotification(`${sender ? sender.firstName+" "+ sender.lastName : message.authorKey}: ${msgShort}`, message.content)
+              enqueueNotification(`${sender ? sender.firstName + " " + sender.lastName : message.authorKey}: ${msgShort}`, message.content)
             } else {
-              enqueueNotification(`Message from ${sender ? sender.firstName+" "+ sender.lastName : message.authorKey}`, message.content)
+              enqueueNotification(`Message from ${sender ? sender.firstName + " " + sender.lastName : message.authorKey}`, message.content)
             }
             conversation.loadImagesForMessage(message) // async load images
           }
@@ -103,7 +103,7 @@ export class RelayStore {
     const progenitor = decodeHashFromBase64(properties.progenitor);
     const privacy = properties.privacy
     const seed = convoCellAndConfig.cell.dna_modifiers.network_seed
-    const newConversation = new ConversationStore(this, seed, convoCellAndConfig.cell.cell_id, convoCellAndConfig.config, properties.created, privacy, progenitor )
+    const newConversation = new ConversationStore(this, seed, convoCellAndConfig.cell.cell_id, convoCellAndConfig.config, properties.created, privacy, progenitor)
 
     const unsub = newConversation.lastMessage.subscribe(() => {
       // Trigger update to conversations store whenever lastMessage changes
