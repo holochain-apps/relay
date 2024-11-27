@@ -45,7 +45,7 @@ export class ContactStore {
 
   update(newData: any) {
     this.contact.update(c => {
-      return {...c, ...newData}
+      return { ...c, ...newData }
     })
   }
 

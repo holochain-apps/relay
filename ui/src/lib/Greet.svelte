@@ -9,7 +9,7 @@
 	}
 </script>
 
-<div class="card p-4 flex gap-4 flex-col">
+<div class="card flex flex-col gap-4 p-4">
 	<label class="label">
 		<span>Enter your name</span>
 		<input id="gree-input" placeholder="Enter a name..." bind:value={name} class="input" />

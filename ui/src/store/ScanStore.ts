@@ -20,7 +20,7 @@ class ScanStore {
   }
 
   scan() {
-    if(!get(this.isSupported)) return;
+    if (!get(this.isSupported)) return;
 
     // Save current path so we can navigate there upon completion
     const currentPath = get(page).url.pathname;
@@ -32,8 +32,8 @@ class ScanStore {
 
   complete() {
     const onCompleteGoto = get(scanStore.onCompleteGoto);
-    if(onCompleteGoto) {
-      goto(onCompleteGoto, {replaceState: true});
+    if (onCompleteGoto) {
+      goto(onCompleteGoto, { replaceState: true });
     }
   }
 
@@ -43,7 +43,7 @@ class ScanStore {
   }
 
   readResult() {
-    if(get(scanStore.onCompleteGoto) !== get(page).url.pathname) return null;
+    if (get(scanStore.onCompleteGoto) !== get(page).url.pathname) return null;
 
     const result = get(scanStore.value);
     scanStore.reset();

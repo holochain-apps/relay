@@ -8,7 +8,7 @@ export class MsgHistory {
   private dnaB64: DnaHashB64
   public messageCount: Readable<number>
 
-  constructor(currentBucket:number, dnaHash: DnaHash) {
+  constructor(currentBucket: number, dnaHash: DnaHash) {
     this.dnaB64 = encodeHashToBase64(dnaHash)
     const buckets: Bucket[] = []
     for (let b = 0; b <= currentBucket; b += 1) {
@@ -22,55 +22,55 @@ export class MsgHistory {
         $b.forEach(b => count += b.count)
         return count
       })
-    }
+  }
 
-    bucketsForSet(setSize: number, startingBucket: number) : number[] {
-      let bucket = startingBucket
-      const bucketsInSet:Array<number> = []
-      let count = 0
-      // add buckets until we get to threshold of what to load
-      let buckets = get(this.buckets)
-      do {
-        bucketsInSet.push(bucket)
-        const h = buckets[bucket]
-        if (h) {
-          const size = h.count
-          count += size
-        }
-        bucket-=1
-      } while (bucket >= 0 && count < setSize)
-        return bucketsInSet
-    }
-
-    ensure(b: number) {
-      if (get(this.buckets)[b] == undefined) {
-        this.buckets.update(buckets=> {
-          buckets[b] = new Bucket([])
-          return buckets
-        })
+  bucketsForSet(setSize: number, startingBucket: number): number[] {
+    let bucket = startingBucket
+    const bucketsInSet: Array<number> = []
+    let count = 0
+    // add buckets until we get to threshold of what to load
+    let buckets = get(this.buckets)
+    do {
+      bucketsInSet.push(bucket)
+      const h = buckets[bucket]
+      if (h) {
+        const size = h.count
+        count += size
       }
-    }
-    getBucket(b: number) : Bucket {
-      this.ensure(b)
-      let buckets = get(this.buckets)
-      return buckets[b]
-    }
+      bucket -= 1
+    } while (bucket >= 0 && count < setSize)
+    return bucketsInSet
+  }
 
-    add(message: Message) {
+  ensure(b: number) {
+    if (get(this.buckets)[b] == undefined) {
       this.buckets.update(buckets => {
-        const bucket = buckets[message.bucket]
-        if (bucket === undefined) {
-          buckets[message.bucket] = new Bucket([message.hash])
-        } else {
-          bucket.add([message.hash])
-        }
+        buckets[b] = new Bucket([])
         return buckets
       })
-      this.saveBucket(message.bucket)
-    }
-
-    saveBucket(b: number) {
-      const bucket = this.getBucket(b)
-      localStorage.setItem(`c.${this.dnaB64}.${b}`, bucket.toJSON())
     }
   }
+  getBucket(b: number): Bucket {
+    this.ensure(b)
+    let buckets = get(this.buckets)
+    return buckets[b]
+  }
+
+  add(message: Message) {
+    this.buckets.update(buckets => {
+      const bucket = buckets[message.bucket]
+      if (bucket === undefined) {
+        buckets[message.bucket] = new Bucket([message.hash])
+      } else {
+        bucket.add([message.hash])
+      }
+      return buckets
+    })
+    this.saveBucket(message.bucket)
+  }
+
+  saveBucket(b: number) {
+    const bucket = this.getBucket(b)
+    localStorage.setItem(`c.${this.dnaB64}.${b}`, bucket.toJSON())
+  }
+}

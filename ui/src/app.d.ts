@@ -2,10 +2,10 @@
 // for information about these interfaces
 // and what to do when importing types
 declare namespace App {
-	// interface Locals {}
-	// interface PageData {}
-	// interface Error {}
-	// interface Platform {}
+  // interface Locals {}
+  // interface PageData {}
+  // interface Error {}
+  // interface Platform {}
 }
 
 declare const __APP_VERSION__: string;
@@ -25,4 +25,4 @@ declare global {
   }
 }
 
-export {};
+export { };

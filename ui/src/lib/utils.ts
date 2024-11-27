@@ -14,7 +14,7 @@ export function sanitizeHTML(html: string) {
 export function linkify(text: string) {
   const urlPattern = /(?:https?:(?:\/\/)?)?(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
   return text.replace(urlPattern, (match) => {
-      // XXX: not quite sure why this is needed, but if i dont do this sveltekit navigates internally and externally at the same time
+    // XXX: not quite sure why this is needed, but if i dont do this sveltekit navigates internally and externally at the same time
     const href = match.includes('://') ? match : `https://${match}`
     return `<a href="${href}" target="_blank" rel="noopener noreferrer">${match}</a>`
   })
@@ -41,10 +41,12 @@ export function copyToClipboard(text: string | Promise<string>) {
     }
   } else {
     if (typeof ClipboardItem && navigator.clipboard.write) {
-      const item = new ClipboardItem({ "text/plain": text.then(t => {
-        console.log("Copying to clipboard", t)
-        return new Blob([t], { type: "text/plain" })
-      })})
+      const item = new ClipboardItem({
+        "text/plain": text.then(t => {
+          console.log("Copying to clipboard", t)
+          return new Blob([t], { type: "text/plain" })
+        })
+      })
       return navigator.clipboard.write([item])
     } else {
       console.log("Copying to clipboard", text);
@@ -84,7 +86,7 @@ export function resizeAndExportAvatar(img: HTMLImageElement) {
   return canvas.toDataURL();
 }
 
-export function handleFileChange(event: Event, callback: (imageData:string)=> void) {
+export function handleFileChange(event: Event, callback: (imageData: string) => void) {
   const input = event.target as HTMLInputElement;
   if (input.files && input.files.length > 0) {
     const file = input.files[0];
@@ -135,19 +137,19 @@ export function isMacOS(): boolean {
   return platform() === 'macos';
 }
 
-export function isDesktop() : boolean {
+export function isDesktop(): boolean {
   return isMacOS() || isLinux() || isWindows()
 }
 
-export function isAndroid() : boolean {
+export function isAndroid(): boolean {
   return platform() === 'android';
 }
 
-export function isIOS() : boolean {
+export function isIOS(): boolean {
   return platform() === 'ios';
 }
 
-export function isMobile() : boolean {
+export function isMobile(): boolean {
   return isAndroid() || isIOS()
 }
 

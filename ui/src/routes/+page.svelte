@@ -7,7 +7,7 @@
 	import Header from '$lib/Header.svelte';
 	import SvgIcon from '$lib/SvgIcon.svelte';
 	import { t } from '$lib/translations';
-	import { RelayStore } from '$store/RelayStore';
+	import { RelayStore } from '$store/RelayStore'; 
 
 	const profilesContext: { getStore: () => ProfilesStore } = getContext('profiles')
 	let profilesStore = profilesContext.getStore()
