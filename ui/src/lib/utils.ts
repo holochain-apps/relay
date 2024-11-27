@@ -36,9 +36,6 @@ export function shareText(text: string | Promise<string>) {
 }
 
 export function copyToClipboard(text: string | Promise<string>) {
-  // @ts-ignore
-  // if (window.__TAURI_PLUGIN_CLIPBOARD_MANAGER__) return window.__TAURI_PLUGIN_CLIPBOARD_MANAGER__.writeText(text);
-  // return writeText(text);
   if (typeof text === "string") {
     if (text && text.trim().length > 0) {
       console.log("Copying to clipboard", text);

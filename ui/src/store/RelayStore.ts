@@ -104,30 +104,6 @@ export class RelayStore {
             conversation.loadImagesForMessage(message); // async load images
           }
         }
-        // let messageList = this.expectations.get(message.from)
-        // if (messageList) {
-        //     if (payload.type == "Ack") {
-        //         const idx = messageList.findIndex((created) => created == payload.created)
-        //         if (idx >= 0) {
-        //             messageList.splice(idx,1)
-        //             this.expectations.set(message.from, messageList)
-        //         }
-        //     }
-        //     // we just received a message from someone who we are expecting
-        //     // to have acked something but they haven't so we retry to send the message
-        //     if (messageList.length > 0) {
-        //         const streams = Object.values(get(this.streams))
-        //         for (const msgId of messageList) {
-        //             for (const stream of streams) {
-        //                 const msg = stream.findMessage(msgId)
-        //                 if (msg) {
-        //                     console.log("Resending", msg)
-        //                     await this.client.sendMessage(stream.id, msg.payload, [message.from])
-        //                 }
-        //             }
-        //         }
-        //     }
-        //}
       }
     });
   }
@@ -203,12 +179,6 @@ export class RelayStore {
     if (!this.client) return;
     return await this.client.inviteAgentToConversation(conversationId, agent, role);
   }
-
-  // removeConversations(id: string): void {
-  //   this.conversations.update(conversations =>
-  //     conversations.filter(conversation => conversation.data.id !== id)
-  //   );
-  // }
 
   getConversation(id: string): ConversationStore | undefined {
     let foundConversation;
