@@ -1,12 +1,10 @@
 import DOMPurify from "dompurify";
-import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import {
   isPermissionGranted,
   requestPermission,
   sendNotification,
 } from "@tauri-apps/plugin-notification";
 import { shareText as sharesheetShareText } from "@buildyourwebapp/tauri-plugin-sharesheet";
-import { type Image } from "../types";
 import { platform } from "@tauri-apps/plugin-os";
 
 export const MIN_TITLE_LENGTH = 3;

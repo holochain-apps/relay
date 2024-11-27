@@ -1,13 +1,6 @@
 import { decode } from "@msgpack/msgpack";
 import { isEqual, camelCase, mapKeys } from "lodash-es";
-import {
-  writable,
-  get,
-  type Subscriber,
-  type Invalidator,
-  type Unsubscriber,
-  type Writable,
-} from "svelte/store";
+import { writable, get, type Writable } from "svelte/store";
 import {
   type AgentPubKey,
   type AgentPubKeyB64,
@@ -15,8 +8,6 @@ import {
   decodeHashFromBase64,
   encodeHashToBase64,
   type Signal,
-  type EntryHash,
-  type AppSignal,
   SignalType,
 } from "@holochain/client";
 import { ContactStore } from "./ContactStore";

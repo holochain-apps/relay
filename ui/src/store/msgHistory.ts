@@ -1,4 +1,4 @@
-import { encodeHashToBase64, type Dna, type DnaHash, type DnaHashB64 } from "@holochain/client";
+import { encodeHashToBase64, type DnaHash, type DnaHashB64 } from "@holochain/client";
 import type { Message } from "../types";
 import { Bucket } from "./bucket";
 import { derived, get, type Readable, writable, type Writable } from "svelte/store";

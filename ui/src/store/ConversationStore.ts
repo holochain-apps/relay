@@ -4,7 +4,6 @@ import { Base64 } from "js-base64";
 import {
   type AgentPubKey,
   type CellId,
-  type DnaHash,
   decodeHashFromBase64,
   encodeHashToBase64,
   type ActionHashB64,
