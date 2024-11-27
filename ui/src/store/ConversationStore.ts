@@ -70,8 +70,8 @@ export class ConversationStore {
   async loadMessagesSet(): Promise<Array<ActionHashB64>> {
     if (this.lastBucketLoaded == 0) return []
 
-    let bucket = this.lastBucketLoaded < 0 ? this.currentBucket() : this.lastBucketLoaded-1
-    let [lastBucketLoaded, messageHashes] =  await this.loadMessageSetFrom(bucket)
+    let bucket = this.lastBucketLoaded < 0 ? this.currentBucket() : this.lastBucketLoaded - 1
+    let [lastBucketLoaded, messageHashes] = await this.loadMessageSetFrom(bucket)
     this.lastBucketLoaded = lastBucketLoaded
     return messageHashes
   }
@@ -79,19 +79,19 @@ export class ConversationStore {
   // looks in the history starting at a bucket number for hashes, and retrieves all
   // the actual messages in that bucket as well as any earlier buckets necessary
   // such that at least MIN_MESSAGES_LOAD messages.
-  async loadMessageSetFrom(bucket: number) : Promise<[number,ActionHashB64[]]> {
+  async loadMessageSetFrom(bucket: number): Promise<[number, ActionHashB64[]]> {
     const buckets = this.history.bucketsForSet(MIN_MESSAGES_LOAD, bucket)
-    const messageHashes:ActionHashB64[] = []
+    const messageHashes: ActionHashB64[] = []
     for (const b of buckets) {
       messageHashes.push(... await this.getMessagesForBucket(b))
     }
-    return [bucket - buckets.length +1, messageHashes]
+    return [bucket - buckets.length + 1, messageHashes]
   }
 
   async fetchAgents() {
     const agentProfiles = await this.client.getAllAgents(this.data.id)
     this.conversation.update(c => {
-      c.agentProfiles = {...agentProfiles}
+      c.agentProfiles = { ...agentProfiles }
       return c
     })
     return agentProfiles
@@ -152,7 +152,7 @@ export class ConversationStore {
     }
   }
 
-  get invitedContactKeys() : string[] {
+  get invitedContactKeys(): string[] {
     if (this.data.privacy === Privacy.Public) return []
     const currentValue = get(this.localDataStore).invitedContactKeys
     return isEmpty(currentValue) ? [] : currentValue
@@ -242,7 +242,7 @@ export class ConversationStore {
     const config = await this.client._getConfig(this.data.id)
     if (config) {
       this.conversation.update(c => {
-        c.config = {...config.entry}
+        c.config = { ...config.entry }
         return c
       })
       return config.entry
@@ -252,7 +252,7 @@ export class ConversationStore {
 
   async getMessagesForBucket(b: number) {
     try {
-      const newMessages: { [key: string] : Message } = this.data.messages
+      const newMessages: { [key: string]: Message } = this.data.messages
       let bucket = this.history.getBucket(b)
       bucket.ensureIsHashType()
       const count = bucket.count
@@ -310,12 +310,12 @@ export class ConversationStore {
                 newMessages[message.hash] = message
               }
             }
-          } catch(e) {
+          } catch (e) {
             console.error("Unable to parse message, ignoring", messageRecord, e)
           }
         }
         this.conversation.update(c => {
-          c.messages = {...newMessages}
+          c.messages = { ...newMessages }
           return c
         })
         this.lastMessage.set(lastMessage)
@@ -328,23 +328,23 @@ export class ConversationStore {
     return []
   }
 
-  bucketFromTimestamp(timestamp: number) : number {
+  bucketFromTimestamp(timestamp: number): number {
     const diff = timestamp - this.created
     return Math.round(diff / (MINUTES_IN_BUCKET * 60 * 1000))
   }
 
-  bucketFromDate(date: Date) : number {
+  bucketFromDate(date: Date): number {
     return this.bucketFromTimestamp(date.getTime())
   }
 
-  currentBucket() :number {
+  currentBucket(): number {
     return this.bucketFromDate(new Date())
   }
 
   get lastActivityAt() {
     return derived(this.lastMessage, ($lastMessage) => {
       return $lastMessage ? $lastMessage.timestamp.getTime() : this.created
-  })
+    })
   }
 
   /***** Setters & actions ******/
@@ -354,7 +354,7 @@ export class ConversationStore {
     const now = new Date()
     const bucket = this.bucketFromDate(now)
     const id = uuidv4()
-    const oldMessage: Message = { authorKey, content, hash: id, status: 'pending', timestamp: now, bucket, images}
+    const oldMessage: Message = { authorKey, content, hash: id, status: 'pending', timestamp: now, bucket, images }
     this.addMessage(oldMessage)
     const imageStructs = await Promise.all(images.filter(i => !!i.file).map(async (image) => {
       const hash = await this.fileStorageClient.uploadFile(image.file!)
@@ -383,7 +383,7 @@ export class ConversationStore {
       if (!lastMessage || message.timestamp > lastMessage.timestamp) {
         this.lastMessage.set(message)
       }
-      return { ...conversation, messages: {...conversation.messages, [message.hash]: message } };
+      return { ...conversation, messages: { ...conversation.messages, [message.hash]: message } };
     });
 
     if (message.hash.startsWith("uhCkk")) {  // don't add placeholder to bucket yet.
@@ -396,15 +396,15 @@ export class ConversationStore {
 
   updateMessage(oldMessage: Message, newMessage: Message): void {
     this.conversation.update(conversation => {
-      const messages = {...conversation.messages}
+      const messages = { ...conversation.messages }
       delete messages[oldMessage.hash]
-      return { ...conversation, messages: {...messages, [newMessage.hash]: newMessage } };
+      return { ...conversation, messages: { ...messages, [newMessage.hash]: newMessage } };
     })
     this.history.add(newMessage)
   }
 
   async loadImagesForMessage(message: Message) {
-    if(message.images?.length === 0) return;
+    if (message.images?.length === 0) return;
 
     const images = await Promise.all(message.images.map((image) => this.loadImage(image)));
     this.conversation.update(conversation => {
@@ -420,7 +420,7 @@ export class ConversationStore {
 
       // Download image file, retrying up to 10 times if download fails
       const file = await pRetry(
-        () => this.fileStorageClient.downloadFile(image.storageEntryHash as Uint8Array), 
+        () => this.fileStorageClient.downloadFile(image.storageEntryHash as Uint8Array),
         {
           retries: 10,
           minTimeout: 1000,
@@ -430,14 +430,14 @@ export class ConversationStore {
           },
         }
       );
-      
+
       // Convert image blob to data url
       const dataURL = await fileToDataUrl(file);
-      
-      return {...image, status: 'loaded', dataURL} as Image;      
-    } catch(e) {
+
+      return { ...image, status: 'loaded', dataURL } as Image;
+    } catch (e) {
       console.error("Error loading image after 10 retries:", e);
-      return {...image, status: 'error', dataURL: ''} as Image;
+      return { ...image, status: 'error', dataURL: '' } as Image;
     }
   }
 
