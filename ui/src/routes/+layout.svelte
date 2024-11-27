@@ -3,15 +3,14 @@
     AppWebsocket,
   } from "@holochain/client";
   import { ProfilesClient, ProfilesStore } from "@holochain-open-dev/profiles";
-  import { modeCurrent, setModeCurrent } from "@skeletonlabs/skeleton";
+  import { modeCurrent } from "@skeletonlabs/skeleton";
   import { onMount, setContext } from "svelte";
-  import { goto } from "$app/navigation";
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$lib/translations";
   import { RelayClient } from "$store/RelayClient";
   import { RelayStore } from "$store/RelayStore";
   import toast, { Toaster } from "svelte-french-toast";
-
+  import { handleLinkClick, initLightDarkModeSwitcher } from "$lib/utils";
   import "../app.postcss";
 
   const ROLE_NAME = "relay";
@@ -70,50 +69,9 @@
   }
 
   onMount(() => {
-    // Launch and connect to holochain
     initHolochain();
 
-    // To change from light mode to dark mode based on system settings
-    // XXX: not using the built in skeleton autoModeWatcher() because it doesn't set modeCurrent in JS which we use
-    const mql = window.matchMedia("(prefers-color-scheme: light)");
-    function setMode(value: boolean) {
-      const elemHtmlClasses = document.documentElement.classList;
-      const classDark = `dark`;
-      value === true ? elemHtmlClasses.remove(classDark) : elemHtmlClasses.add(classDark);
-      setModeCurrent(value);
-    }
-    setMode(mql.matches);
-    mql.onchange = () => {
-      setMode(mql.matches);
-    };
-
-    // Prevent internal links from opening in the browser when using Tauri
-    const handleLinkClick = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      // Ensure the clicked element is an anchor and has a href attribute
-      if (target.closest("a[href]")) {
-        // Prevent default action
-        event.preventDefault();
-        event.stopPropagation();
-
-        const anchor = target.closest("a") as HTMLAnchorElement;
-        let link = anchor.getAttribute("href");
-        if (
-          anchor &&
-          anchor.href.startsWith(window.location.origin) &&
-          !anchor.getAttribute("rel")?.includes("noopener")
-        ) {
-          return goto(anchor.pathname); // Navigate internally using SvelteKit's goto
-        } else if (anchor && link) {
-          // Handle external links using Tauri's API
-          if (!link.includes("://")) {
-            link = `https://${link}`;
-          }
-          const { open } = window.__TAURI_PLUGIN_SHELL__;
-          open(link);
-        }
-      }
-    };
+    initLightDarkModeSwitcher()
 
     setTimeout(updateAppHeight, 300);
     window.addEventListener("resize", updateAppHeight);

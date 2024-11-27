@@ -6,6 +6,9 @@ import {
 } from "@tauri-apps/plugin-notification";
 import { shareText as sharesheetShareText } from "@buildyourwebapp/tauri-plugin-sharesheet";
 import { platform } from "@tauri-apps/plugin-os";
+import { setModeCurrent } from "@skeletonlabs/skeleton";
+import { goto } from "$app/navigation";
+import { open } from "@tauri-apps/plugin-shell";
 
 export const MIN_TITLE_LENGTH = 3;
 
@@ -167,4 +170,49 @@ export async function fileToDataUrl(file: File): Promise<string> {
     };
     reader.onerror = (e) => reject(`Failed to convert File to Image: ${e}`);
   });
+}
+
+// To change from light mode to dark mode based on system settings
+// XXX: not using the built in skeleton autoModeWatcher() because it doesn't set modeCurrent in JS which we use
+function setLightDarkMode(value: boolean) {
+  const elemHtmlClasses = document.documentElement.classList;
+  const classDark = `dark`;
+  value === true ? elemHtmlClasses.remove(classDark) : elemHtmlClasses.add(classDark);
+  setModeCurrent(value);
+}
+
+export function initLightDarkModeSwitcher() {
+  const mql = window.matchMedia("(prefers-color-scheme: light)");
+
+  setLightDarkMode(mql.matches);
+  mql.onchange = () => {
+    setLightDarkMode(mql.matches);
+  };
+}
+
+// Prevent internal links from opening in the browser when using Tauri
+export function handleLinkClick(event: MouseEvent) {
+  const target = event.target as HTMLElement;
+  // Ensure the clicked element is an anchor and has a href attribute
+  if (target.closest("a[href]")) {
+    // Prevent default action
+    event.preventDefault();
+    event.stopPropagation();
+
+    const anchor = target.closest("a") as HTMLAnchorElement;
+    let link = anchor.getAttribute("href");
+    if (
+      anchor &&
+      anchor.href.startsWith(window.location.origin) &&
+      !anchor.getAttribute("rel")?.includes("noopener")
+    ) {
+      return goto(anchor.pathname); // Navigate internally using SvelteKit's goto
+    } else if (anchor && link) {
+      // Handle external links using Tauri's API
+      if (!link.includes("://")) {
+        link = `https://${link}`;
+      }
+      open(link);
+    }
+  }
 }
