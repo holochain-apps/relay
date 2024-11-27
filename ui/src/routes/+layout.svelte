@@ -32,7 +32,7 @@
 
   async function initHolochain() {
     try {
-      console.log("__HC_LAUNCHER_ENV__ is", (window as any).__HC_LAUNCHER_ENV__);
+      console.log("__HC_LAUNCHER_ENV__ is", window.__HC_LAUNCHER_ENV__);
       
       // Connect to holochain
       client = await AppWebsocket.connect({ defaultTimeout: 15000 });
@@ -146,7 +146,7 @@
       <img src="/icon.png" alt="Icon" width="58" class="mb-4" />
       <h1 class="text-2xl font-bold">{$t("common.app_name")}</h1>
       <span class="mt-3 flex text-xs"
-        >v{__APP_VERSION__}<SvgIcon
+        >v{window.__APP_VERSION__}<SvgIcon
           icon="betaTag"
           size="24"
           moreClasses="ml-1"
