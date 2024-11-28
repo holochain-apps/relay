@@ -198,7 +198,7 @@ export class ConversationStore {
   }
 
   get open() {
-    return get(this.localDataStore).open;
+    return get(page).url.pathname === `/conversations/${get(this.conversation).id}`;
   }
 
   get unread() {
