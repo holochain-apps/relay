@@ -1,7 +1,7 @@
 import type { ActionHashB64 } from "@holochain/client";
 import { get, writable, type Writable } from "svelte/store";
 
-export class BucketStore {
+export class ConversationHistoryBucketStore {
   public type: BucketType = BucketType.Hashes;
   public hashes: Writable<Set<ActionHashB64>> = writable(new Set());
   private _count = writable(0);

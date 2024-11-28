@@ -1,19 +1,27 @@
 import { encodeHashToBase64, type DnaHash, type DnaHashB64 } from "@holochain/client";
 import type { Message } from "../types";
-import { BucketStore } from "./BucketStore";
-import { derived, get, type Readable, writable, type Writable } from "svelte/store";
+import { ConversationHistoryBucketStore } from "./ConversationHistoryBucketStore";
+import {
+  derived,
+  get,
+  type Readable,
+  writable,
+  type Writable,
+} from "svelte/store";
 
-export class MessageHistoryStore {
-  private buckets: Writable<BucketStore[]>;
+export class ConversationHistoryStore {
+  private buckets: Writable<ConversationHistoryBucketStore[]>;
   private dnaB64: DnaHashB64;
   public messageCount: Readable<number>;
 
   constructor(currentBucket: number, dnaHash: DnaHash) {
     this.dnaB64 = encodeHashToBase64(dnaHash);
-    const buckets: BucketStore[] = [];
+    const buckets: ConversationHistoryBucketStore[] = [];
     for (let b = 0; b <= currentBucket; b += 1) {
       const bucketJSON = localStorage.getItem(`c.${this.dnaB64}.${b}`);
-      buckets[b] = bucketJSON ? new BucketStore(bucketJSON) : new BucketStore(undefined);
+      buckets[b] = bucketJSON
+        ? new ConversationHistoryBucketStore(bucketJSON)
+        : new ConversationHistoryBucketStore(undefined);
     }
     this.buckets = writable(buckets);
     this.messageCount = derived(this.buckets, ($b) => {
@@ -44,12 +52,12 @@ export class MessageHistoryStore {
   ensure(b: number) {
     if (get(this.buckets)[b] == undefined) {
       this.buckets.update((buckets) => {
-        buckets[b] = new BucketStore([]);
+        buckets[b] = new ConversationHistoryBucketStore([]);
         return buckets;
       });
     }
   }
-  getBucket(b: number): BucketStore {
+  getBucket(b: number): ConversationHistoryBucketStore {
     this.ensure(b);
     let buckets = get(this.buckets);
     return buckets[b];
@@ -59,7 +67,9 @@ export class MessageHistoryStore {
     this.buckets.update((buckets) => {
       const bucket = buckets[message.bucket];
       if (bucket === undefined) {
-        buckets[message.bucket] = new BucketStore([message.hash]);
+        buckets[message.bucket] = new ConversationHistoryBucketStore([
+          message.hash,
+        ]);
       } else {
         bucket.add([message.hash]);
       }

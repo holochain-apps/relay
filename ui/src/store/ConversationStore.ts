@@ -27,7 +27,7 @@ import {
   Privacy,
   type Messages,
 } from "../types";
-import { MessageHistoryStore } from "./MessageHistoryStore";
+import { ConversationHistoryStore } from "./ConversationHistoryStore";
 import pRetry from "p-retry";
 import { fileToDataUrl } from "$lib/utils";
 
@@ -36,7 +36,7 @@ export const MIN_MESSAGES_LOAD = 20;
 
 export class ConversationStore {
   public conversation: Writable<Conversation>;
-  public history: MessageHistoryStore;
+  public history: ConversationHistoryStore;
   public lastBucketLoaded: number = -1;
   public lastMessage: Writable<Message | null>;
   public localDataStore: Writable<LocalConversationData>;
@@ -55,7 +55,7 @@ export class ConversationStore {
     const messages: Messages = {};
 
     const currentBucket = this.currentBucket();
-    this.history = new MessageHistoryStore(currentBucket, this.cellId[0]);
+    this.history = new ConversationHistoryStore(currentBucket, this.cellId[0]);
 
     this.conversation = writable({
       id,
