@@ -543,15 +543,15 @@ export class ConversationStore {
     }));
   }
 
-  setArchived(archived = true) {
-    this.status.update((data) => ({ ...data, archived }));
+  setStatusOpen(open: boolean) {
+    return this.status.update((data) => ({ ...data, open }));
   }
 
-  setOpen(open: boolean) {
-    this.status.update((data) => ({ ...data, open }));
+  toggleArchived() {
+    return this.status.update((data) => ({ ...data, archived: !data.archived }));
   }
 
-  setUnread(unread: boolean) {
-    this.status.update((data) => ({ ...data, unread }));
+  markAsRead() {
+    this.status.update((data) => ({ ...data, unread: false }));
   }
 }

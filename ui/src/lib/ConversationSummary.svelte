@@ -126,13 +126,9 @@
   }
 
   function archiveConversation() {
-    if (store.archived) {
-      store.setArchived(false);
-    } else {
-      store.setArchived(true);
-    }
-    isVisible = true;
-    x.set(0);
+    store.toggleArchived();
+    isVisible = true
+    x.set(0)
   }
 </script>
 
