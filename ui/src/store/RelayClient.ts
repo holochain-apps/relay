@@ -291,31 +291,25 @@ export class RelayClient {
     });
   }
 
-  public async inviteAgentToConversation(
+  public async generateMembraneProofForAgent(
     conversationId: string,
     forAgent: AgentPubKey,
     role: number = 0,
   ): Promise<MembraneProof | undefined> {
-    try {
-      const conversation = this.conversations[conversationId];
+    const conversation = this.conversations[conversationId];
 
-      const data: MembraneProofData = {
+    const membraneProof = await this.client.callZome({
+      cell_id: conversation.cell.cell_id,
+      zome_name: "profiles",
+      fn_name: "generate_membrane_proof",
+      payload: {
         conversation_id: conversation.cell.dna_modifiers.network_seed,
         for_agent: forAgent,
         as_role: role,
-      };
+      } as MembraneProofData,
+    });
 
-      const r = await this.client.callZome({
-        cell_id: conversation.cell.cell_id,
-        zome_name: "profiles",
-        fn_name: "generate_membrane_proof",
-        payload: data,
-      });
-      return r;
-    } catch (e) {
-      console.error("Error generating membrane proof", e);
-    }
-    return undefined;
+    return membraneProof;
   }
 
   /********* Contacts **********/

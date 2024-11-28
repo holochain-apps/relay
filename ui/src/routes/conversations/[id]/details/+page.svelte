@@ -119,7 +119,7 @@
           <img src={image} alt="Group" class="mb-5 h-32 min-h-32 w-32 rounded-full object-cover" />
           <label
             for="avatarInput"
-            class="absolute bottom-5 right-0 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-secondary-200 pl-1 hover:bg-secondary-300 dark:bg-secondary-500 dark:hover:bg-secondary-400"
+            class="bg-secondary-200 hover:bg-secondary-300 dark:bg-secondary-500 dark:hover:bg-secondary-400 absolute bottom-5 right-0 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full pl-1"
           >
             <SvgIcon icon="image" color={$modeCurrent ? "%232e2e2e" : "white"} />
           </label>
@@ -127,7 +127,7 @@
       {:else}
         <label
           for="avatarInput"
-          class="flex h-32 min-h-32 w-32 cursor-pointer items-center justify-center rounded-full rounded-full bg-secondary-200 hover:bg-secondary-300 dark:bg-secondary-500 dark:hover:bg-secondary-400"
+          class="bg-secondary-200 hover:bg-secondary-300 dark:bg-secondary-500 dark:hover:bg-secondary-400 flex h-32 min-h-32 w-32 cursor-pointer items-center justify-center rounded-full rounded-full"
         >
           <SvgIcon icon="image" size="44" color={$modeCurrent ? "%232e2e2e" : "white"} />
         </label>
@@ -137,7 +137,7 @@
       <div class="flex flex-row flex-wrap items-center justify-center">
         <input
           autofocus
-          class="grow border-none bg-surface-900 pl-0.5 pt-0 text-center text-3xl outline-none focus:outline-none focus:ring-0"
+          class="bg-surface-900 grow border-none pl-0.5 pt-0 text-center text-3xl outline-none focus:outline-none focus:ring-0"
           type="text"
           placeholder={$t("conversations.enter_name_here")}
           name="title"
@@ -186,13 +186,13 @@
             class="variant-filled-primary mb-2 flex flex-row items-center rounded-full p-2 text-xl"
           >
             <span
-              class="inline-block flex h-10 w-10 items-center justify-center rounded-full bg-surface-500"
+              class="bg-surface-500 inline-block flex h-10 w-10 items-center justify-center rounded-full"
             >
               <SvgIcon icon="addPerson" size="24" color="%23FD3524" />
             </span>
             <span class="ml-4 flex-1 text-sm font-bold">{$t("conversations.add_members")}</span>
             <button
-              class="mr-1 flex items-center justify-center rounded-full bg-surface-500 px-2 py-2 text-xs font-bold text-secondary-500"
+              class="bg-surface-500 text-secondary-500 mr-1 flex items-center justify-center rounded-full px-2 py-2 text-xs font-bold"
               on:click={() => copyToClipboard(conversation.publicInviteCode)}
             >
               <SvgIcon icon="copy" size="14" color="%23FD3524" moreClasses="mr-2" />
@@ -200,7 +200,7 @@
             </button>
             {#if isMobile()}
               <button
-                class="mr-1 flex items-center justify-center rounded-full bg-surface-500 px-2 py-2 text-xs font-bold text-secondary-500"
+                class="bg-surface-500 text-secondary-500 mr-1 flex items-center justify-center rounded-full px-2 py-2 text-xs font-bold"
                 on:click={() => shareText(conversation.publicInviteCode)}
               >
                 <SvgIcon icon="share" size="14" color="%23FD3524" moreClasses="mr-1" />
@@ -209,7 +209,7 @@
           </li>
         {/if}
         {#if conversation.invitedUnjoined.length > 0}
-          <h3 class="text-md mb-2 font-light text-secondary-300">
+          <h3 class="text-md text-secondary-300 mb-2 font-light">
             {$t("conversations.unconfirmed_invitations")}
           </h3>
           {#each conversation.invitedUnjoined as contact}
@@ -224,7 +224,7 @@
               <button
                 class="variant-filled-tertiary flex items-center justify-center rounded-2xl p-2 px-3 text-sm font-bold"
                 on:click={() =>
-                  copyToClipboard(conversation.inviteCodeForAgent(contact.publicKeyB64))}
+                  copyToClipboard(conversation.makeInviteCodeForAgent(contact.publicKeyB64))}
               >
                 <SvgIcon icon="copy" size="18" color="%23FD3524" moreClasses="mr-2" />
                 {$t("conversations.copy_invite")}
@@ -232,7 +232,8 @@
               {#if isMobile()}
                 <button
                   class="variant-filled-tertiary flex items-center justify-center rounded-2xl p-2 px-3 text-sm font-bold"
-                  on:click={() => shareText(conversation.inviteCodeForAgent(contact.publicKeyB64))}
+                  on:click={() =>
+                    shareText(conversation.makeInviteCodeForAgent(contact.publicKeyB64))}
                 >
                   <SvgIcon icon="share" size="18" color="%23FD3524" moreClasses="mr-2" />
                 </button>
@@ -242,7 +243,7 @@
         {/if}
 
         {#if conversation.privacy === Privacy.Private}
-          <h3 class="text-md mb-2 mt-4 font-light text-secondary-300">
+          <h3 class="text-md text-secondary-300 mb-2 mt-4 font-light">
             {$t("conversations.members")}
           </h3>
         {/if}
@@ -250,7 +251,7 @@
           <Avatar agentPubKey={myPublicKey64} size="38" moreClasses="-ml-30" />
           <span class="ml-4 flex-1 text-sm font-bold">{$t("conversations.you")}</span>
           {#if myPublicKey64 === encodeHashToBase64(conversation.data.progenitor)}
-            <span class="ml-2 text-xs text-secondary-300">{$t("conversations.admin")}</span>
+            <span class="text-secondary-300 ml-2 text-xs">{$t("conversations.admin")}</span>
           {/if}
         </li>
         {#each conversation.memberList() as contact}
@@ -265,7 +266,7 @@
               >{contact.firstName + " " + contact.lastName}</span
             >
             {#if contact.publicKeyB64 === encodeHashToBase64(conversation.data.progenitor)}
-              <span class="ml-2 text-xs text-secondary-300">{$t("conversations.admin")}</span>
+              <span class="text-secondary-300 ml-2 text-xs">{$t("conversations.admin")}</span>
             {/if}
           </li>
         {/each}

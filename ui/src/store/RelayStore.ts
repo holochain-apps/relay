@@ -166,11 +166,6 @@ export class RelayStore {
     return null;
   }
 
-  async inviteAgentToConversation(conversationId: string, agent: AgentPubKey, role: number = 0) {
-    if (!this.client) return;
-    return await this.client.inviteAgentToConversation(conversationId, agent, role);
-  }
-
   getConversation(id: string): ConversationStore | undefined {
     let foundConversation;
     this.conversations.subscribe((conversations) => {

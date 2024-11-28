@@ -30,6 +30,7 @@ import { ConversationHistoryStore } from "./ConversationHistoryStore";
 import pRetry from "p-retry";
 import { fileToDataUrl } from "$lib/utils";
 import { persisted, type Persisted } from "@square/svelte-store";
+import toast from "svelte-french-toast";
 
 // Timestamp range of actions contained within a single bucket, in milliseconds
 export const BUCKET_RANGE_MS = 1000 * 60 * 60 * 24; // 1 day
@@ -43,7 +44,6 @@ export class ConversationStore {
   public status: Persisted<LocalConversationStatus>;
   public oldestBucketIndexLoaded: number | undefined;
   public lastMessage: Writable<Message | null>;
-  private client;
   private fileStorageClient: FileStorageClient;
 
   constructor(
@@ -73,9 +73,8 @@ export class ConversationStore {
       `CONVERSATION.${this.data.id}.STATUS`,
     );
     this.lastMessage = writable(null);
-    this.client = relayStore.client;
     this.fileStorageClient = new FileStorageClient(
-      this.client.client,
+      this.relayStore.client.client,
       "UNUSED ROLE NAME", // this is not used when cellId is specified, but the FileStorageClient still requires the parameter
       "file_storage",
       cellId,
@@ -115,7 +114,7 @@ export class ConversationStore {
   }
 
   async loadAgents() {
-    const agentProfiles = await this.client.getAllAgents(this.data.id);
+    const agentProfiles = await this.relayStore.client.getAllAgents(this.data.id);
     this.conversation.update((c) => {
       c.agentProfiles = { ...agentProfiles };
       return c;
@@ -132,52 +131,57 @@ export class ConversationStore {
     return get(this.conversation);
   }
 
+  /**
+   * Public joining code for a conversation
+   */
   get publicInviteCode() {
-    if (this.data.privacy === Privacy.Public) {
-      const invitation: Invitation = {
+    if(this.data.privacy !== Privacy.Public) throw new Error("Cannot generate public invite code for private conversation");
+
+    return Base64.fromUint8Array(
+      encode({
         created: this.created,
         networkSeed: this.data.id,
         privacy: this.data.privacy,
         progenitor: this.data.progenitor,
         title: this.title,
-      };
-      const msgpck = encode(invitation);
-      return Base64.fromUint8Array(msgpck);
-    } else {
-      return "";
-    }
+      } as Invitation)
+    );
   }
 
-  async inviteCodeForAgent(publicKeyB64: string) {
-    if (this.data.privacy === Privacy.Public) {
-      return this.publicInviteCode;
-    }
-    const proof = await this.relayStore.inviteAgentToConversation(
-      this.data.id,
-      decodeHashFromBase64(publicKeyB64),
-    );
-    if (proof !== undefined) {
+  async makeInviteCodeForAgent(publicKeyB64: string) {
+    if (this.data.privacy === Privacy.Public) return this.publicInviteCode;
+
+    try {
+      const membraneProof = await this.relayStore.client.generateMembraneProofForAgent(
+        this.data.id,
+        decodeHashFromBase64(publicKeyB64),
+      );
+
       // The name of the conversation we are inviting to should be our name + # of other people invited
-      let myProfile = get(this.client.profilesStore.myProfile);
-      const profileData = myProfile.status === "complete" ? myProfile.value?.entry : undefined;
-      let title = (profileData?.fields.firstName || "") + " " + profileData?.fields.lastName;
+      let myProfile = get(this.relayStore.client.profilesStore.myProfile);
+      const profileData =
+        myProfile.status === "complete" ? myProfile.value?.entry : undefined;
+      let title =
+        (profileData?.fields.firstName || "") +
+        " " +
+        profileData?.fields.lastName;
       if (this.invitedContactKeys.length > 1) {
         title = `${title} + ${this.invitedContactKeys.length - 1}`;
       }
 
-      const invitation: Invitation = {
-        created: this.created,
-        progenitor: this.data.progenitor,
-        privacy: this.data.privacy,
-        proof,
-        networkSeed: this.data.id,
-        title,
-      };
-      const msgpck = encode(invitation);
-      return Base64.fromUint8Array(msgpck);
-    } else {
-      alert(get(t)("conversations.unable_to_create_code"));
-      return "";
+      return Base64.fromUint8Array(
+        encode({
+          created: this.created,
+          progenitor: this.data.progenitor,
+          privacy: this.data.privacy,
+          proof: membraneProof,
+          networkSeed: this.data.id,
+          title,
+        } as Invitation)
+      );
+    } catch(e) {
+      console.error("Failed to makeInviteCodeForAgent", e);
+      toast.error(get(t)("conversations.unable_to_create_code"));
     }
   }
 
@@ -210,20 +214,28 @@ export class ConversationStore {
     return this.memberList(true);
   }
 
+  /**
+   * return the list of agents that have joined the conversation, 
+   * checking the relayStore for contacts and using the contact info first 
+   * and if that doesn't exist using the agent profile
+   *
+   * @param includeInvited 
+   * @returns 
+   */
   memberList(includeInvited = false) {
-    // return the list of agents that have joined the conversation, checking the relayStore for contacts and using the contact info first and if that doesn't exist using the agent profile
     const joinedAgents = this.data.agentProfiles;
     const contacts = get(this.relayStore.contacts);
 
-    const keys = uniq(
-      Object.keys(joinedAgents).concat(includeInvited ? this.invitedContactKeys : []),
-    );
+    let agentPubKeysB64 = Object.keys(joinedAgents);
+    if(includeInvited) {
+      agentPubKeysB64 = uniq([...agentPubKeysB64, ...this.invitedContactKeys]);
+    }
 
     // Filter out progenitor, as they are always in the list,
     // use contact data for each agent if it exists locally, otherwise use their profile
     // sort by first name (for now)
-    return keys
-      .filter((k) => k !== this.client.myPubKeyB64)
+    return agentPubKeysB64
+      .filter((k) => k !== this.relayStore.client.myPubKeyB64)
       .map((agentKey) => {
         const agentProfile = joinedAgents[agentKey];
         const contactProfile = contacts.find((contact) => contact.publicKeyB64 === agentKey);
@@ -279,7 +291,7 @@ export class ConversationStore {
   }
 
   async getConfig() {
-    const config = await this.client._getConfig(this.data.id);
+    const config = await this.relayStore.client._getConfig(this.data.id);
     if (config) {
       this.conversation.update((c) => {
         c.config = { ...config.entry };
@@ -295,7 +307,11 @@ export class ConversationStore {
       const newMessages: { [key: string]: Message } = this.data.messages;
       let bucket = this.history.getBucket(b);
       const count = bucket.count;
-      const messageHashes = await this.client.getMessageHashes(this.data.id, b, count);
+      const messageHashes = await this.relayStore.client.getMessageHashes(
+        this.data.id,
+        b,
+        count,
+      );
 
       const messageHashesB64 = messageHashes.map((h) => encodeHashToBase64(h));
       const missingHashes = bucket.missingHashes(messageHashesB64);
@@ -312,10 +328,8 @@ export class ConversationStore {
       });
 
       if (hashesToLoad.length > 0) {
-        const messageRecords: Array<MessageRecord> = await this.client.getMessageEntries(
-          this.data.id,
-          hashesToLoad,
-        );
+        const messageRecords: Array<MessageRecord> =
+          await this.relayStore.client.getMessageEntries(this.data.id, hashesToLoad);
         if (hashesToLoad.length != messageRecords.length) {
           console.log("Warning: not all requested hashes were loaded");
         }
@@ -428,7 +442,7 @@ export class ConversationStore {
           };
         }),
     );
-    const newMessageEntry = await this.client.sendMessage(
+    const newMessageEntry = await this.relayStore.client.sendMessage(
       this.data.id,
       content,
       bucket,
@@ -457,7 +471,7 @@ export class ConversationStore {
     if (message.hash.startsWith("uhCkk")) {
       // don't add placeholder to bucket yet.
       this.history.add(message);
-      if (!this.open && message.authorKey !== this.client.myPubKeyB64) {
+      if (!this.open && message.authorKey !== this.relayStore.client.myPubKeyB64) {
         this.status.update((data) => ({ ...data, unread: true }));
       }
     }

@@ -49,7 +49,7 @@
   const SCROLL_TOP_THRESHOLD = 300; // How close to the top must the user be to consider it "at the top"
 
   const checkForAgents = async () => {
-    if(!conversation) return;
+    if (!conversation) return;
 
     const agentProfiles = await conversation.loadAgents();
     if (Object.values(agentProfiles).length < 2) {
@@ -57,33 +57,33 @@
         checkForAgents();
       }, 2000);
     }
-  }
+  };
 
   const checkForConfig = async () => {
-    if(!conversation) return;
+    if (!conversation) return;
 
     const config = await conversation.getConfig();
     if (!config?.title) {
       configTimeout = setTimeout(() => {
-        checkForConfig()
+        checkForConfig();
       }, 2000);
     }
-  }
+  };
 
   const checkForMessages = async () => {
-    if(!conversation) return;
+    if (!conversation) return;
 
     // Fetch the current page of messages
     await conversation.loadMessagesCurrentPage();
-    
+
     // If this we aren't getting anything back and there are no messages loaded at all
     // then keep trying as this is probably a no network, or a just joined situation
-    if(Object.keys(conversation.data.messages).length === 0) {
+    if (Object.keys(conversation.data.messages).length === 0) {
       messageTimeout = setTimeout(() => {
-        checkForMessages()
-      }, 2000)
+        checkForMessages();
+      }, 2000);
     }
-  }
+  };
 
   function handleResize() {
     if (scrollAtBottom) {
@@ -352,13 +352,13 @@
             {#if conversation.allMembers.length === 1}
               <!-- A 1:1 conversation, so this is a pending connection -->
               <div
-                class="mx-8 mb-3 flex flex-col items-center rounded-xl bg-tertiary-500 p-4 dark:bg-secondary-500"
+                class="bg-tertiary-500 dark:bg-secondary-500 mx-8 mb-3 flex flex-col items-center rounded-xl p-4"
               >
                 <SvgIcon icon="handshake" size="36" color={$modeCurrent ? "%23232323" : "white"} />
-                <h1 class="mt-2 text-xl font-bold text-secondary-500 dark:text-tertiary-100">
+                <h1 class="text-secondary-500 dark:text-tertiary-100 mt-2 text-xl font-bold">
                   {$t("contacts.pending_connection_header")}
                 </h1>
-                <p class="mb-6 mt-4 text-center text-sm text-secondary-400 dark:text-tertiary-700">
+                <p class="text-secondary-400 dark:text-tertiary-700 mb-6 mt-4 text-center text-sm">
                   {$tAny("contacts.pending_connection_description", { name: conversation.title })}
                 </p>
                 <div class="flex justify-center">
@@ -366,7 +366,9 @@
                     moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
                     onClick={() => {
                       copyToClipboard(
-                        conversation.inviteCodeForAgent(conversation.allMembers[0]?.publicKeyB64),
+                        conversation.makeInviteCodeForAgent(
+                          conversation.allMembers[0]?.publicKeyB64,
+                        ),
                       );
                     }}
                   >
@@ -378,7 +380,9 @@
                       moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
                       onClick={() => {
                         shareText(
-                          conversation.inviteCodeForAgent(conversation.allMembers[0]?.publicKeyB64),
+                          conversation.makeInviteCodeForAgent(
+                            conversation.allMembers[0]?.publicKeyB64,
+                          ),
                         );
                       }}
                     >
@@ -389,7 +393,7 @@
                 </div>
               </div>
             {:else}
-              <p class="mx-10 mb-8 text-center text-xs text-secondary-500 dark:text-tertiary-500">
+              <p class="text-secondary-500 dark:text-tertiary-500 mx-10 mb-8 text-center text-xs">
                 {$t("conversations.share_personal_invitations")}
               </p>
               <Button
@@ -402,7 +406,7 @@
             {/if}
           {:else}
             <!-- Public conversation, make it easy to copy invite code-->
-            <p class="mx-10 mb-8 text-center text-xs text-secondary-500 dark:text-tertiary-700">
+            <p class="text-secondary-500 dark:text-tertiary-700 mx-10 mb-8 text-center text-xs">
               {$t("conversations.share_invitation_code_msg")}
             </p>
             <Button
@@ -430,7 +434,7 @@
               {@const fromMe = message.authorKey === myPubKeyB64}
               {#if message.header}
                 <li class="mb-3 mt-auto">
-                  <div class="text-center text-xs text-secondary-400 dark:text-secondary-300">
+                  <div class="text-secondary-400 dark:text-secondary-300 text-center text-xs">
                     {message.header}
                   </div>
                 </li>
@@ -456,7 +460,7 @@
                   {#if !message.hideDetails}
                     <span class="flex items-baseline {fromMe && 'flex-row-reverse opacity-80'}">
                       <span class="font-bold">{fromMe ? "You" : message.author}</span>
-                      <span class="mx-2 text-xxs"
+                      <span class="text-xxs mx-2"
                         ><Time timestamp={message.timestamp} format="h:mma" /></span
                       >
                     </span>
@@ -472,7 +476,7 @@
                           />
                         {:else if image.status === "loading" || image.status === "pending"}
                           <div
-                            class="mb-2 flex h-20 w-20 items-center justify-center bg-surface-800"
+                            class="bg-surface-800 mb-2 flex h-20 w-20 items-center justify-center"
                           >
                             <SvgIcon
                               icon="spinner"
@@ -482,7 +486,7 @@
                           </div>
                         {:else}
                           <div
-                            class="mb-2 flex h-20 w-20 items-center justify-center bg-surface-800"
+                            class="bg-surface-800 mb-2 flex h-20 w-20 items-center justify-center"
                           >
                             <SvgIcon
                               icon="x"
@@ -505,7 +509,7 @@
       {/if}
     </div>
   </div>
-  <div class="w-full flex-shrink-0 bg-tertiary-500 p-2 dark:bg-secondary-500">
+  <div class="bg-tertiary-500 dark:bg-secondary-500 w-full flex-shrink-0 p-2">
     <form class="flex" method="POST" on:submit={sendMessage}>
       <input
         type="file"
@@ -530,13 +534,13 @@
           type="text"
           bind:this={newMessageInput}
           bind:value={newMessageText}
-          class="w-full border-0 bg-tertiary-500 placeholder:text-sm placeholder:text-gray-400 focus:border-gray-500 focus:ring-0"
+          class="bg-tertiary-500 w-full border-0 placeholder:text-sm placeholder:text-gray-400 focus:border-gray-500 focus:ring-0"
           placeholder={$t("conversations.message_placeholder")}
         />
         <div class="flex flex-row px-4">
           {#each $newMessageImages as image, i}
             {#if image.status === "loading"}
-              <div class="mr-2 flex h-10 w-10 items-center justify-center bg-tertiary-500">
+              <div class="bg-tertiary-500 mr-2 flex h-10 w-10 items-center justify-center">
                 <SvgIcon icon="spinner" color="white" size="10" />
               </div>
             {:else}

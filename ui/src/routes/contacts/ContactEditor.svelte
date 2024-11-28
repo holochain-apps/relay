@@ -117,7 +117,7 @@
         <img src={$imageUrl} alt="Avatar" class="h-32 w-32 rounded-full object-cover" />
         <label
           for="avatarInput"
-          class="absolute bottom-0 right-0 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-tertiary-500 pl-1 hover:bg-tertiary-600 dark:bg-secondary-500 dark:hover:bg-secondary-400"
+          class="bg-tertiary-500 hover:bg-tertiary-600 dark:bg-secondary-500 dark:hover:bg-secondary-400 absolute bottom-0 right-0 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full pl-1"
         >
           <SvgIcon icon="image" color={$modeCurrent ? "%232e2e2e" : "white"} />
         </label>
@@ -125,7 +125,7 @@
     {:else}
       <label
         for="avatarInput"
-        class="flex h-32 w-32 cursor-pointer items-center justify-center rounded-full rounded-full bg-tertiary-500 hover:bg-tertiary-600 dark:bg-secondary-500 dark:hover:bg-secondary-400"
+        class="bg-tertiary-500 hover:bg-tertiary-600 dark:bg-secondary-500 dark:hover:bg-secondary-400 flex h-32 w-32 cursor-pointer items-center justify-center rounded-full rounded-full"
       >
         <SvgIcon icon="image" size="44" color={$modeCurrent ? "%232e2e2e" : "white"} />
       </label>
@@ -137,7 +137,7 @@
       <h3 class="h3">{$t("common.first_name")} *</h3>
       <input
         autofocus
-        class="border-none bg-surface-900 pl-0.5 outline-none focus:outline-none focus:ring-0"
+        class="bg-surface-900 border-none pl-0.5 outline-none focus:outline-none focus:ring-0"
         type="text"
         placeholder={$t("contacts.enter_first_name")}
         name="name"
@@ -147,7 +147,7 @@
 
       <h3 class="h3 mt-4">{$t("common.last_name")}</h3>
       <input
-        class="border-none bg-surface-900 pl-0.5 outline-none focus:outline-none focus:ring-0"
+        class="bg-surface-900 border-none pl-0.5 outline-none focus:outline-none focus:ring-0"
         type="text"
         placeholder={$t("contacts.enter_last_name")}
         name="name"
@@ -156,7 +156,7 @@
 
       <h3 class="h3 mt-4">{$t("contacts.contact_code")} *</h3>
       <input
-        class="border-none bg-surface-900 pl-0.5 outline-none focus:outline-none focus:ring-0"
+        class="bg-surface-900 border-none pl-0.5 outline-none focus:outline-none focus:ring-0"
         type="text"
         placeholder={$t("contacts.enter_contact_code")}
         name="publicKey"
@@ -164,10 +164,10 @@
         minlength={1}
       />
       {#if !isEmpty($error)}
-        <p class="ml-1 mt-1 text-xs text-error-500">{$error}</p>
+        <p class="text-error-500 ml-1 mt-1 text-xs">{$error}</p>
       {/if}
       {#if !editContactId}
-        <p class="mb-4 mt-4 text-xs text-secondary-600 dark:text-tertiary-700">
+        <p class="text-secondary-600 dark:text-tertiary-700 mb-4 mt-4 text-xs">
           {$t("contacts.request_contact_code")}
         </p>
       {/if}
@@ -205,7 +205,7 @@
       </div>
       <div class="mt-2 flex items-center justify-center">
         <span
-          class="mr-1 w-64 overflow-hidden text-ellipsis text-nowrap text-secondary-400 dark:text-tertiary-700"
+          class="text-secondary-400 dark:text-tertiary-700 mr-1 w-64 overflow-hidden text-ellipsis text-nowrap"
         >
           {contact?.publicKeyB64}
         </span>
@@ -222,13 +222,13 @@
 
     {#if contact?.pendingConnection}
       <div
-        class="mx-8 flex flex-col items-center rounded-xl bg-tertiary-500 p-4 dark:bg-secondary-500"
+        class="bg-tertiary-500 dark:bg-secondary-500 mx-8 flex flex-col items-center rounded-xl p-4"
       >
         <SvgIcon icon="handshake" size="36" color={$modeCurrent ? "%23232323" : "white"} />
-        <h1 class="mt-2 text-xl font-bold text-secondary-500 dark:text-tertiary-100">
+        <h1 class="text-secondary-500 dark:text-tertiary-100 mt-2 text-xl font-bold">
           {$t("contacts.pending_connection_header")}
         </h1>
-        <p class="mb-6 mt-4 text-center text-sm text-secondary-400 dark:text-tertiary-700">
+        <p class="text-secondary-400 dark:text-tertiary-700 mb-6 mt-4 text-center text-sm">
           {$tAny("contacts.pending_connection_description", { name: contact?.firstName })}
         </p>
         <div class="flex justify-center">
@@ -236,7 +236,7 @@
             moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
             onClick={() =>
               copyToClipboard(
-                contact?.privateConversation?.inviteCodeForAgent(contact?.publicKeyB64) || "",
+                contact?.privateConversation?.makeInviteCodeForAgent(contact?.publicKeyB64) || "",
               )}
           >
             <SvgIcon icon="copy" size="20" color="%23FD3524" moreClasses="mr-2" />
@@ -247,7 +247,7 @@
               moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
               onClick={() =>
                 shareText(
-                  contact?.privateConversation?.inviteCodeForAgent(contact?.publicKeyB64) || "",
+                  contact?.privateConversation?.makeInviteCodeForAgent(contact?.publicKeyB64) || "",
                 )}
             >
               <SvgIcon icon="copy" size="20" color="%23FD3524" moreClasses="mr-2" />
