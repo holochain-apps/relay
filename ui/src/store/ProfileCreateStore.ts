@@ -4,7 +4,8 @@ import { writable } from "svelte/store";
 // On the first page, a user enters their first and last name.
 // On the second page, a user chooses an avatar picture.
 //
-// This store holds that state so we can call create_profile with all necessary data.
+// This store holds that state so we can call create_profile with all data,
+// from both pages.
 export const ProfileCreateStore = writable({
   firstName: "",
   lastName: "",
