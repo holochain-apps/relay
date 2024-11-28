@@ -31,6 +31,7 @@ import pRetry from "p-retry";
 import { fileToDataUrl } from "$lib/utils";
 import { persisted, type Persisted } from "@square/svelte-store";
 import toast from "svelte-french-toast";
+import { page } from "$app/stores";
 
 // Timestamp range of actions contained within a single bucket, in milliseconds
 export const BUCKET_RANGE_MS = 1000 * 60 * 60 * 24; // 1 day
