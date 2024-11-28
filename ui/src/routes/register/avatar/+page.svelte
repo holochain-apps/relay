@@ -8,7 +8,7 @@
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$lib/translations";
   import { RelayClient } from "$store/RelayClient";
-  import { UserStore } from "$store/UserStore";
+  import { ProfileCreateStore } from "$store/ProfileCreateStore";
   import { handleFileChange } from "$lib/utils";
 
   const relayClientContext: { getClient: () => RelayClient } = getContext("relayClient");
@@ -20,7 +20,7 @@
 
   $: {
     // Subscribe to the store and update local state
-    UserStore.subscribe(($profile) => {
+    ProfileCreateStore.subscribe(($profile) => {
       firstName = $profile.firstName;
       lastName = $profile.lastName;
       $avatarDataUrl = $profile.avatar;
@@ -49,7 +49,7 @@
     class="hidden"
     on:change={(event) =>
       handleFileChange(event, (imageData) => {
-        UserStore.update((current) => {
+        ProfileCreateStore.update((current) => {
           return { firstName, lastName, avatar: imageData };
         });
       })}
