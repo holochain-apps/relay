@@ -1,11 +1,10 @@
 import {
   encodeHashToBase64,
-  type Dna,
   type DnaHash,
   type DnaHashB64,
 } from "@holochain/client";
 import type { Message } from "../types";
-import { Bucket } from "./bucket";
+import { BucketStore } from "./BucketStore";
 import {
   derived,
   get,
@@ -14,17 +13,19 @@ import {
   type Writable,
 } from "svelte/store";
 
-export class MsgHistory {
-  private buckets: Writable<Bucket[]>;
+export class MessageHistoryStore {
+  private buckets: Writable<BucketStore[]>;
   private dnaB64: DnaHashB64;
   public messageCount: Readable<number>;
 
   constructor(currentBucket: number, dnaHash: DnaHash) {
     this.dnaB64 = encodeHashToBase64(dnaHash);
-    const buckets: Bucket[] = [];
+    const buckets: BucketStore[] = [];
     for (let b = 0; b <= currentBucket; b += 1) {
       const bucketJSON = localStorage.getItem(`c.${this.dnaB64}.${b}`);
-      buckets[b] = bucketJSON ? new Bucket(bucketJSON) : new Bucket(undefined);
+      buckets[b] = bucketJSON
+        ? new BucketStore(bucketJSON)
+        : new BucketStore(undefined);
     }
     this.buckets = writable(buckets);
     this.messageCount = derived(this.buckets, ($b) => {
@@ -55,12 +56,12 @@ export class MsgHistory {
   ensure(b: number) {
     if (get(this.buckets)[b] == undefined) {
       this.buckets.update((buckets) => {
-        buckets[b] = new Bucket([]);
+        buckets[b] = new BucketStore([]);
         return buckets;
       });
     }
   }
-  getBucket(b: number): Bucket {
+  getBucket(b: number): BucketStore {
     this.ensure(b);
     let buckets = get(this.buckets);
     return buckets[b];
@@ -70,7 +71,7 @@ export class MsgHistory {
     this.buckets.update((buckets) => {
       const bucket = buckets[message.bucket];
       if (bucket === undefined) {
-        buckets[message.bucket] = new Bucket([message.hash]);
+        buckets[message.bucket] = new BucketStore([message.hash]);
       } else {
         bucket.add([message.hash]);
       }

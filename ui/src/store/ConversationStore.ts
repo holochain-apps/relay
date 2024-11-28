@@ -4,7 +4,6 @@ import { Base64 } from "js-base64";
 import {
   type AgentPubKey,
   type CellId,
-  type DnaHash,
   decodeHashFromBase64,
   encodeHashToBase64,
   type ActionHashB64,
@@ -28,7 +27,7 @@ import {
   Privacy,
   type Messages,
 } from "../types";
-import { MsgHistory } from "./msgHistory";
+import { MessageHistoryStore } from "./MessageHistoryStore";
 import pRetry from "p-retry";
 import { fileToDataUrl } from "$lib/utils";
 
@@ -37,7 +36,7 @@ export const MIN_MESSAGES_LOAD = 20;
 
 export class ConversationStore {
   public conversation: Writable<Conversation>;
-  public history: MsgHistory;
+  public history: MessageHistoryStore;
   public lastBucketLoaded: number = -1;
   public lastMessage: Writable<Message | null>;
   public localDataStore: Writable<LocalConversationData>;
@@ -56,7 +55,7 @@ export class ConversationStore {
     const messages: Messages = {};
 
     const currentBucket = this.currentBucket();
-    this.history = new MsgHistory(currentBucket, this.cellId[0]);
+    this.history = new MessageHistoryStore(currentBucket, this.cellId[0]);
 
     this.conversation = writable({
       id,
@@ -75,7 +74,7 @@ export class ConversationStore {
     this.client = relayStore.client;
     this.fileStorageClient = new FileStorageClient(
       this.client.client,
-      "relay",
+      "UNUSED ROLE NAME", // this is not used when cellId is specified, but the FileStorageClient still requires the parameter
       "file_storage",
       cellId,
     );

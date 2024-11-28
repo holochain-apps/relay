@@ -29,27 +29,42 @@
 </Header>
 
 {#if !loggedIn}
-	<div class='flex flex-col items-center justify-center grow'>
-		<img src="/icon.png" alt="Icon" width='58' class='mb-4' />
-		<h1 class="text-2xl font-bold">{$t('common.app_name')}</h1>
-		<span class='text-xs flex mt-3'>v{__APP_VERSION__}<SvgIcon icon='betaTag' size='24' moreClasses='ml-1' color={$modeCurrent ? '#000' : '#fff'} /></span>
-		<p class='mt-10'>{$t('common.tagline')}</p>
-	</div>
-	{#if $prof && $prof.status === 'pending'}
-		<div class="flex flex-col items-center justify-center">
-			<p class="mb-8">{$t('connecting_to_holochain')}</p>
-		</div>
-	{:else if $prof && $prof.status === 'error'}
-		<div class="flex flex-col items-center justify-center">
-			<p class="text-2xl">{$t("common.profile_error")}: {$prof.error}</p>
-		</div>
-	{:else}
-		<a class='variant-filled-tertiary dark:variant-filled-tertiary rounded-full flex items-center px-6 py-3 mb-8' href="/register">
-			<SvgIcon icon='lock' size='24' color='%23fd3524' /> <span class='ml-2'>{$t('common.create_an_account')}</span>
-		</a>
-	{/if}
-	<div class="flex flex-col items-center justify-center pb-10">
-		<p class='text-xs mb-2'>{$t('common.secured_by')}</p>
-		<img class='max-w-52'src={$modeCurrent ? '/holochain-charcoal.png' : '/holochain-white.png'} alt="holochain" />
-	</div>
+  <div class="flex grow flex-col items-center justify-center">
+    <img src="/icon.png" alt="Icon" width="58" class="mb-4" />
+    <h1 class="text-2xl font-bold">{$t("common.app_name")}</h1>
+    <span class="mt-3 flex text-xs"
+      >v{window.__APP_VERSION__}<SvgIcon
+        icon="betaTag"
+        size="24"
+        moreClasses="ml-1"
+        color={$modeCurrent ? "#000" : "#fff"}
+      /></span
+    >
+    <p class="mt-10">{$t("common.tagline")}</p>
+  </div>
+  {#if $prof && $prof.status === "pending"}
+    <div class="flex flex-col items-center justify-center">
+      <p class="mb-8">{$t("connecting_to_holochain")}</p>
+    </div>
+  {:else if $prof && $prof.status === "error"}
+    <div class="flex flex-col items-center justify-center">
+      <p class="text-2xl">{$t("common.profile_error")}: {$prof.error}</p>
+    </div>
+  {:else}
+    <a
+      class="variant-filled-tertiary mb-8 flex items-center rounded-full px-6 py-3 dark:variant-filled-tertiary"
+      href="/register"
+    >
+      <SvgIcon icon="lock" size="24" color="%23fd3524" />
+      <span class="ml-2">{$t("common.create_an_account")}</span>
+    </a>
+  {/if}
+  <div class="flex flex-col items-center justify-center pb-10">
+    <p class="mb-2 text-xs">{$t("common.secured_by")}</p>
+    <img
+      class="max-w-52"
+      src={$modeCurrent ? "/holochain-charcoal.png" : "/holochain-white.png"}
+      alt="holochain"
+    />
+  </div>
 {/if}

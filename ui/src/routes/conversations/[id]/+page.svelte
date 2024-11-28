@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { debounce } from 'lodash-es';
-  import { type AgentPubKeyB64, decodeHashFromBase64, encodeHashToBase64 } from '@holochain/client';
-  import { type Profile } from '@holochain-open-dev/profiles';
-  import { modeCurrent } from '@skeletonlabs/skeleton';
-  import { getContext, onDestroy, onMount } from 'svelte';
+  import { debounce } from "lodash-es";
+  import { type AgentPubKeyB64, encodeHashToBase64 } from "@holochain/client";
+  import { type Profile } from "@holochain-open-dev/profiles";
+  import { modeCurrent } from "@skeletonlabs/skeleton";
+  import { getContext, onDestroy, onMount } from "svelte";
   import { type Unsubscriber, derived, writable, type Writable } from "svelte/store";
   import Time from "svelte-time";
   import { page } from '$app/stores';
