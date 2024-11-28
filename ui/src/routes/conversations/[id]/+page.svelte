@@ -1,6 +1,6 @@
 <script lang="ts">
   import { debounce } from "lodash-es";
-  import { type AgentPubKeyB64, decodeHashFromBase64, encodeHashToBase64 } from "@holochain/client";
+  import { type AgentPubKeyB64, encodeHashToBase64 } from "@holochain/client";
   import { type Profile } from "@holochain-open-dev/profiles";
   import { modeCurrent } from "@skeletonlabs/skeleton";
   import { getContext, onDestroy, onMount } from "svelte";

@@ -2,7 +2,6 @@
   import { decodeHashFromBase64, encodeHashToBase64, type AgentPubKey } from "@holochain/client";
   import { ProfilesStore } from "@holochain-open-dev/profiles";
   import { getContext } from "svelte";
-  import SvgIcon from "./SvgIcon.svelte";
   import "@holochain-open-dev/elements/dist/elements/holo-identicon.js";
 
   const profilesContext: { getStore: () => ProfilesStore } = getContext("profiles");

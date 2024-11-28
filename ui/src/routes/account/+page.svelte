@@ -1,6 +1,6 @@
 <script lang="ts">
   import { modeCurrent } from "@skeletonlabs/skeleton";
-  import { getContext } from "svelte";
+  import { getContext, onMount } from "svelte";
   import { QRCodeImage } from "svelte-qrcode-image";
   import Avatar from "$lib/Avatar.svelte";
   import Button from "$lib/Button.svelte";
@@ -10,6 +10,7 @@
   import { copyToClipboard, handleFileChange, isMobile, shareText } from "$lib/utils";
   import { RelayClient } from "$store/RelayClient";
   import { ProfilesStore } from "@holochain-open-dev/profiles";
+  import { get } from "svelte/store";
 
   const relayClientContext: { getClient: () => RelayClient } = getContext("relayClient");
   let relayClient = relayClientContext.getClient();
@@ -44,6 +45,11 @@
     firstName = profileData?.fields.firstName || "";
     lastName = profileData?.fields.lastName || "";
   };
+
+  onMount(() => {
+    // Trigger refetching profile if not already in profilesStore
+    get(profilesStore.myProfile);
+  });
 </script>
 
 <Header>
