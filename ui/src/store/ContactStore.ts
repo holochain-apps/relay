@@ -20,7 +20,7 @@ export class ContactStore {
   ) {
     this.privateConversationId = persisted<string | undefined>(
       conversationId,
-      `contact_${publicKeyB64}_private_conversation`,
+      `CONTACTS.${publicKeyB64}.PRIVATE_CONVERSATION_ID`,
     );
     this.contact = writable({
       avatar,
