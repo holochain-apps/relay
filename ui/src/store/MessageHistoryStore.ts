@@ -3,7 +3,7 @@ import type { Message } from "../types";
 import { BucketStore } from "./BucketStore";
 import { derived, get, type Readable, writable, type Writable } from "svelte/store";
 
-export class MsgHistory {
+export class MessageHistoryStore {
   private buckets: Writable<BucketStore[]>;
   private dnaB64: DnaHashB64;
   public messageCount: Readable<number>;
@@ -49,7 +49,7 @@ export class MsgHistory {
       });
     }
   }
-  getBucket(b: number): Bucket {
+  getBucket(b: number): BucketStore {
     this.ensure(b);
     let buckets = get(this.buckets);
     return buckets[b];
