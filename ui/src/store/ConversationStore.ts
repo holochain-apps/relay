@@ -203,7 +203,9 @@ export class ConversationStore {
   }
 
   get open() {
-    return get(this.status).open;
+    return (
+      get(page).url.pathname === `/conversations/${get(this.conversation).id}`
+    );
   }
 
   get unread() {
@@ -316,9 +318,7 @@ export class ConversationStore {
       const messageHashesB64 = messageHashes.map((h) => encodeHashToBase64(h));
       const missingHashes = bucket.missingHashes(messageHashesB64);
       if (missingHashes.length > 0) {
-        if (this.open == false) {
-          this.status.update((data) => ({ ...data, unread: true }));
-        }
+        this.markAsUnread();
         bucket.add(missingHashes);
       }
 
@@ -468,11 +468,11 @@ export class ConversationStore {
       return { ...conversation, messages: { ...conversation.messages, [message.hash]: message } };
     });
 
+    // don't add placeholder to bucket yet.
     if (message.hash.startsWith("uhCkk")) {
-      // don't add placeholder to bucket yet.
       this.history.add(message);
-      if (!this.open && message.authorKey !== this.relayStore.client.myPubKeyB64) {
-        this.status.update((data) => ({ ...data, unread: true }));
+      if (message.authorKey !== this.relayStore.client.myPubKeyB64) {
+        this.markAsUnread();
       }
     }
   }
@@ -543,15 +543,18 @@ export class ConversationStore {
     }));
   }
 
-  setStatusOpen(open: boolean) {
-    return this.status.update((data) => ({ ...data, open }));
-  }
-
   toggleArchived() {
     return this.status.update((data) => ({ ...data, archived: !data.archived }));
   }
 
   markAsRead() {
     this.status.update((data) => ({ ...data, unread: false }));
+  }
+
+  markAsUnread() {
+    // Only mark conversation as unread if user is *not* currently viewing conversation
+    if (this.open) return;
+
+    this.status.update((data) => ({ ...data, unread: true }));
   }
 }

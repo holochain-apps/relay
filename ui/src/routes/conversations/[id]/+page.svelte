@@ -107,16 +107,12 @@
       conversationContainer.addEventListener("scroll", handleScroll);
       window.addEventListener("resize", debouncedHandleResize);
       newMessageInput.focus();
-      conversation.setStatusOpen(true)
       conversation.markAsRead()
     }
   });
 
   // Cleanup
   onDestroy(() => {
-    if (conversation) {
-      conversation.setStatusOpen(false)
-    }
     unsubscribe && unsubscribe();
     clearTimeout(agentTimeout);
     clearTimeout(configTimeout);
