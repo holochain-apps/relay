@@ -70,16 +70,19 @@
       });
   };
 
-  const checkForMessages = () => {
-    conversation && conversation.loadMessageSetFrom(conversation.currentBucketIndex()).then(([_,hashes]) => {
-      // If this we aren't getting anything back and there are no messages loaded at all
-      // then keep trying as this is probably a no network, or a just joined situation
-      if (hashes.length == 0  && Object.keys(conversation.data.messages).length == 0) {
-        messageTimeout = setTimeout(() => {
-          checkForMessages()
-        }, 2000)
-      }
-    })
+  const checkForMessages = async () => {
+    if(!conversation) return;
+
+    // Fetch the current page of messages
+    await conversation.loadMessagesCurrentPage();
+    
+    // If this we aren't getting anything back and there are no messages loaded at all
+    // then keep trying as this is probably a no network, or a just joined situation
+    if(Object.keys(conversation.data.messages).length === 0) {
+      messageTimeout = setTimeout(() => {
+        checkForMessages()
+      }, 2000)
+    }
   }
 
   function handleResize() {
@@ -98,7 +101,9 @@
         // messages = c.messages;
         numMembers = Object.values(agentProfiles).length;
       });
-      checkForData();
+      checkForAgents();
+      checkForConfig();
+      checkForMessages();
       conversationContainer.addEventListener("scroll", handleScroll);
       window.addEventListener("resize", debouncedHandleResize);
       newMessageInput.focus();
@@ -186,7 +191,7 @@
   const handleScroll = debounce(() => {
     const atTop = conversationContainer.scrollTop < SCROLL_TOP_THRESHOLD;
     if (!scrollAtTop && atTop && conversation) {
-      conversation.loadMessagesSet();
+      conversation.loadMessagesLatestPage();
     }
     scrollAtTop = atTop;
     scrollAtBottom =

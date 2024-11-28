@@ -31,14 +31,17 @@ import pRetry from "p-retry";
 import { fileToDataUrl } from "$lib/utils";
 import { persisted, type Persisted } from "@square/svelte-store";
 
-export const MINUTES_IN_BUCKET = 60 * 24 * 1; // 1 day for now
-export const TARGET_MESSAGES_LOAD = 20;
+// Timestamp range of actions contained within a single bucket, in milliseconds
+export const BUCKET_RANGE_MS = 1000 * 60 * 60 * 24; // 1 day
+
+// Target number of messages to load in a single request for additional message history
+export const TARGET_MESSAGES_COUNT = 20;
 
 export class ConversationStore {
   public conversation: Writable<Conversation>;
-  public conversationStatus: Persisted<LocalConversationStatus>;
   public history: ConversationHistoryStore;
-  public lastBucketLoaded: number = -1;
+  public status: Persisted<LocalConversationStatus>;
+  public oldestBucketIndexLoaded: number | undefined;
   public lastMessage: Writable<Message | null>;
   private client;
   private fileStorageClient: FileStorageClient;
@@ -65,7 +68,7 @@ export class ConversationStore {
       agentProfiles: {},
       messages,
     });
-    this.conversationStatus = persisted<LocalConversationStatus>(
+    this.status = persisted<LocalConversationStatus>(
       { archived: false, invitedContactKeys: [], open: false, unread: false },
       `CONVERSATION.${this.data.id}`,
     );
@@ -81,37 +84,36 @@ export class ConversationStore {
 
   async initialize() {
     await this.fetchAgents();
-    await this.loadMessagesSet();
+    await this.loadMessagesCurrentPage();
   }
 
-  // 1. looks in the history, starting at a current bucket, for hashes, and retrieves all
-  // the actual messages in that bucket as well as any earlier buckets necessary
-  // such that at least MIN_MESSAGES_LOAD messages.
-  // 2. then updates the "lateBucketLoaded" state variable so the next time earlier buckets
-  // will be loaded.
-  async loadMessagesSet(): Promise<Array<ActionHashB64>> {
-    if (this.lastBucketLoaded == 0) return [];
+  /**
+   * Load the page of messages for the current time
+   * @returns 
+   */
+  async loadMessagesCurrentPage() {
+    await this.loadMessageSetFrom(this.currentBucketIndex());
+  }
 
-    let bucket =
-      this.lastBucketLoaded < 0
-        ? this.currentBucketIndex()
-        : this.lastBucketLoaded - 1;
-    let [lastBucketLoaded, messageHashes] =
-      await this.loadMessageSetFrom(bucket);
-    this.lastBucketLoaded = lastBucketLoaded;
-    return messageHashes;
+  /**
+   * Load the most recent page of messages that has not already been loaded
+   * @returns 
+   */
+  async loadMessagesLatestPage() {
+    await this.loadMessageSetFrom(this.oldestBucketIndexLoaded ? this.oldestBucketIndexLoaded : this.currentBucketIndex());
   }
 
   // looks in the history starting at a bucket number for hashes, and retrieves all
   // the actual messages in that bucket as well as any earlier buckets necessary
-  // such that at least MIN_MESSAGES_LOAD messages.
-  async loadMessageSetFrom(bucket: number): Promise<[number, ActionHashB64[]]> {
-    const bucketIndexes = this.history.getBucketsForMessageCount(TARGET_MESSAGES_LOAD, bucket);
-    const messageHashes: ActionHashB64[] = [];
-    for (const b of bucketIndexes) {
-      messageHashes.push(...(await this.getMessagesForBucket(b)));
-    }
-    return [bucket - bucketIndexes.length + 1, messageHashes];
+  // such that at least TARGET_MESSAGES_COUNT messages.
+  async loadMessageSetFrom(bucketIndex: number): Promise<number | undefined> {
+    const bucketIndexes = this.history.getBucketsForMessageCount(TARGET_MESSAGES_COUNT, bucketIndex);
+
+    if(bucketIndexes.length === 0) return undefined;
+
+    await Promise.allSettled(bucketIndexes.map((i) => this.loadMessagesForBucket(i)));
+
+    this.oldestBucketIndexLoaded = bucketIndex - bucketIndexes.length + 1;
   }
 
   async fetchAgents() {
@@ -183,7 +185,7 @@ export class ConversationStore {
 
   get invitedContactKeys(): string[] {
     if (this.data.privacy === Privacy.Public) return [];
-    const currentValue = get(this.conversationStatus).invitedContactKeys;
+    const currentValue = get(this.status).invitedContactKeys;
     return isEmpty(currentValue) ? [] : currentValue;
   }
 
@@ -195,15 +197,15 @@ export class ConversationStore {
   }
 
   get archived() {
-    return get(this.conversationStatus).archived;
+    return get(this.status).archived;
   }
 
   get open() {
-    return get(this.conversationStatus).open;
+    return get(this.status).open;
   }
 
   get unread() {
-    return get(this.conversationStatus).unread;
+    return get(this.status).unread;
   }
 
   get allMembers() {
@@ -290,7 +292,7 @@ export class ConversationStore {
     return null;
   }
 
-  async getMessagesForBucket(b: number) {
+  async loadMessagesForBucket(b: number) {
     try {
       const newMessages: { [key: string]: Message } = this.data.messages;
       let bucket = this.history.getBucket(b);
@@ -301,7 +303,7 @@ export class ConversationStore {
       const missingHashes = bucket.missingHashes(messageHashesB64);
       if (missingHashes.length > 0) {
         if (this.open == false) {
-          this.conversationStatus.update((data) => ({ ...data, unread: true }));
+          this.status.update((data) => ({ ...data, unread: true }));
         }
         bucket.add(missingHashes);
       }
@@ -380,7 +382,7 @@ export class ConversationStore {
 
   bucketFromTimestamp(timestamp: number): number {
     const diff = timestamp - this.created;
-    return Math.round(diff / (MINUTES_IN_BUCKET * 60 * 1000));
+    return Math.round(diff / BUCKET_RANGE_MS);
   }
 
   bucketFromDate(date: Date): number {
@@ -458,7 +460,7 @@ export class ConversationStore {
       // don't add placeholder to bucket yet.
       this.history.add(message);
       if (!this.open && message.authorKey !== this.client.myPubKeyB64) {
-        this.conversationStatus.update((data) => ({ ...data, unread: true }));
+        this.status.update((data) => ({ ...data, unread: true }));
       }
     }
   }
@@ -521,7 +523,7 @@ export class ConversationStore {
 
   // Invite more contacts to this private conversation
   addContacts(invitedContacts: Contact[]) {
-    this.conversationStatus.update((data) => ({
+    this.status.update((data) => ({
       ...data,
       invitedContactKeys: this.invitedContactKeys.concat(
         invitedContacts.map((c) => c.publicKeyB64),
@@ -530,14 +532,14 @@ export class ConversationStore {
   }
 
   setArchived(archived = true) {
-    this.conversationStatus.update((data) => ({ ...data, archived }));
+    this.status.update((data) => ({ ...data, archived }));
   }
 
   setOpen(open: boolean) {
-    this.conversationStatus.update((data) => ({ ...data, open }));
+    this.status.update((data) => ({ ...data, open }));
   }
 
   setUnread(unread: boolean) {
-    this.conversationStatus.update((data) => ({ ...data, unread }));
+    this.status.update((data) => ({ ...data, unread }));
   }
 }
