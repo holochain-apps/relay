@@ -92,7 +92,7 @@ export interface Conversation {
   agentProfiles: { [key: AgentPubKeyB64]: Profile };
 }
 
-export interface LocalConversationData {
+export interface LocalConversationStatus {
   archived?: boolean;
   invitedContactKeys: string[];
   open?: boolean;

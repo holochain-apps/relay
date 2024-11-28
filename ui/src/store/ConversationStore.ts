@@ -13,7 +13,6 @@ import { FileStorageClient } from "@holochain-open-dev/file-storage";
 import { derived, get, writable, type Writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { t } from "$lib/translations";
-import LocalStorageStore from "$store/LocalStorageStore";
 import { RelayStore } from "$store/RelayStore";
 import {
   type Config,
@@ -21,7 +20,7 @@ import {
   type Conversation,
   type Image,
   type Invitation,
-  type LocalConversationData,
+  type LocalConversationStatus,
   type Message,
   type MessageRecord,
   Privacy,
@@ -30,16 +29,17 @@ import {
 import { ConversationHistoryStore } from "./ConversationHistoryStore";
 import pRetry from "p-retry";
 import { fileToDataUrl } from "$lib/utils";
+import { persisted, type Persisted } from "@square/svelte-store";
 
 export const MINUTES_IN_BUCKET = 60 * 24 * 1; // 1 day for now
 export const MIN_MESSAGES_LOAD = 20;
 
 export class ConversationStore {
   public conversation: Writable<Conversation>;
+  public conversationStatus: Persisted<LocalConversationStatus>;
   public history: ConversationHistoryStore;
   public lastBucketLoaded: number = -1;
   public lastMessage: Writable<Message | null>;
-  public localDataStore: Writable<LocalConversationData>;
   private client;
   private fileStorageClient: FileStorageClient;
 
@@ -66,12 +66,10 @@ export class ConversationStore {
       agentProfiles: {},
       messages,
     });
-    this.localDataStore = LocalStorageStore<LocalConversationData>(`conversation_${this.data.id}`, {
-      archived: false,
-      invitedContactKeys: [],
-      open: false,
-      unread: false,
-    });
+    this.conversationStatus = persisted<LocalConversationStatus>(
+      { archived: false, invitedContactKeys: [], open: false, unread: false },
+      `CONVERSATION.${this.data.id}`,
+    );
     this.lastMessage = writable(null);
     this.client = relayStore.client;
     this.fileStorageClient = new FileStorageClient(
@@ -182,7 +180,7 @@ export class ConversationStore {
 
   get invitedContactKeys(): string[] {
     if (this.data.privacy === Privacy.Public) return [];
-    const currentValue = get(this.localDataStore).invitedContactKeys;
+    const currentValue = get(this.conversationStatus).invitedContactKeys;
     return isEmpty(currentValue) ? [] : currentValue;
   }
 
@@ -194,15 +192,15 @@ export class ConversationStore {
   }
 
   get archived() {
-    return get(this.localDataStore).archived;
+    return get(this.conversationStatus).archived;
   }
 
   get open() {
-    return get(page).url.pathname === `/conversations/${get(this.conversation).id}`;
+    return get(this.conversationStatus).open;
   }
 
   get unread() {
-    return get(this.localDataStore).unread;
+    return get(this.conversationStatus).unread;
   }
 
   get allMembers() {
@@ -301,7 +299,7 @@ export class ConversationStore {
       const missingHashes = bucket.missingHashes(messageHashesB64);
       if (missingHashes.length > 0) {
         if (this.open == false) {
-          this.localDataStore.update((data) => ({ ...data, unread: true }));
+          this.conversationStatus.update((data) => ({ ...data, unread: true }));
         }
         bucket.add(missingHashes);
         this.history.saveBucket(b);
@@ -459,7 +457,7 @@ export class ConversationStore {
       // don't add placeholder to bucket yet.
       this.history.add(message);
       if (!this.open && message.authorKey !== this.client.myPubKeyB64) {
-        this.localDataStore.update((data) => ({ ...data, unread: true }));
+        this.conversationStatus.update((data) => ({ ...data, unread: true }));
       }
     }
   }
@@ -522,7 +520,7 @@ export class ConversationStore {
 
   // Invite more contacts to this private conversation
   addContacts(invitedContacts: Contact[]) {
-    this.localDataStore.update((data) => ({
+    this.conversationStatus.update((data) => ({
       ...data,
       invitedContactKeys: this.invitedContactKeys.concat(
         invitedContacts.map((c) => c.publicKeyB64),
@@ -531,14 +529,14 @@ export class ConversationStore {
   }
 
   setArchived(archived = true) {
-    this.localDataStore.update((data) => ({ ...data, archived }));
+    this.conversationStatus.update((data) => ({ ...data, archived }));
   }
 
   setOpen(open: boolean) {
-    this.localDataStore.update((data) => ({ ...data, open }));
+    this.conversationStatus.update((data) => ({ ...data, open }));
   }
 
   setUnread(unread: boolean) {
-    this.localDataStore.update((data) => ({ ...data, unread }));
+    this.conversationStatus.update((data) => ({ ...data, unread }));
   }
 }
