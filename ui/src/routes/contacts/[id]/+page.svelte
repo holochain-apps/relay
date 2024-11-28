@@ -4,7 +4,6 @@
   import { page } from '$app/stores';
   import Header from '$lib/Header.svelte';
   import SvgIcon from "$lib/SvgIcon.svelte";
-  import { t } from '$lib/translations';
   import ContactEditor from "../ContactEditor.svelte";
 
   $: contactId = $page.params.id;

@@ -6,10 +6,10 @@
   import Button from "$lib/Button.svelte"
   import Header from '$lib/Header.svelte';
   import SvgIcon from "$lib/SvgIcon.svelte";
-  import { t } from '$lib/translations';
-  import { RelayClient } from '$store/RelayClient';
-  import { UserStore } from '$store/UserStore';
-  import { handleFileChange, resizeAndExportAvatar } from '$lib/utils';
+  import { t } from "$lib/translations";
+  import { RelayClient } from "$store/RelayClient";
+  import { ProfileCreateStore } from "$store/ProfileCreateStore";
+  import { handleFileChange } from "$lib/utils";
 
   const relayClientContext: { getClient: () => RelayClient } = getContext('relayClient')
 	let relayClient = relayClientContext.getClient()
@@ -20,7 +20,7 @@
 
   $: {
     // Subscribe to the store and update local state
-    UserStore.subscribe($profile => {
+    ProfileCreateStore.subscribe(($profile) => {
       firstName = $profile.firstName;
       lastName = $profile.lastName;
       $avatarDataUrl = $profile.avatar;
@@ -42,14 +42,17 @@
   <h1 class='h1 mb-10'>{$t('common.select_an_avatar')}</h1>
 
   <!-- Hidden file input -->
-  <input type="file" accept="image/*" id="avatarInput" class='hidden'
-    on:change={(event) => handleFileChange(event,
-      (imageData) => {
-        UserStore.update(current => {
-          return { firstName, lastName, avatar: imageData};
-        })
-      }
-    )}
+  <input
+    type="file"
+    accept="image/*"
+    id="avatarInput"
+    class="hidden"
+    on:change={(event) =>
+      handleFileChange(event, (imageData) => {
+        ProfileCreateStore.update((current) => {
+          return { firstName, lastName, avatar: imageData };
+        });
+      })}
   />
 
   <!-- Label styled as a big clickable icon -->

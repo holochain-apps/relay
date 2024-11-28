@@ -4,8 +4,8 @@
   import Button from "$lib/Button.svelte";
   import Header from '$lib/Header.svelte';
   import SvgIcon from "$lib/SvgIcon.svelte";
-  import { t } from '$lib/translations';
-  import { UserStore } from '$store/UserStore';
+  import { t } from "$lib/translations";
+  import { ProfileCreateStore } from "$store/ProfileCreateStore";
 
   const MIN_FIRST_NAME_LENGTH = 3;
   let firstName = ''
@@ -13,17 +13,17 @@
 
   $: {
     // Subscribe to the store and update local state
-    UserStore.subscribe($profile => {
-      firstName = $profile.firstName
-      lastName = $profile.lastName
+    ProfileCreateStore.subscribe(($profile) => {
+      firstName = $profile.firstName;
+      lastName = $profile.lastName;
     });
   }
 
   function saveName() {
     firstName = firstName.trim();
     lastName = lastName.trim();
-    UserStore.update(current => {
-        return { ...current, firstName, lastName };
+    ProfileCreateStore.update((current) => {
+      return { ...current, firstName, lastName };
     });
     if (firstName.length >= MIN_FIRST_NAME_LENGTH) {
       goto('/register/avatar');

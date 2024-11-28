@@ -67,16 +67,4 @@ export class ContactStore {
       return { ...c, ...newData };
     });
   }
-
-  // async getContact() {
-  //   const contact = await this.client.getContact(this.data.publicKey)
-  //   if (contact) {
-  //     this.contact.update(c => {
-  //       c = {...c, ...contact}
-  //       return c
-  //     })
-  //     return contact
-  //   }
-  //   return null
-  // }
 }

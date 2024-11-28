@@ -16,11 +16,7 @@ export default defineConfig({
     },
   },
   plugins: [sveltekit(), purgeCss()],
-  build: {
-    minify: false,
-  },
   define: {
-    "process.env.IS_PREACT": JSON.stringify("false"),
-    __APP_VERSION__: JSON.stringify(version), // Define a global constant
+    "window.__APP_VERSION__": JSON.stringify(version), // Define a global constant
   },
 });

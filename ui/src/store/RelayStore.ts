@@ -1,21 +1,12 @@
 import { decode } from "@msgpack/msgpack";
 import { isEqual, camelCase, mapKeys } from "lodash-es";
-import {
-  writable,
-  get,
-  type Subscriber,
-  type Invalidator,
-  type Unsubscriber,
-  type Writable,
-} from "svelte/store";
+import { writable, get, type Writable } from "svelte/store";
 import {
   type AgentPubKey,
   type AgentPubKeyB64,
   type DnaHash,
   decodeHashFromBase64,
   encodeHashToBase64,
-  type Signal,
-  type EntryHash,
   type AppSignal,
 } from "@holochain/client";
 import { ContactStore } from "./ContactStore";
@@ -66,7 +57,7 @@ export class RelayStore {
 
       if (payload.type == "Message") {
         const conversation = this.getConversationByCellDnaHash(
-          signal.cell_id[0],
+          signal.cell_id[0]
         );
 
         const from: AgentPubKey = payload.from;
@@ -80,7 +71,7 @@ export class RelayStore {
               ({
                 ...(mapKeys(i, (v, k) => camelCase(k)) as Image),
                 status: "loading",
-              }) as Image,
+              }) as Image
           ), // convert snake_case to camelCase
           status: "confirmed",
           timestamp: new Date(payload.action.hashed.content.timestamp / 1000),
@@ -88,7 +79,7 @@ export class RelayStore {
 
         if (conversation && message.authorKey !== this.client.myPubKeyB64) {
           const sender = conversation.allMembers.find(
-            (m) => m.publicKeyB64 == message.authorKey,
+            (m) => m.publicKeyB64 == message.authorKey
           );
           conversation.addMessage(message);
           if (!conversation.archived) {
@@ -99,41 +90,17 @@ export class RelayStore {
             if (isMobile()) {
               enqueueNotification(
                 `${sender ? sender.firstName + " " + sender.lastName : message.authorKey}: ${msgShort}`,
-                message.content,
+                message.content
               );
             } else {
               enqueueNotification(
                 `Message from ${sender ? sender.firstName + " " + sender.lastName : message.authorKey}`,
-                message.content,
+                message.content
               );
             }
             conversation.loadImagesForMessage(message); // async load images
           }
         }
-        // let messageList = this.expectations.get(message.from)
-        // if (messageList) {
-        //     if (payload.type == "Ack") {
-        //         const idx = messageList.findIndex((created) => created == payload.created)
-        //         if (idx >= 0) {
-        //             messageList.splice(idx,1)
-        //             this.expectations.set(message.from, messageList)
-        //         }
-        //     }
-        //     // we just received a message from someone who we are expecting
-        //     // to have acked something but they haven't so we retry to send the message
-        //     if (messageList.length > 0) {
-        //         const streams = Object.values(get(this.streams))
-        //         for (const msgId of messageList) {
-        //             for (const stream of streams) {
-        //                 const msg = stream.findMessage(msgId)
-        //                 if (msg) {
-        //                     console.log("Resending", msg)
-        //                     await this.client.sendMessage(stream.id, msg.payload, [message.from])
-        //                 }
-        //             }
-        //         }
-        //     }
-        //}
       }
     });
   }
@@ -141,7 +108,7 @@ export class RelayStore {
   async _addConversation(convoCellAndConfig: ConversationCellAndConfig) {
     if (!this.client) return;
     const properties: Properties = decode(
-      convoCellAndConfig.cell.dna_modifiers.properties,
+      convoCellAndConfig.cell.dna_modifiers.properties
     ) as Properties;
     const progenitor = decodeHashFromBase64(properties.progenitor);
     const privacy = properties.privacy;
@@ -153,7 +120,7 @@ export class RelayStore {
       convoCellAndConfig.config,
       properties.created,
       privacy,
-      progenitor,
+      progenitor
     );
 
     const unsub = newConversation.lastMessage.subscribe(() => {
@@ -183,13 +150,13 @@ export class RelayStore {
     title: string,
     image: string,
     privacy: Privacy,
-    initialContacts: Contact[] = [],
+    initialContacts: Contact[] = []
   ) {
     if (!this.client) return null;
     const convoCellAndConfig = await this.client.createConversation(
       title,
       image,
-      privacy,
+      privacy
     );
     if (convoCellAndConfig) {
       const conversationStore = await this._addConversation(convoCellAndConfig);
@@ -215,27 +182,21 @@ export class RelayStore {
   async inviteAgentToConversation(
     conversationId: string,
     agent: AgentPubKey,
-    role: number = 0,
+    role: number = 0
   ) {
     if (!this.client) return;
     return await this.client.inviteAgentToConversation(
       conversationId,
       agent,
-      role,
+      role
     );
   }
-
-  // removeConversations(id: string): void {
-  //   this.conversations.update(conversations =>
-  //     conversations.filter(conversation => conversation.data.id !== id)
-  //   );
-  // }
 
   getConversation(id: string): ConversationStore | undefined {
     let foundConversation;
     this.conversations.subscribe((conversations) => {
       foundConversation = conversations.find(
-        (conversation) => conversation.data.id === id,
+        (conversation) => conversation.data.id === id
       );
     })();
 
@@ -243,12 +204,12 @@ export class RelayStore {
   }
 
   getConversationByCellDnaHash(
-    cellDnaHash: DnaHash,
+    cellDnaHash: DnaHash
   ): ConversationStore | undefined {
     let foundConversation;
     this.conversations.subscribe((conversations) => {
       foundConversation = conversations.find((conversation) =>
-        isEqual(conversation.data.cellId[0], cellDnaHash),
+        isEqual(conversation.data.cellId[0], cellDnaHash)
       );
     })();
 
@@ -268,9 +229,9 @@ export class RelayStore {
           contact.first_name,
           contact.last_name,
           contactRecord.original_action,
-          encodeHashToBase64(contact.public_key),
+          encodeHashToBase64(contact.public_key)
         );
-      }),
+      })
     );
   }
 
@@ -284,14 +245,14 @@ export class RelayStore {
         this.conversationsData.find(
           (c) =>
             c.privacy === Privacy.Private &&
-            c.allMembers.every((m) => m.publicKeyB64 === contact.publicKeyB64),
+            c.allMembers.every((m) => m.publicKeyB64 === contact.publicKeyB64)
         ) || null;
       if (!conversation) {
         conversation = await this.createConversation(
           contact.firstName + " " + contact.lastName,
           "",
           Privacy.Private,
-          [contact],
+          [contact]
         );
       }
       const contactStore = new ContactStore(
@@ -302,7 +263,7 @@ export class RelayStore {
         contact.lastName,
         contactResult.signed_action.hashed.hash,
         contact.publicKeyB64,
-        conversation?.id,
+        conversation?.id
       );
       this.contacts.update((contacts) => [...contacts, contactStore]);
       return contactStore;
@@ -320,7 +281,7 @@ export class RelayStore {
         contact.firstName,
         contact.lastName,
         contact.originalActionHash,
-        contact.publicKeyB64,
+        contact.publicKeyB64
       );
       this.contacts.update((contacts) => [
         ...contacts.filter((c) => c.publicKeyB64 !== contact.publicKeyB64),
@@ -335,7 +296,7 @@ export class RelayStore {
     let foundContact;
     this.contacts.subscribe((contacts) => {
       foundContact = contacts.find(
-        (contact) => contact.data.publicKeyB64 === publicKey,
+        (contact) => contact.data.publicKeyB64 === publicKey
       );
     })();
 
