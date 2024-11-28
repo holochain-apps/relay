@@ -70,7 +70,7 @@ export class ConversationStore {
     });
     this.status = persisted<LocalConversationStatus>(
       { archived: false, invitedContactKeys: [], open: false, unread: false },
-      `CONVERSATION.${this.data.id}`,
+      `CONVERSATION.${this.data.id}.STATUS`,
     );
     this.lastMessage = writable(null);
     this.client = relayStore.client;
