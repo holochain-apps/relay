@@ -48,27 +48,27 @@
   const SCROLL_BOTTOM_THRESHOLD = 100; // How close to the bottom must the user be to consider it "at the bottom"
   const SCROLL_TOP_THRESHOLD = 300; // How close to the top must the user be to consider it "at the top"
 
-  const checkForAgents = () => {
-    conversation &&
-      conversation.fetchAgents().then((agentProfiles) => {
-        if (Object.values(agentProfiles).length < 2) {
-          agentTimeout = setTimeout(() => {
-            checkForAgents();
-          }, 2000);
-        }
-      });
-  };
+  const checkForAgents = async () => {
+    if(!conversation) return;
 
-  const checkForConfig = () => {
-    conversation &&
-      conversation.getConfig().then((config) => {
-        if (!config?.title) {
-          configTimeout = setTimeout(() => {
-            checkForConfig();
-          }, 2000);
-        }
-      });
-  };
+    const agentProfiles = await conversation.loadAgents();
+    if (Object.values(agentProfiles).length < 2) {
+      agentTimeout = setTimeout(() => {
+        checkForAgents();
+      }, 2000);
+    }
+  }
+
+  const checkForConfig = async () => {
+    if(!conversation) return;
+
+    const config = await conversation.getConfig();
+    if (!config?.title) {
+      configTimeout = setTimeout(() => {
+        checkForConfig()
+      }, 2000);
+    }
+  }
 
   const checkForMessages = async () => {
     if(!conversation) return;

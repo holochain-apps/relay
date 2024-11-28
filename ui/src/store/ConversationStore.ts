@@ -83,13 +83,12 @@ export class ConversationStore {
   }
 
   async initialize() {
-    await this.fetchAgents();
+    await this.loadAgents();
     await this.loadMessagesCurrentPage();
   }
 
   /**
    * Load the page of messages for the current time
-   * @returns 
    */
   async loadMessagesCurrentPage() {
     await this.loadMessageSetFrom(this.currentBucketIndex());
@@ -97,7 +96,6 @@ export class ConversationStore {
 
   /**
    * Load the most recent page of messages that has not already been loaded
-   * @returns 
    */
   async loadMessagesLatestPage() {
     await this.loadMessageSetFrom(this.oldestBucketIndexLoaded ? this.oldestBucketIndexLoaded : this.currentBucketIndex());
@@ -116,7 +114,7 @@ export class ConversationStore {
     this.oldestBucketIndexLoaded = bucketIndex - bucketIndexes.length + 1;
   }
 
-  async fetchAgents() {
+  async loadAgents() {
     const agentProfiles = await this.client.getAllAgents(this.data.id);
     this.conversation.update((c) => {
       c.agentProfiles = { ...agentProfiles };
