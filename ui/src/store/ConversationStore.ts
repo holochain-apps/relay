@@ -32,7 +32,7 @@ import { fileToDataUrl } from "$lib/utils";
 import { persisted, type Persisted } from "@square/svelte-store";
 
 export const MINUTES_IN_BUCKET = 60 * 24 * 1; // 1 day for now
-export const MIN_MESSAGES_LOAD = 20;
+export const TARGET_MESSAGES_LOAD = 20;
 
 export class ConversationStore {
   public conversation: Writable<Conversation>;
@@ -54,8 +54,7 @@ export class ConversationStore {
   ) {
     const messages: Messages = {};
 
-    const currentBucket = this.currentBucket();
-    this.history = new ConversationHistoryStore(currentBucket, this.cellId[0]);
+    this.history = new ConversationHistoryStore(encodeHashToBase64(this.cellId[0]), this.currentBucketIndex());
 
     this.conversation = writable({
       id,
@@ -93,8 +92,12 @@ export class ConversationStore {
   async loadMessagesSet(): Promise<Array<ActionHashB64>> {
     if (this.lastBucketLoaded == 0) return [];
 
-    let bucket = this.lastBucketLoaded < 0 ? this.currentBucket() : this.lastBucketLoaded - 1;
-    let [lastBucketLoaded, messageHashes] = await this.loadMessageSetFrom(bucket);
+    let bucket =
+      this.lastBucketLoaded < 0
+        ? this.currentBucketIndex()
+        : this.lastBucketLoaded - 1;
+    let [lastBucketLoaded, messageHashes] =
+      await this.loadMessageSetFrom(bucket);
     this.lastBucketLoaded = lastBucketLoaded;
     return messageHashes;
   }
@@ -103,12 +106,12 @@ export class ConversationStore {
   // the actual messages in that bucket as well as any earlier buckets necessary
   // such that at least MIN_MESSAGES_LOAD messages.
   async loadMessageSetFrom(bucket: number): Promise<[number, ActionHashB64[]]> {
-    const buckets = this.history.bucketsForSet(MIN_MESSAGES_LOAD, bucket);
+    const bucketIndexes = this.history.getBucketsForMessageCount(TARGET_MESSAGES_LOAD, bucket);
     const messageHashes: ActionHashB64[] = [];
-    for (const b of buckets) {
+    for (const b of bucketIndexes) {
       messageHashes.push(...(await this.getMessagesForBucket(b)));
     }
-    return [bucket - buckets.length + 1, messageHashes];
+    return [bucket - bucketIndexes.length + 1, messageHashes];
   }
 
   async fetchAgents() {
@@ -291,7 +294,6 @@ export class ConversationStore {
     try {
       const newMessages: { [key: string]: Message } = this.data.messages;
       let bucket = this.history.getBucket(b);
-      bucket.ensureIsHashType();
       const count = bucket.count;
       const messageHashes = await this.client.getMessageHashes(this.data.id, b, count);
 
@@ -302,7 +304,6 @@ export class ConversationStore {
           this.conversationStatus.update((data) => ({ ...data, unread: true }));
         }
         bucket.add(missingHashes);
-        this.history.saveBucket(b);
       }
 
       const hashesToLoad: Array<ActionHash> = [];
@@ -386,7 +387,7 @@ export class ConversationStore {
     return this.bucketFromTimestamp(date.getTime());
   }
 
-  currentBucket(): number {
+  currentBucketIndex(): number {
     return this.bucketFromDate(new Date());
   }
 

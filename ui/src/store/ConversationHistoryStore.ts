@@ -1,85 +1,83 @@
-import { encodeHashToBase64, type DnaHash, type DnaHashB64 } from "@holochain/client";
+import { type DnaHashB64 } from "@holochain/client";
 import type { Message } from "../types";
 import { ConversationHistoryBucketStore } from "./ConversationHistoryBucketStore";
-import {
-  derived,
-  get,
-  type Readable,
-  writable,
-  type Writable,
-} from "svelte/store";
+import { range } from "lodash-es";
 
 export class ConversationHistoryStore {
-  private buckets: Writable<ConversationHistoryBucketStore[]>;
-  private dnaB64: DnaHashB64;
-  public messageCount: Readable<number>;
+  private conversationId: DnaHashB64;
+  private buckets: ConversationHistoryBucketStore[];
 
-  constructor(currentBucket: number, dnaHash: DnaHash) {
-    this.dnaB64 = encodeHashToBase64(dnaHash);
-    const buckets: ConversationHistoryBucketStore[] = [];
-    for (let b = 0; b <= currentBucket; b += 1) {
-      const bucketJSON = localStorage.getItem(`c.${this.dnaB64}.${b}`);
-      buckets[b] = bucketJSON
-        ? new ConversationHistoryBucketStore(bucketJSON)
-        : new ConversationHistoryBucketStore(undefined);
-    }
-    this.buckets = writable(buckets);
-    this.messageCount = derived(this.buckets, ($b) => {
-      let count = 0;
-      $b.forEach((b) => (count += b.count));
-      return count;
-    });
+  /**
+   * A List of buckets for a given conversation (i.e. a clone of the relay cell)
+   */
+  constructor(conversationId: DnaHashB64, currentBucketIndex: number) {
+    this.conversationId = conversationId;
+    this.buckets = range(0, currentBucketIndex + 1).map(
+      (i) => new ConversationHistoryBucketStore(this.conversationId, i)
+    );
   }
 
-  bucketsForSet(setSize: number, startingBucket: number): number[] {
-    let bucket = startingBucket;
-    const bucketsInSet: Array<number> = [];
+  /**
+   * Returns an array of bucket indices that contain enough messages to meet the targetMessagesCount
+   * @param targetMessagesCount - The target number of messages contained within all included buckets.
+   *  The total number of messages will be *less* than the targetMessagesCount,
+   *  unless a single bucket contains more messages than the targetMessagesCount.
+   * @param startingBucketIndex - The bucket index to start searching from
+   * @returns Array of selected bucket indices in descending order
+   */
+  getBucketsForMessageCount(
+    targetMessagesCount: number,
+    startingBucketIndex: number
+  ): number[] {
+    const selectedIndexes: Array<number> = [];
+
+    let i = startingBucketIndex;
     let count = 0;
-    // add buckets until we get to threshold of what to load
-    let buckets = get(this.buckets);
-    do {
-      bucketsInSet.push(bucket);
-      const h = buckets[bucket];
-      if (h) {
-        const size = h.count;
-        count += size;
-      }
-      bucket -= 1;
-    } while (bucket >= 0 && count < setSize);
-    return bucketsInSet;
-  }
-
-  ensure(b: number) {
-    if (get(this.buckets)[b] == undefined) {
-      this.buckets.update((buckets) => {
-        buckets[b] = new ConversationHistoryBucketStore([]);
-        return buckets;
-      });
+    for (let i = startingBucketIndex; i >= 0; i--) {
+      selectedIndexes.push(i);
+      if (this.buckets[i]) count += this.buckets[i].count;
+      if (count >= targetMessagesCount) break;
     }
-  }
-  getBucket(b: number): ConversationHistoryBucketStore {
-    this.ensure(b);
-    let buckets = get(this.buckets);
-    return buckets[b];
+
+    return selectedIndexes;
   }
 
+  /**
+   * Create bucket at index if it does not exist.
+   *
+   * @param i index of bucket
+   * @returns
+   */
+  ensure(i: number) {
+    if (this.buckets[i]) return;
+
+    this.buckets[i] = new ConversationHistoryBucketStore(
+      this.conversationId,
+      i
+    );
+  }
+
+  /**
+   * Get bucket at index.
+   * Creates the bucket if it doesn't exist.
+   *
+   * @param i index of bucket
+   * @returns
+   */
+  getBucket(i: number): ConversationHistoryBucketStore {
+    this.ensure(i);
+    return this.buckets[i];
+  }
+
+  /**
+   * Adds a message hash to its corresponding bucket
+   * Creates the bucket if it doesn't exist.
+   *
+   * @param message - The message to add to the conversation history
+   */
   add(message: Message) {
-    this.buckets.update((buckets) => {
-      const bucket = buckets[message.bucket];
-      if (bucket === undefined) {
-        buckets[message.bucket] = new ConversationHistoryBucketStore([
-          message.hash,
-        ]);
-      } else {
-        bucket.add([message.hash]);
-      }
-      return buckets;
-    });
-    this.saveBucket(message.bucket);
-  }
+    this.ensure(message.bucket);
 
-  saveBucket(b: number) {
-    const bucket = this.getBucket(b);
-    localStorage.setItem(`c.${this.dnaB64}.${b}`, bucket.toJSON());
+    this.buckets[message.bucket].add([message.hash]);
   }
 }

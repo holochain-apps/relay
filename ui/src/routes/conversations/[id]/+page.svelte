@@ -71,23 +71,16 @@
   };
 
   const checkForMessages = () => {
-    conversation &&
-      conversation.loadMessageSetFrom(conversation.currentBucket()).then(([_, hashes]) => {
-        // If this we aren't getting anything back and there are no messages loaded at all
-        // then keep trying as this is probably a no network, or a just joined situation
-        if (hashes.length == 0 && Object.keys(conversation.data.messages).length == 0) {
-          messageTimeout = setTimeout(() => {
-            checkForMessages();
-          }, 2000);
-        }
-      });
-  };
-
-  const checkForData = () => {
-    checkForAgents();
-    checkForConfig();
-    checkForMessages();
-  };
+    conversation && conversation.loadMessageSetFrom(conversation.currentBucketIndex()).then(([_,hashes]) => {
+      // If this we aren't getting anything back and there are no messages loaded at all
+      // then keep trying as this is probably a no network, or a just joined situation
+      if (hashes.length == 0  && Object.keys(conversation.data.messages).length == 0) {
+        messageTimeout = setTimeout(() => {
+          checkForMessages()
+        }, 2000)
+      }
+    })
+  }
 
   function handleResize() {
     if (scrollAtBottom) {
