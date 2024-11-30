@@ -148,6 +148,20 @@ export interface Message {
   bucket: number;
 }
 
+export interface MessageFile {
+  name: string;
+  last_modified: number;
+  size: number;
+  file_type: string;
+  storage_entry_hash: EntryHash;
+}
+
+export interface Message2 {
+  content: string;
+  bucket: number;
+  images: MessageFile[];
+}
+
 export type BucketInput = {
   bucket: number;
   count: number;
