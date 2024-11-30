@@ -107,7 +107,7 @@ export class RelayClient {
     title: string,
     image: string,
     privacy: Privacy,
-  ): Promise<ConversationCellAndConfig | null> {
+  ): Promise<ConversationCellAndConfig> {
     return this.cloneConversation(
       new Date().getTime(),
       title,
@@ -117,7 +117,7 @@ export class RelayClient {
     );
   }
 
-  async joinConversation(invitation: Invitation): Promise<ConversationCellAndConfig | null> {
+  async joinConversation(invitation: Invitation): Promise<ConversationCellAndConfig> {
     // we don't have the image at join time, it get's loaded later
     return this.cloneConversation(
       invitation.created,
@@ -138,36 +138,32 @@ export class RelayClient {
     progenitor: AgentPubKey,
     membrane_proof?: MembraneProof,
     networkSeed?: string,
-  ): Promise<ConversationCellAndConfig | null> {
+  ): Promise<ConversationCellAndConfig> {
     const conversationId = networkSeed || uuidv4();
 
-    try {
-      const cell = await this.client.createCloneCell({
-        role_name: this.roleName,
-        name: title,
-        membrane_proof,
-        modifiers: {
-          network_seed: conversationId,
-          properties: {
-            created,
-            privacy,
-            progenitor: encodeHashToBase64(progenitor),
-          },
+    const cell = await this.client.createCloneCell({
+      role_name: this.roleName,
+      name: title,
+      membrane_proof,
+      modifiers: {
+        network_seed: conversationId,
+        properties: {
+          created,
+          privacy,
+          progenitor: encodeHashToBase64(progenitor),
         },
-      });
+      },
+    });
 
-      if (!networkSeed) {
-        await this.setConfig({ title, image }, cell.cell_id);
-      }
-
-      await this.setMyProfileForConversation(cell.cell_id);
-      const convoCellAndConfig: ConversationCellAndConfig = { cell, config: { title, image } };
-      this.conversations[conversationId] = convoCellAndConfig;
-      return convoCellAndConfig;
-    } catch (e) {
-      console.error("Error creating conversation", e);
-      return null;
+    if (!networkSeed) {
+      await this.setConfig({ title, image }, cell.cell_id);
     }
+
+    await this.setMyProfileForConversation(cell.cell_id);
+    const convoCellAndConfig: ConversationCellAndConfig = { cell, config: { title, image } };
+    this.conversations[conversationId] = convoCellAndConfig;
+
+    return convoCellAndConfig;
   }
 
   async getMessageHashes(

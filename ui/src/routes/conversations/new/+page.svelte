@@ -11,22 +11,27 @@
   import { RelayStore } from "$store/RelayStore";
   import { Privacy } from "../../../types";
   import HiddenFileInput from "$lib/HiddenFileInput.svelte";
+  import toast from "svelte-french-toast";
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext("relayStore");
   let relayStore = relayStoreContext.getStore();
 
   let title = "";
   let imageUrl = writable("");
-  let pendingCreate = false;
+  let creating = false;
 
-  async function createConversation(e: Event, privacy: Privacy) {
-    pendingCreate = true;
-    e.preventDefault();
-    const conversation = await relayStore.createConversation(title, get(imageUrl), privacy);
-    if (conversation) {
+  async function createConversation(privacy: Privacy) {
+    creating = true;
+
+    try {
+      const conversation = await relayStore.createConversation(title, get(imageUrl), privacy);
       goto(`/conversations/${conversation.data.id}`);
-      pendingCreate = false;
+    } catch (e) {
+      console.error("Failed to create conversation", e);
+      toast.error("Failed to create conversation");
     }
+
+    creating = false;
   }
 
   $: valid = title.trim().length >= MIN_TITLE_LENGTH;
@@ -75,12 +80,10 @@
 <footer>
   <Button
     moreClasses="w-72 justify-center variant-filled-tertiary"
-    onClick={(e) => {
-      createConversation(e, Privacy.Public);
-    }}
-    disabled={!valid || pendingCreate}
+    on:click={() => createConversation(Privacy.Public)}
+    disabled={!valid || creating}
   >
-    {#if pendingCreate}
+    {#if creating}
       <SvgIcon icon="spinner" size="18" color={$modeCurrent ? "%232e2e2e" : "white"} />
     {/if}
     <strong class="ml-2">{$t("conversations.create_group")}</strong>

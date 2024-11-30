@@ -95,8 +95,11 @@ export class RelayStore {
     });
   }
 
-  private async addConversation(convoCellAndConfig: ConversationCellAndConfig) {
-    if (!this.client) return;
+  private async addConversation(
+    convoCellAndConfig: ConversationCellAndConfig,
+  ): Promise<ConversationStore> {
+    if (!this.client) throw Error("Client must be initialized");
+
     const properties: Properties = decode(
       convoCellAndConfig.cell.dna_modifiers.properties,
     ) as Properties;
@@ -130,6 +133,7 @@ export class RelayStore {
     this.conversations.update((conversations) => [...conversations, newConversation]);
 
     await newConversation.initialize();
+
     return newConversation;
   }
 
@@ -138,19 +142,17 @@ export class RelayStore {
     image: string,
     privacy: Privacy,
     initialContacts: Contact[] = [],
-  ) {
-    if (!this.client) return null;
+  ): Promise<ConversationStore> {
+    if (!this.client) throw Error("Client is not initialized");
     const convoCellAndConfig = await this.client.createConversation(title, image, privacy);
-    if (convoCellAndConfig) {
-      const conversationStore = await this.addConversation(convoCellAndConfig);
-      if (conversationStore) {
-        if (initialContacts.length > 0) {
-          conversationStore.addContacts(initialContacts);
-        }
-        return conversationStore;
-      }
+
+    const conversationStore = await this.addConversation(convoCellAndConfig);
+
+    if (initialContacts.length > 0) {
+      conversationStore.addContacts(initialContacts);
     }
-    return null;
+
+    return conversationStore;
   }
 
   async joinConversation(invitation: Invitation) {
