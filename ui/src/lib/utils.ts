@@ -94,18 +94,20 @@ export function handleFileChange(event: Event, callback: (imageData: string) => 
   }
 }
 
-async function checkPermission() {
-  if (!(await isPermissionGranted())) {
-    return (await requestPermission()) === "granted";
-  }
-  return true;
-}
-
 export async function enqueueNotification(title: string, body: string) {
-  if (!(await checkPermission())) {
-    return;
+  try {
+    const hasPermission = await isPermissionGranted();
+    if (!hasPermission) {
+      const permission = await requestPermission();
+
+      if(permission !== "granted") 
+        throw new Error("Permission to create notifications denied");
+    }
+
+    sendNotification({ title, body });
+  } catch(e) {
+    console.error("Failed to enqueue notification");
   }
-  sendNotification({ title, body });
 }
 
 export function isLinux(): boolean {
