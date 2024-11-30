@@ -7,9 +7,10 @@
   import Header from "$lib/Header.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$lib/translations";
-  import { handleFileChange, MIN_TITLE_LENGTH } from "$lib/utils";
+  import { MIN_TITLE_LENGTH } from "../../../config";
   import { RelayStore } from "$store/RelayStore";
   import { Privacy } from "../../../types";
+  import HiddenFileInput from "$lib/HiddenFileInput.svelte";
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext("relayStore");
   let relayStore = relayStoreContext.getStore();
@@ -39,19 +40,16 @@
 </Header>
 
 <div class="my-10 flex flex-col items-center justify-center">
-  <!-- Hidden file input -->
-  <input
-    type="file"
-    id="avatarInput"
+  <HiddenFileInput
     accept="image/jpeg, image/png, image/gif"
-    class="hidden"
-    on:change={(event) => handleFileChange(event, (imageData) => imageUrl.set(imageData))}
+    id="avatarInput"
+    on:change={(e) => imageUrl.set(e.detail)}
   />
 
   <!-- Label styled as a big clickable icon -->
   <label
     for="avatarInput"
-    class="file-icon-label flex h-32 w-32 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-tertiary-500 hover:bg-tertiary-600 dark:bg-secondary-500 dark:hover:bg-secondary-400"
+    class="file-icon-label bg-tertiary-500 hover:bg-tertiary-600 dark:bg-secondary-500 dark:hover:bg-secondary-400 flex h-32 w-32 cursor-pointer items-center justify-center overflow-hidden rounded-full"
   >
     {#if $imageUrl}
       <img src={$imageUrl} alt="Avatar" class="h-32 w-32 rounded-full object-cover" />

@@ -9,7 +9,7 @@
   import { t } from "$lib/translations";
   import { RelayClient } from "$store/RelayClient";
   import { ProfileCreateStore } from "$store/ProfileCreateStore";
-  import { handleFileChange } from "$lib/utils";
+  import HiddenFileInput from "$lib/HiddenFileInput.svelte";
 
   const relayClientContext: { getClient: () => RelayClient } = getContext("relayClient");
   let relayClient = relayClientContext.getClient();
@@ -41,24 +41,17 @@
 <div class="flex grow flex-col items-center justify-center">
   <h1 class="h1 mb-10">{$t("common.select_an_avatar")}</h1>
 
-  <!-- Hidden file input -->
-  <input
-    type="file"
+  <HiddenFileInput
     accept="image/*"
     id="avatarInput"
-    class="hidden"
-    on:change={(event) =>
-      handleFileChange(event, (imageData) => {
-        ProfileCreateStore.update((current) => {
-          return { firstName, lastName, avatar: imageData };
-        });
-      })}
+    on:change={(e) =>
+      ProfileCreateStore.update((current) => ({ firstName, lastName, avatar: e.detail }))}
   />
 
   <!-- Label styled as a big clickable icon -->
   <label
     for="avatarInput"
-    class="file-icon-label flex h-32 w-32 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-secondary-300 hover:bg-secondary-400"
+    class="file-icon-label bg-secondary-300 hover:bg-secondary-400 flex h-32 w-32 cursor-pointer items-center justify-center overflow-hidden rounded-full"
   >
     {#if $avatarDataUrl}
       <img src={$avatarDataUrl} alt="Avatar" class="h-32 w-32 rounded-full object-cover" />
