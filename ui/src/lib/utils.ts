@@ -26,36 +26,18 @@ export function linkify(text: string) {
   });
 }
 
-export function shareText(text: string | Promise<string>) {
-  if (typeof text === "string") {
-    if (text && text.trim().length > 0) {
-      return sharesheetShareText(text);
-    }
-  } else {
-    return text.then((t) => sharesheetShareText(t));
-  }
+export function shareText(text: string): Promise<void> {
+  const normalized = text.trim();
+  if (normalized.length === 0) throw Error("Text is empty");
+  
+  return sharesheetShareText(normalized);
 }
 
-export function copyToClipboard(text: string | Promise<string>) {
-  if (typeof text === "string") {
-    if (text && text.trim().length > 0) {
-      console.log("Copying to clipboard", text);
-      return navigator.clipboard.writeText(text);
-    }
-  } else {
-    if (typeof ClipboardItem && navigator.clipboard.write) {
-      const item = new ClipboardItem({
-        "text/plain": text.then((t) => {
-          console.log("Copying to clipboard", t);
-          return new Blob([t], { type: "text/plain" });
-        }),
-      });
-      return navigator.clipboard.write([item]);
-    } else {
-      console.log("Copying to clipboard", text);
-      return text.then((t) => navigator.clipboard.writeText(t));
-    }
-  }
+export function copyToClipboard(text: string): Promise<void> {
+  const normalized = text.trim();
+  if (normalized.length === 0) throw Error("Text is empty");
+  
+  return navigator.clipboard.writeText(text);
 }
 
 // Crop avatar image and return a base64 bytes string of its content

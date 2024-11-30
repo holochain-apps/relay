@@ -184,7 +184,7 @@ export class ConversationStore {
   async shareInviteCodeForAgent(publicKeyB64: AgentPubKeyB64) {
     try {
       const code = await this.makeInviteCodeForAgent(publicKeyB64);
-      shareText(code);
+      await shareText(code);
     } catch(e) {
       console.error("Failed to makeInviteCodeForAgent", e);
       toast.error(get(t)("conversations.unable_to_create_code"));
@@ -194,7 +194,7 @@ export class ConversationStore {
   async copyInviteCodeForAgent(publicKeyB64: AgentPubKeyB64) {
     try {
       const code = await this.makeInviteCodeForAgent(publicKeyB64);
-      copyToClipboard(code);
+      await copyToClipboard(code);
     } catch(e) {
       console.error("Failed to makeInviteCodeForAgent", e);
       toast.error(get(t)("conversations.unable_to_create_code"));
