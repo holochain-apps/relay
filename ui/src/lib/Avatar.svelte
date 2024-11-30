@@ -4,7 +4,7 @@
   import { getContext } from "svelte";
   import "@holochain-open-dev/elements/dist/elements/holo-identicon.js";
 
-  const profilesContext: { getStore: () => ProfilesStore } = getContext("profiles");
+  const profilesContext: { getStore: () => ProfilesStore } = getContext("profilesStore");
   const store = profilesContext.getStore();
 
   export let agentPubKey: AgentPubKey | string | null = null;

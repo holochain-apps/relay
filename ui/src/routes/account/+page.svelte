@@ -17,7 +17,7 @@
   const relayClientContext: { getClient: () => RelayDnaClient } = getContext("relayClient");
   let relayClient = relayClientContext.getClient();
 
-  const profilesContext: { getStore: () => ProfilesStore } = getContext("profiles");
+  const profilesContext: { getStore: () => ProfilesStore } = getContext("profilesStore");
   let profilesStore = profilesContext.getStore();
   $: prof = profilesStore ? profilesStore.myProfile : undefined;
   $: profileData = $prof?.status === "complete" ? $prof.value?.entry : undefined;

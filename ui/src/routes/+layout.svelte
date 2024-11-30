@@ -89,7 +89,7 @@
     getClient: () => relayClient,
   });
 
-  setContext("profiles", {
+  setContext("profilesStore", {
     getStore: () => profilesStore,
   });
 
