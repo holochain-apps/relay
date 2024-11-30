@@ -360,13 +360,7 @@
                 <div class="flex justify-center">
                   <Button
                     moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
-                    onClick={() => {
-                      copyToClipboard(
-                        conversation.makeInviteCodeForAgent(
-                          conversation.allMembers[0]?.publicKeyB64,
-                        ),
-                      );
-                    }}
+                    onClick={() => conversation.copyInviteCodeForAgent(conversation.allMembers[0]?.publicKeyB64)}
                   >
                     <SvgIcon icon="copy" size="20" color="%23FD3524" moreClasses="mr-2" />
                     {$t("contacts.copy_invite_code")}
@@ -374,13 +368,7 @@
                   {#if isMobile()}
                     <Button
                       moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
-                      onClick={() => {
-                        shareText(
-                          conversation.makeInviteCodeForAgent(
-                            conversation.allMembers[0]?.publicKeyB64,
-                          ),
-                        );
-                      }}
+                      onClick={() => conversation.shareInviteCodeForAgent(conversation.allMembers[0]?.publicKeyB64)}
                     >
                       <SvgIcon icon="share" size="20" color="%23FD3524" moreClasses="mr-2" />
                       {$t("contacts.share_invite_code")}

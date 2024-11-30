@@ -96,28 +96,6 @@
       editing = false;
     }
   }
-
-  async function copyPrivateConversationInviteCodeForContact() {
-    const inviteCode = await contact?.privateConversation?.makeInviteCodeForAgent(contact.publicKeyB64);
-    
-    if(!inviteCode) {
-      toast.error("Failed to copy invite code");
-      return;
-    }
-
-    copyToClipboard(inviteCode);
-  }
-
-  async function sharePrivateConversationInviteCodeForContact() {
-    const inviteCode = await contact?.privateConversation?.makeInviteCodeForAgent(contact.publicKeyB64);
-    
-    if(!inviteCode) {
-      toast.error("Failed to share invite code");
-      return;
-    }
-
-    shareText(inviteCode);
-  }
 </script>
 
 <div class="flex flex-1 flex-col items-center p-4">
@@ -257,7 +235,7 @@
         <div class="flex justify-center">
           <Button
             moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
-            onClick={() => copyPrivateConversationInviteCodeForContact()}
+            onClick={() => contact?.privateConversation?.copyInviteCodeForAgent(contact?.publicKeyB64)}
           >
             <SvgIcon icon="copy" size="20" color="%23FD3524" moreClasses="mr-2" />
             {$t("contacts.copy_invite_code")}
@@ -265,7 +243,7 @@
           {#if isMobile()}
             <Button
               moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
-              onClick={() => sharePrivateConversationInviteCodeForContact()}
+              onClick={() => contact?.privateConversation?.shareInviteCodeForAgent(contact?.publicKeyB64)}
             >
               <SvgIcon icon="copy" size="20" color="%23FD3524" moreClasses="mr-2" />
               <strong>{$t("contacts.share_invite_code")}</strong>

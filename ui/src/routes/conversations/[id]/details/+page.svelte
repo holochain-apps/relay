@@ -224,7 +224,7 @@
               <button
                 class="variant-filled-tertiary flex items-center justify-center rounded-2xl p-2 px-3 text-sm font-bold"
                 on:click={() =>
-                  copyToClipboard(conversation.makeInviteCodeForAgent(contact.publicKeyB64))}
+                  conversation.copyInviteCodeForAgent(contact.publicKeyB64)}
               >
                 <SvgIcon icon="copy" size="18" color="%23FD3524" moreClasses="mr-2" />
                 {$t("conversations.copy_invite")}
@@ -233,7 +233,7 @@
                 <button
                   class="variant-filled-tertiary flex items-center justify-center rounded-2xl p-2 px-3 text-sm font-bold"
                   on:click={() =>
-                    shareText(conversation.makeInviteCodeForAgent(contact.publicKeyB64))}
+                    conversation.shareInviteCodeForAgent(contact.publicKeyB64)}
                 >
                   <SvgIcon icon="share" size="18" color="%23FD3524" moreClasses="mr-2" />
                 </button>

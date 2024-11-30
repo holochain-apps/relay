@@ -6,8 +6,8 @@ import {
   type CellId,
   decodeHashFromBase64,
   encodeHashToBase64,
-  type ActionHashB64,
   type ActionHash,
+  type AgentPubKeyB64,
 } from "@holochain/client";
 import { FileStorageClient } from "@holochain-open-dev/file-storage";
 import { derived, get, writable, type Writable } from "svelte/store";
@@ -28,7 +28,7 @@ import {
 } from "../types";
 import { ConversationHistoryStore } from "./ConversationHistoryStore";
 import pRetry from "p-retry";
-import { fileToDataUrl } from "$lib/utils";
+import { copyToClipboard, fileToDataUrl, shareText } from "$lib/utils";
 import { persisted, type Persisted } from "@square/svelte-store";
 import toast from "svelte-french-toast";
 import { page } from "$app/stores";
@@ -149,10 +149,9 @@ export class ConversationStore {
     );
   }
 
-  async makeInviteCodeForAgent(publicKeyB64: string) {
+  private async makeInviteCodeForAgent(publicKeyB64: string) {
     if (this.data.privacy === Privacy.Public) return this.publicInviteCode;
 
-    try {
       const membraneProof = await this.relayStore.client.generateMembraneProofForAgent(
         this.data.id,
         decodeHashFromBase64(publicKeyB64),
@@ -180,6 +179,22 @@ export class ConversationStore {
           title,
         } as Invitation)
       );
+  }
+
+  async shareInviteCodeForAgent(publicKeyB64: AgentPubKeyB64) {
+    try {
+      const code = await this.makeInviteCodeForAgent(publicKeyB64);
+      shareText(code);
+    } catch(e) {
+      console.error("Failed to makeInviteCodeForAgent", e);
+      toast.error(get(t)("conversations.unable_to_create_code"));
+    }
+  }
+
+  async copyInviteCodeForAgent(publicKeyB64: AgentPubKeyB64) {
+    try {
+      const code = await this.makeInviteCodeForAgent(publicKeyB64);
+      copyToClipboard(code);
     } catch(e) {
       console.error("Failed to makeInviteCodeForAgent", e);
       toast.error(get(t)("conversations.unable_to_create_code"));
