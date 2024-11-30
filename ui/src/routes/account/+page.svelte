@@ -35,9 +35,14 @@
 
   $: saveName = async () => {
     if (profileData && firstNameElem.value?.length >= MIN_FIRST_NAME_LENGTH) {
-      firstName = firstNameElem.value;
-      lastName = lastNameElem.value;
-      await relayClient.updateProfile(firstName, lastName, profileData.fields.avatar);
+      firstName = firstNameElem.value.trim();
+      lastName = lastNameElem.value.trim();
+      await profilesStore.client.updateProfile({
+        nickname: `${firstName} ${lastName}`,
+        fields: {
+          avatar: profileData.fields.avatar,
+        },
+      });
       editingName = false;
     }
   };

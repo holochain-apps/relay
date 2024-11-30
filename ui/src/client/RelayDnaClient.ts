@@ -45,36 +45,6 @@ export class RelayDnaClient {
     return this.client.myPubKey;
   }
 
-  async createProfile(firstName: string, lastName: string, avatar: string): Promise<Profile> {
-    return this.client.callZome({
-      role_name: this.roleName,
-      zome_name: "profiles",
-      fn_name: "create_profile",
-      payload: { nickname: firstName + " " + lastName, fields: { avatar, firstName, lastName } },
-    });
-  }
-
-  async updateProfile(firstName: string, lastName: string, avatar: string): Promise<Profile> {
-    const profile = await this.client.callZome({
-      role_name: this.roleName,
-      zome_name: "profiles",
-      fn_name: "update_profile",
-      payload: { nickname: firstName + " " + lastName, fields: { avatar, firstName, lastName } },
-    });
-
-    // Update profile in every conversation I am a part of
-    Object.values(this.conversations).forEach(async (conversation) => {
-      await this.client.callZome({
-        cell_id: conversation.cell.cell_id,
-        zome_name: "profiles",
-        fn_name: "update_profile",
-        payload: { nickname: firstName + " " + lastName, fields: { avatar, firstName, lastName } },
-      });
-    });
-
-    return profile;
-  }
-
   /********* Conversations **********/
   async initConversations() {
     const appInfo = await this.client.appInfo();
