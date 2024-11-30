@@ -161,7 +161,7 @@ export class RelayClient {
       }
 
       await this._setMyProfileForConversation(cell.cell_id);
-      const convoCellAndConfig: ConversationCellAndConfig = { cell, config };
+      const convoCellAndConfig: ConversationCellAndConfig = { cell, config: { title, image } };
       this.conversations[conversationId] = convoCellAndConfig;
       return convoCellAndConfig;
     } catch (e) {

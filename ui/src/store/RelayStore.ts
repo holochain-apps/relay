@@ -124,7 +124,7 @@ export class RelayStore {
       });
     });
 
-    const unsub2 = newConversation.localDataStore.subscribe(() => {
+    const unsub2 = newConversation.status.subscribe(() => {
       // Trigger update to conversations store whenever localDataStore changes
       this.conversations.update((convs) => {
         return [...convs]; // Force reactivity by returning a new array reference
