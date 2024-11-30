@@ -27,7 +27,7 @@ import type {
   Privacy,
 } from "../types";
 
-export class RelayClient {
+export class RelayDnaClient {
   // conversations is a map of string to ClonedCell
   conversations: { [key: string]: ConversationCellAndConfig } = {};
   myPubKeyB64: AgentPubKeyB64;

@@ -7,11 +7,12 @@
   import Header from "$lib/Header.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$lib/translations";
-  import { RelayClient } from "$store/RelayClient";
+  import { RelayDnaClient } from "$client/RelayDnaClient";
+
   import { ProfileCreateStore } from "$store/ProfileCreateStore";
   import HiddenFileInput from "$lib/HiddenFileInput.svelte";
 
-  const relayClientContext: { getClient: () => RelayClient } = getContext("relayClient");
+  const relayClientContext: { getClient: () => RelayDnaClient } = getContext("relayClient");
   let relayClient = relayClientContext.getClient();
 
   let firstName = "";

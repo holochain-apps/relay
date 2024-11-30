@@ -7,10 +7,11 @@
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$lib/translations";
 
-  import { RelayClient } from "$store/RelayClient";
+  import { RelayDnaClient } from "$client/RelayDnaClient";
+
   import { RelayStore } from "$store/RelayStore";
 
-  const relayClientContext: { getClient: () => RelayClient } = getContext("relayClient");
+  const relayClientContext: { getClient: () => RelayDnaClient } = getContext("relayClient");
   let relayClient = relayClientContext.getClient();
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext("relayStore");
@@ -40,7 +41,7 @@
 
 <footer class="flex w-full justify-between gap-4 px-10 pb-10">
   <button
-    class="flex h-24 w-28 flex-col items-center rounded-2xl bg-tertiary-500 py-2 text-xs disabled:opacity-50 dark:bg-secondary-500"
+    class="bg-tertiary-500 dark:bg-secondary-500 flex h-24 w-28 flex-col items-center rounded-2xl py-2 text-xs disabled:opacity-50"
     on:click={() => goto("/conversations/join")}
   >
     <SvgIcon
@@ -53,7 +54,7 @@
   </button>
 
   <button
-    class="flex h-24 w-28 flex-col items-center rounded-2xl bg-tertiary-500 py-2 text-xs disabled:opacity-50 dark:bg-secondary-500"
+    class="bg-tertiary-500 dark:bg-secondary-500 flex h-24 w-28 flex-col items-center rounded-2xl py-2 text-xs disabled:opacity-50"
     on:click={() => goto("/contacts/new")}
   >
     <SvgIcon
@@ -66,7 +67,7 @@
   </button>
 
   <button
-    class="flex h-24 w-28 flex-col items-center rounded-2xl bg-tertiary-500 py-2 text-xs disabled:opacity-50 dark:bg-secondary-500"
+    class="bg-tertiary-500 dark:bg-secondary-500 flex h-24 w-28 flex-col items-center rounded-2xl py-2 text-xs disabled:opacity-50"
     on:click={() => goto("/conversations/new")}
   >
     <SvgIcon

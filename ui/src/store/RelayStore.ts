@@ -12,7 +12,7 @@ import {
 } from "@holochain/client";
 import { ContactStore } from "./ContactStore";
 import { ConversationStore } from "./ConversationStore";
-import { RelayClient } from "$store/RelayClient";
+import { RelayDnaClient } from "../clients/RelayDnaClient";
 import type {
   Contact,
   Image,
@@ -29,7 +29,7 @@ export class RelayStore {
   public contacts: Writable<ContactStore[]>;
   public conversations: Writable<ConversationStore[]>;
 
-  constructor(public client: RelayClient) {
+  constructor(public client: RelayDnaClient) {
     this.contacts = writable([]);
     this.conversations = writable([]);
   }

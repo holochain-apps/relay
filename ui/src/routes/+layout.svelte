@@ -5,7 +5,8 @@
   import { onMount, setContext } from "svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$lib/translations";
-  import { RelayClient } from "$store/RelayClient";
+  import { RelayDnaClient } from "$client/RelayDnaClient";
+
   import { RelayStore } from "$store/RelayStore";
   import toast, { Toaster } from "svelte-french-toast";
   import { handleLinkClick, initLightDarkModeSwitcher } from "$lib/utils";
@@ -15,7 +16,7 @@
   const ZOME_NAME = "relay";
 
   let client: AppWebsocket;
-  let relayClient: RelayClient;
+  let relayClient: RelayDnaClient;
   let relayStore: RelayStore;
   let connected = false;
   let profilesStore: ProfilesStore | null = null;
@@ -55,7 +56,7 @@
       // Setup stores
       let profilesClient = new ProfilesClient(client, ROLE_NAME);
       profilesStore = new ProfilesStore(profilesClient);
-      relayClient = new RelayClient(client, profilesStore, ROLE_NAME, ZOME_NAME);
+      relayClient = new RelayDnaClient(client, profilesStore, ROLE_NAME, ZOME_NAME);
       relayStore = new RelayStore(relayClient);
       await relayStore.initialize();
 
