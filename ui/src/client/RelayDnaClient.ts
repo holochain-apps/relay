@@ -254,7 +254,7 @@ export class RelayDnaClient {
 
     const membraneProof = await this.client.callZome({
       cell_id: conversation.cell.cell_id,
-      zome_name: "profiles",
+      zome_name: "relay",
       fn_name: "generate_membrane_proof",
       payload: {
         conversation_id: conversation.cell.dna_modifiers.network_seed,
