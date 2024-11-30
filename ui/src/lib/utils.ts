@@ -10,10 +10,22 @@ import { setModeCurrent } from "@skeletonlabs/skeleton";
 import { goto } from "$app/navigation";
 import { open } from "@tauri-apps/plugin-shell";
 
+/**
+ * Sanitize user-inputted HTML before we render it to prevent XSS attacks
+ * 
+ * @param html 
+ * @returns 
+ */
 export function sanitizeHTML(html: string) {
   return DOMPurify.sanitize(html);
 }
 
+/**
+ * Search the provided text for URLs, replacing them with HTML link tags pointing to that URL
+ * 
+ * @param text 
+ * @returns 
+ */
 export function linkify(text: string) {
   const urlPattern =
     /(?:https?:(?:\/\/)?)?(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
@@ -24,13 +36,27 @@ export function linkify(text: string) {
   });
 }
 
+/**
+ * Share text via sharesheet
+ * 
+ * @param text 
+ * @returns 
+ */
 export function shareText(text: string): Promise<void> {
+  if(!isMobile()) throw Error("Sharesheet is only supported on mobile");
+
   const normalized = text.trim();
   if (normalized.length === 0) throw Error("Text is empty");
   
   return sharesheetShareText(normalized);
 }
 
+/**
+ * Copy text to clipboard
+ * 
+ * @param text 
+ * @returns 
+ */
 export function copyToClipboard(text: string): Promise<void> {
   const normalized = text.trim();
   if (normalized.length === 0) throw Error("Text is empty");
@@ -38,8 +64,13 @@ export function copyToClipboard(text: string): Promise<void> {
   return navigator.clipboard.writeText(text);
 }
 
-// Crop avatar image and return a base64 bytes string of its content
-export function resizeAndExportAvatar(img: HTMLImageElement) {
+/**
+ * Crop avatar image and return a data url of its content
+
+ * @param img 
+ * @returns 
+ */
+export function resizeAndExportAvatar(img: HTMLImageElement): string {
   const MAX_WIDTH = 300;
   const MAX_HEIGHT = 300;
 
@@ -94,6 +125,13 @@ export function handleFileChange(event: Event, callback: (imageData: string) => 
   }
 }
 
+/**
+ * Send a system notification
+ * If permissions have not been granted for sending notifications, request them.
+ * 
+ * @param title 
+ * @param body 
+ */
 export async function enqueueNotification(title: string, body: string) {
   try {
     const hasPermission = await isPermissionGranted();
@@ -110,19 +148,17 @@ export async function enqueueNotification(title: string, body: string) {
   }
 }
 
-export function isAndroid(): boolean {
-  return platform() === "android";
-}
-
-export function isIOS(): boolean {
-  return platform() === "ios";
-}
-
 export function isMobile(): boolean {
   const p = platform();
   return p === "android" || p === "ios";
 }
 
+/**
+ * Convert file to data url
+ * 
+ * @param file file
+ * @returns 
+ */
 export async function fileToDataUrl(file: File): Promise<string> {
   const reader = new FileReader();
   reader.readAsDataURL(file);
