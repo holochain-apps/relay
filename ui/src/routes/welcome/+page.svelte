@@ -5,7 +5,7 @@
   import Avatar from "$lib/Avatar.svelte";
   import Header from "$lib/Header.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
-  import { t } from "$lib/translations";
+  import { t } from "$translations";
   import { RelayStore } from "$store/RelayStore";
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext("relayStore");

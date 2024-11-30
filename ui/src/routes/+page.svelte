@@ -6,7 +6,7 @@
   import { goto } from "$app/navigation";
   import Header from "$lib/Header.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
-  import { t } from "$lib/translations";
+  import { t } from "$translations";
   import { RelayStore } from "$store/RelayStore";
 
   const profilesContext: { getStore: () => ProfilesStore } = getContext("profilesStore");
