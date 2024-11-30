@@ -30,7 +30,7 @@ import type {
 export class RelayDnaClient {
   // conversations is a map of string to ClonedCell
   conversations: { [key: string]: ConversationCellAndConfig } = {};
-  myPubKeyB64: AgentPubKeyB64;
+  public myPubKeyB64: AgentPubKeyB64;
 
   constructor(
     public client: AppClient,
@@ -38,7 +38,7 @@ export class RelayDnaClient {
     public roleName: string,
     public zomeName: string,
   ) {
-    this.myPubKeyB64 = encodeHashToBase64(this.client.myPubKey);
+    this.myPubKeyB64 = encodeHashToBase64(this.myPubKey);
   }
 
   get myPubKey(): AgentPubKey {

@@ -8,21 +8,18 @@
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$lib/translations";
   import { copyToClipboard, isMobile, shareText } from "$lib/utils";
-  import { RelayDnaClient } from "$client/RelayDnaClient";
-
   import { ProfilesStore } from "@holochain-open-dev/profiles";
   import { get } from "svelte/store";
   import HiddenFileInput from "$lib/HiddenFileInput.svelte";
+  import type { RelayStore } from "$store/RelayStore";
 
-  const relayClientContext: { getClient: () => RelayDnaClient } = getContext("relayClient");
-  let relayClient = relayClientContext.getClient();
+  const relayStoreContext: { getStore: () => RelayStore } = getContext("relayStore");
+  let relayStore = relayStoreContext.getStore();
 
   const profilesContext: { getStore: () => ProfilesStore } = getContext("profilesStore");
   let profilesStore = profilesContext.getStore();
   $: prof = profilesStore ? profilesStore.myProfile : undefined;
   $: profileData = $prof?.status === "complete" ? $prof.value?.entry : undefined;
-
-  const agentPublicKey64 = relayClient.myPubKeyB64;
 
   const MIN_FIRST_NAME_LENGTH = 3;
 
@@ -70,11 +67,19 @@
     <HiddenFileInput
       accept="image/jpeg, image/png, image/gif"
       id="avatarInput"
-      on:change={(e) => relayClient.updateProfile(firstName, lastName, e.detail)}
+      on:change={(e) =>
+        profilesStore.client.updateProfile({
+          nickname: `${firstName.trim()} ${lastName.trim()}`,
+          fields: {
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
+            avatar: e.detail,
+          },
+        })}
     />
 
     <div style="position:relative">
-      <Avatar agentPubKey={relayClient.myPubKey} size="128" moreClasses="mb-4" />
+      <Avatar agentPubKey={relayStore.myPubKey} size="128" moreClasses="mb-4" />
       <label
         for="avatarInput"
         class="bg-tertiary-500 hover:bg-secondary-300 dark:bg-secondary-500 dark:hover:bg-secondary-400 absolute bottom-5 right-0 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full pl-1"
@@ -133,16 +138,16 @@
       </div>
     {/if}
 
-    <QRCodeImage text={agentPublicKey64} width={7} />
+    <QRCodeImage text={relayStore.myPubKeyB64} width={7} />
 
     <p
       class="text-secondary-400 dark:text-tertiary-700 mb-4 mt-8 w-64 overflow-hidden text-ellipsis text-nowrap"
     >
-      {agentPublicKey64}
+      {relayStore.myPubKeyB64}
     </p>
 
     <Button
-      on:click={() => copyToClipboard(agentPublicKey64)}
+      on:click={() => copyToClipboard(relayStore.myPubKeyB64)}
       moreClasses="w-64 text-sm variant-filled-tertiary dark:!bg-tertiary-200"
     >
       <SvgIcon icon="copy" size="22" color="%23FD3524" moreClasses="mr-3" />
@@ -150,7 +155,7 @@
     </Button>
     {#if isMobile()}
       <Button
-        on:click={() => shareText(agentPublicKey64)}
+        on:click={() => shareText(relayStore.myPubKeyB64)}
         moreClasses="w-64 text-sm variant-filled-tertiary dark:!bg-tertiary-200"
       >
         <SvgIcon icon="share" size="22" color="%23FD3524" moreClasses="mr-3" />

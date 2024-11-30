@@ -6,13 +6,7 @@
   import Header from "$lib/Header.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$lib/translations";
-
-  import { RelayDnaClient } from "$client/RelayDnaClient";
-
   import { RelayStore } from "$store/RelayStore";
-
-  const relayClientContext: { getClient: () => RelayDnaClient } = getContext("relayClient");
-  let relayClient = relayClientContext.getClient();
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext("relayStore");
   let relayStore = relayStoreContext.getStore();
@@ -24,7 +18,7 @@
 
 <Header>
   <button on:click={() => goto("/account")}>
-    <Avatar size={24} agentPubKey={relayClient.myPubKey} />
+    <Avatar size={24} agentPubKey={relayStore.myPubKey} />
   </button>
 
   <button on:click={() => goto("/create")} class="absolute right-4">

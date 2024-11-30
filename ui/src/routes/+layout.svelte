@@ -88,10 +88,6 @@
 
   $: prof = profilesStore ? profilesStore.myProfile : undefined;
 
-  setContext("relayClient", {
-    getClient: () => relayClient,
-  });
-
   setContext("profilesStore", {
     getStore: () => profilesStore,
   });
