@@ -1,37 +1,34 @@
 <script lang="ts">
   import { modeCurrent } from "@skeletonlabs/skeleton";
   import { getContext } from "svelte";
-  import { writable } from "svelte/store";
   import { goto } from "$app/navigation";
   import Button from "$lib/Button.svelte";
   import Header from "$lib/Header.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$lib/translations";
-  import { RelayDnaClient } from "$client/RelayDnaClient";
-
   import { ProfileCreateStore } from "$store/ProfileCreateStore";
   import HiddenFileInput from "$lib/HiddenFileInput.svelte";
+  import type { ProfilesStore } from "@holochain-open-dev/profiles";
+  import toast from "svelte-french-toast";
 
-  const relayClientContext: { getClient: () => RelayDnaClient } = getContext("relayClient");
-  let relayClient = relayClientContext.getClient();
+  const profilesStoreContext: { getStore: () => ProfilesStore } = getContext("profilesStore");
+  let profilesStore = profilesStoreContext.getStore();
 
-  let firstName = "";
-  let lastName = "";
-  $: avatarDataUrl = writable("");
-
-  $: {
-    // Subscribe to the store and update local state
-    ProfileCreateStore.subscribe(($profile) => {
-      firstName = $profile.firstName;
-      lastName = $profile.lastName;
-      $avatarDataUrl = $profile.avatar;
-    });
-  }
-
-  function createAccount() {
-    relayClient.createProfile(firstName, lastName, $avatarDataUrl).then(() => {
+  async function createAccount() {
+    try {
+      await profilesStore.client.createProfile({
+        nickname: `${$ProfileCreateStore.firstName} ${$ProfileCreateStore.lastName}`,
+        fields: {
+          avatar: $ProfileCreateStore.avatar,
+          firstName: $ProfileCreateStore.firstName,
+          lastName: $ProfileCreateStore.lastName,
+        },
+      });
       goto("/welcome");
-    });
+    } catch (e) {
+      console.error("Failed to create profile", e);
+      toast.error("Failed to create profile");
+    }
   }
 </script>
 
@@ -45,8 +42,7 @@
   <HiddenFileInput
     accept="image/*"
     id="avatarInput"
-    on:change={(e) =>
-      ProfileCreateStore.update((current) => ({ firstName, lastName, avatar: e.detail }))}
+    on:change={(e) => ProfileCreateStore.update((current) => ({ ...current, avatar: e.detail }))}
   />
 
   <!-- Label styled as a big clickable icon -->
@@ -54,8 +50,12 @@
     for="avatarInput"
     class="file-icon-label bg-secondary-300 hover:bg-secondary-400 flex h-32 w-32 cursor-pointer items-center justify-center overflow-hidden rounded-full"
   >
-    {#if $avatarDataUrl}
-      <img src={$avatarDataUrl} alt="Avatar" class="h-32 w-32 rounded-full object-cover" />
+    {#if $ProfileCreateStore.avatar}
+      <img
+        src={$ProfileCreateStore.avatar}
+        alt="Avatar"
+        class="h-32 w-32 rounded-full object-cover"
+      />
     {:else}
       <img src="/image-placeholder.png" alt="Avatar Uploader" class="h-16 w-16 rounded-full" />
     {/if}
