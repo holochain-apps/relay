@@ -106,13 +106,13 @@
         />
         <Button
           moreClasses="h-6 w-6 rounded-md py-0 !px-0 mb-0 mr-2 bg-primary-100 flex items-center justify-center"
-          onClick={() => saveName()}
+          on:click={() => saveName()}
         >
           <SvgIcon icon="checkMark" color="%23FD3524" size="12" />
         </Button>
         <Button
           moreClasses="h-6 w-6 !px-0 py-0 mb-0 rounded-md bg-surface-400 flex items-center justify-center"
-          onClick={() => cancelEditName()}
+          on:click={() => cancelEditName()}
         >
           <SvgIcon icon="x" color="gray" size="12" />
         </Button>
@@ -136,7 +136,7 @@
     </p>
 
     <Button
-      onClick={() => copyToClipboard(agentPublicKey64)}
+      on:click={() => copyToClipboard(agentPublicKey64)}
       moreClasses="w-64 text-sm variant-filled-tertiary dark:!bg-tertiary-200"
     >
       <SvgIcon icon="copy" size="22" color="%23FD3524" moreClasses="mr-3" />
@@ -144,7 +144,7 @@
     </Button>
     {#if isMobile()}
       <Button
-        onClick={() => shareText(agentPublicKey64)}
+        on:click={() => shareText(agentPublicKey64)}
         moreClasses="w-64 text-sm variant-filled-tertiary dark:!bg-tertiary-200"
       >
         <SvgIcon icon="share" size="22" color="%23FD3524" moreClasses="mr-3" />

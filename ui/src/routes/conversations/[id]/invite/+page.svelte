@@ -80,37 +80,37 @@
     </div>
 
     <footer>
-      <Button onClick={() => copyToClipboard(conversation.publicInviteCode)} moreClasses="w-64">
+      <Button on:click={() => copyToClipboard(conversation.publicInviteCode)} moreClasses="w-64">
         <p class="w-64 overflow-hidden text-ellipsis text-nowrap">
           {conversation.publicInviteCode}
         </p>
         <img src="/copy.svg" alt="Copy Icon" width="16" />&nbsp;<span
-          class="text-xs text-tertiary-500">{$t("common.copy")}</span
+          class="text-tertiary-500 text-xs">{$t("common.copy")}</span
         >
       </Button>
       {#if isMobile()}
-        <Button onClick={() => shareText(conversation.publicInviteCode)} moreClasses="w-64">
+        <Button on:click={() => shareText(conversation.publicInviteCode)} moreClasses="w-64">
           <p class="w-64 overflow-hidden text-ellipsis text-nowrap">
             {conversation.publicInviteCode}
           </p>
           <img src="/share.svg" alt="Share Icon" width="16" />&nbsp;<span
-            class="text-xs text-tertiary-500">{$t("common.share")}</span
+            class="text-tertiary-500 text-xs">{$t("common.share")}</span
           >
         </Button>
       {/if}
       <Button
         moreClasses="bg-surface-400 text-secondary-50 w-64 justify-center"
-        onClick={() => goto(`/conversations/${conversationId}`)}>{$t("common.done")}</Button
+        on:click={() => goto(`/conversations/${conversationId}`)}>{$t("common.done")}</Button
       >
     </footer>
   {:else}
     <div
-      class="container relative mx-auto flex w-full flex-1 flex-col items-center p-5 text-secondary-500"
+      class="text-secondary-500 container relative mx-auto flex w-full flex-1 flex-col items-center p-5"
     >
       <div class="relative my-5 w-full">
         <input
           type="text"
-          class="text-md h-12 w-full rounded-full border-0 !bg-tertiary-500 pl-10 pr-4 dark:!bg-secondary-500 dark:text-tertiary-500"
+          class="text-md !bg-tertiary-500 dark:!bg-secondary-500 dark:text-tertiary-500 h-12 w-full rounded-full border-0 pl-10 pr-4"
           placeholder={$t("create.search_placeholder")}
           bind:value={search}
         />
@@ -128,7 +128,7 @@
           alt="No contacts"
           class="mb-4 mt-10 h-32 w-32"
         />
-        <h2 class="text-lg text-primary-200">{$t("create.no_contacts_header")}</h2>
+        <h2 class="text-primary-200 text-lg">{$t("create.no_contacts_header")}</h2>
         <p class="text-center text-xs">{$t("create.no_contacts_text")}</p>
       {:else}
         <div class="w-full font-light">
@@ -136,7 +136,7 @@
             {#if i === 0 || contact.firstName.charAt(0).toUpperCase() !== $contacts[i - 1].firstName
                   .charAt(0)
                   .toUpperCase()}
-              <p class="mb-1 mt-2 pl-0 text-secondary-300">{contact.firstName[0].toUpperCase()}</p>
+              <p class="text-secondary-300 mb-1 mt-2 pl-0">{contact.firstName[0].toUpperCase()}</p>
             {/if}
             {@const selected = $selectedContacts.find(
               (c) => c.publicKeyB64 === contact.data.publicKeyB64,
@@ -149,7 +149,7 @@
               .find((m) => m?.publicKeyB64 === contact.data.publicKeyB64)}
             <button
               class="-ml-1 mb-2 flex w-full items-center justify-between rounded-3xl p-2 {selected &&
-                'bg-tertiary-500 dark:bg-secondary-500'} font-normal disabled:font-light dark:disabled:text-tertiary-700"
+                'bg-tertiary-500 dark:bg-secondary-500'} dark:disabled:text-tertiary-700 font-normal disabled:font-light"
               on:click={() => selectContact(contact.data.publicKeyB64)}
               disabled={alreadyInConversation || alreadyInvited}
             >
@@ -159,7 +159,7 @@
                 agentPubKey={contact.publicKeyB64}
                 moreClasses="mr-3"
               />
-              <p class="flex-1 text-start text-secondary-500 dark:text-tertiary-100">
+              <p class="text-secondary-500 dark:text-tertiary-100 flex-1 text-start">
                 {contact.firstName}
                 {contact.lastName}
               </p>
@@ -168,7 +168,7 @@
               {:else if alreadyInvited}
                 <span class="text-xs font-extralight">{$t("conversations.already_invited")}</span>
               {:else}
-                <span class="text-lg font-extrabold text-primary-500">+</span>
+                <span class="text-primary-500 text-lg font-extrabold">+</span>
               {/if}
             </button>
           {/each}
@@ -176,11 +176,11 @@
 
         {#if $selectedContacts.length > 0}
           <button
-            class="fixed bottom-5 right-5 flex max-w-2/3 items-center justify-center rounded-full border-0 bg-primary-500 py-1 pl-2 pr-4 text-white"
+            class="max-w-2/3 bg-primary-500 fixed bottom-5 right-5 flex items-center justify-center rounded-full border-0 py-1 pl-2 pr-4 text-white"
             on:click={() => addContactsToConversation()}
           >
             <span
-              class="mr-2 flex h-9 w-9 items-center justify-center rounded-full bg-surface-500 text-sm font-extrabold text-primary-500"
+              class="bg-surface-500 text-primary-500 mr-2 flex h-9 w-9 items-center justify-center rounded-full text-sm font-extrabold"
             >
               <SvgIcon icon="person" size="12" color="%23FD3524" moreClasses="mr-1" />
               {$selectedContacts.length}

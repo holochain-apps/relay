@@ -360,7 +360,7 @@
                 <div class="flex justify-center">
                   <Button
                     moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
-                    onClick={() =>
+                    on:click={() =>
                       conversation.copyInviteCodeForAgent(conversation.allMembers[0]?.publicKeyB64)}
                   >
                     <SvgIcon icon="copy" size="20" color="%23FD3524" moreClasses="mr-2" />
@@ -369,7 +369,7 @@
                   {#if isMobile()}
                     <Button
                       moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
-                      onClick={() =>
+                      on:click={() =>
                         conversation.shareInviteCodeForAgent(
                           conversation.allMembers[0]?.publicKeyB64,
                         )}
@@ -385,7 +385,7 @@
                 {$t("conversations.share_personal_invitations")}
               </p>
               <Button
-                onClick={() => goto(`/conversations/${conversation.data.id}/details`)}
+                on:click={() => goto(`/conversations/${conversation.data.id}/details`)}
                 moreClasses="w-72 justify-center"
               >
                 <SvgIcon icon="ticket" size="24" color={$modeCurrent ? "white" : "%23FD3524"} />
@@ -398,7 +398,7 @@
               {$t("conversations.share_invitation_code_msg")}
             </p>
             <Button
-              onClick={() => copyToClipboard(conversation.publicInviteCode)}
+              on:click={() => copyToClipboard(conversation.publicInviteCode)}
               moreClasses="w-64 justify-center variant-filled-tertiary"
             >
               <SvgIcon icon="copy" size="18" color="%23FD3524" />
@@ -406,7 +406,7 @@
             </Button>
             {#if isMobile()}
               <Button
-                onClick={() => shareText(conversation.publicInviteCode)}
+                on:click={() => shareText(conversation.publicInviteCode)}
                 moreClasses="w-64 justify-center variant-filled-tertiary"
               >
                 <SvgIcon icon="share" size="18" color="%23FD3524" />
