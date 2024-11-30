@@ -9,12 +9,13 @@ import { platform } from "@tauri-apps/plugin-os";
 import { setModeCurrent } from "@skeletonlabs/skeleton";
 import { goto } from "$app/navigation";
 import { open } from "@tauri-apps/plugin-shell";
+import linkifyStr from "linkify-string";
 
 /**
  * Sanitize user-inputted HTML before we render it to prevent XSS attacks
- * 
- * @param html 
- * @returns 
+ *
+ * @param html
+ * @returns
  */
 export function sanitizeHTML(html: string) {
   return DOMPurify.sanitize(html);
@@ -22,54 +23,53 @@ export function sanitizeHTML(html: string) {
 
 /**
  * Search the provided text for URLs, replacing them with HTML link tags pointing to that URL
- * 
- * @param text 
- * @returns 
+ *
+ * @param text
+ * @returns
  */
-export function linkify(text: string) {
-  const urlPattern =
-    /(?:https?:(?:\/\/)?)?(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
-  return text.replace(urlPattern, (match) => {
-    // XXX: not quite sure why this is needed, but if i dont do this sveltekit navigates internally and externally at the same time
-    const href = match.includes("://") ? match : `https://${match}`;
-    return `<a href="${href}" target="_blank" rel="noopener noreferrer">${match}</a>`;
+export const linkify = (text: string): string =>
+  linkifyStr(text, {
+    defaultProtocol: "https",
+    rel: {
+      url: "noopener noreferrer",
+    },
+    target: "_blank",
   });
-}
 
 /**
  * Share text via sharesheet
- * 
- * @param text 
- * @returns 
+ *
+ * @param text
+ * @returns
  */
 export function shareText(text: string): Promise<void> {
-  if(!isMobile()) throw Error("Sharesheet is only supported on mobile");
+  if (!isMobile()) throw Error("Sharesheet is only supported on mobile");
 
   const normalized = text.trim();
   if (normalized.length === 0) throw Error("Text is empty");
-  
+
   return sharesheetShareText(normalized);
 }
 
 /**
  * Copy text to clipboard
- * 
- * @param text 
- * @returns 
+ *
+ * @param text
+ * @returns
  */
 export function copyToClipboard(text: string): Promise<void> {
   const normalized = text.trim();
   if (normalized.length === 0) throw Error("Text is empty");
-  
+
   return navigator.clipboard.writeText(text);
 }
 
 /**
  * Send a system notification
  * If permissions have not been granted for sending notifications, request them.
- * 
- * @param title 
- * @param body 
+ *
+ * @param title
+ * @param body
  */
 export async function enqueueNotification(title: string, body: string) {
   try {
@@ -77,16 +77,20 @@ export async function enqueueNotification(title: string, body: string) {
     if (!hasPermission) {
       const permission = await requestPermission();
 
-      if(permission !== "granted") 
-        throw new Error("Permission to create notifications denied");
+      if (permission !== "granted") throw new Error("Permission to create notifications denied");
     }
 
     sendNotification({ title, body });
-  } catch(e) {
+  } catch (e) {
     console.error("Failed to enqueue notification");
   }
 }
 
+/**
+ * Is app running on mobile?
+ *
+ * @returns
+ */
 export function isMobile(): boolean {
   const p = platform();
   return p === "android" || p === "ios";
@@ -94,9 +98,9 @@ export function isMobile(): boolean {
 
 /**
  * Convert file to data url
- * 
- * @param file file
- * @returns 
+ *
+ * @param file
+ * @returns
  */
 export async function fileToDataUrl(file: File): Promise<string> {
   const reader = new FileReader();
