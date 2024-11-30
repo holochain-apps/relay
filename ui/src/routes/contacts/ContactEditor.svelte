@@ -10,6 +10,7 @@
   import { t } from "$lib/translations";
   import { copyToClipboard, handleFileChange, isMobile, shareText } from "$lib/utils";
   import { RelayStore } from "$store/RelayStore";
+  import toast from "svelte-french-toast";
 
   // Silly thing to get around typescript issues with sveltekit-i18n
   const tAny = t as any;
@@ -94,6 +95,28 @@
     } else {
       editing = false;
     }
+  }
+
+  async function copyPrivateConversationInviteCodeForContact() {
+    const inviteCode = await contact?.privateConversation?.makeInviteCodeForAgent(contact.publicKeyB64);
+    
+    if(!inviteCode) {
+      toast.error("Failed to copy invite code");
+      return;
+    }
+
+    copyToClipboard(inviteCode);
+  }
+
+  async function sharePrivateConversationInviteCodeForContact() {
+    const inviteCode = await contact?.privateConversation?.makeInviteCodeForAgent(contact.publicKeyB64);
+    
+    if(!inviteCode) {
+      toast.error("Failed to share invite code");
+      return;
+    }
+
+    shareText(inviteCode);
   }
 </script>
 
@@ -234,10 +257,7 @@
         <div class="flex justify-center">
           <Button
             moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
-            onClick={() =>
-              copyToClipboard(
-                contact?.privateConversation?.makeInviteCodeForAgent(contact?.publicKeyB64) || "",
-              )}
+            onClick={() => copyPrivateConversationInviteCodeForContact()}
           >
             <SvgIcon icon="copy" size="20" color="%23FD3524" moreClasses="mr-2" />
             {$t("contacts.copy_invite_code")}
@@ -245,10 +265,7 @@
           {#if isMobile()}
             <Button
               moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
-              onClick={() =>
-                shareText(
-                  contact?.privateConversation?.makeInviteCodeForAgent(contact?.publicKeyB64) || "",
-                )}
+              onClick={() => sharePrivateConversationInviteCodeForContact()}
             >
               <SvgIcon icon="copy" size="20" color="%23FD3524" moreClasses="mr-2" />
               <strong>{$t("contacts.share_invite_code")}</strong>
