@@ -8,22 +8,15 @@
   import { t } from "$lib/translations";
   import { ProfileCreateStore } from "$store/ProfileCreateStore";
   import HiddenFileInput from "$lib/HiddenFileInput.svelte";
-  import type { ProfilesStore } from "@holochain-open-dev/profiles";
   import toast from "svelte-french-toast";
 
-  const profilesStoreContext: { getStore: () => ProfilesStore } = getContext("profilesStore");
-  let profilesStore = profilesStoreContext.getStore();
+  const profileCreateStoreContext: { getStore: () => ProfileCreateStore } =
+    getContext("profileCreateStore");
+  let profileCreateStore = profileCreateStoreContext.getStore();
 
-  async function createAccount() {
+  async function create() {
     try {
-      await profilesStore.client.createProfile({
-        nickname: `${$ProfileCreateStore.firstName} ${$ProfileCreateStore.lastName}`,
-        fields: {
-          avatar: $ProfileCreateStore.avatar,
-          firstName: $ProfileCreateStore.firstName,
-          lastName: $ProfileCreateStore.lastName,
-        },
-      });
+      await profileCreateStore.create();
       goto("/welcome");
     } catch (e) {
       console.error("Failed to create profile", e);
@@ -42,7 +35,7 @@
   <HiddenFileInput
     accept="image/*"
     id="avatarInput"
-    on:change={(e) => ProfileCreateStore.update((current) => ({ ...current, avatar: e.detail }))}
+    on:change={(e) => profileCreateStore.updateAvatar(e.detail)}
   />
 
   <!-- Label styled as a big clickable icon -->
@@ -50,9 +43,9 @@
     for="avatarInput"
     class="file-icon-label bg-secondary-300 hover:bg-secondary-400 flex h-32 w-32 cursor-pointer items-center justify-center overflow-hidden rounded-full"
   >
-    {#if $ProfileCreateStore.avatar}
+    {#if $profileCreateStore.avatar}
       <img
-        src={$ProfileCreateStore.avatar}
+        src={$profileCreateStore.avatar}
         alt="Avatar"
         class="h-32 w-32 rounded-full object-cover"
       />
@@ -63,7 +56,7 @@
 </div>
 
 <div class="items-right flex w-full justify-end pr-4">
-  <Button on:click={() => createAccount()}>
+  <Button on:click={() => create()}>
     <SvgIcon icon="hand" size="20" color={$modeCurrent ? "white" : "%23FD3524"} />
     <strong class="ml-2">{$t("common.jump_in")}</strong>
   </Button>

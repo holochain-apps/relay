@@ -11,6 +11,7 @@
   import toast, { Toaster } from "svelte-french-toast";
   import { handleLinkClick, initLightDarkModeSwitcher } from "$lib/utils";
   import "../app.postcss";
+  import { ProfileCreateStore } from "$store/ProfileCreateStore";
 
   const ROLE_NAME = "relay";
   const ZOME_NAME = "relay";
@@ -20,6 +21,7 @@
   let relayStore: RelayStore;
   let connected = false;
   let profilesStore: ProfilesStore | null = null;
+  let profileCreateStore: ProfileCreateStore;
 
   let appHeight: number;
 
@@ -56,6 +58,7 @@
       // Setup stores
       let profilesClient = new ProfilesClient(client, ROLE_NAME);
       profilesStore = new ProfilesStore(profilesClient);
+      profileCreateStore = new ProfileCreateStore(profilesStore);
       relayClient = new RelayDnaClient(client, profilesStore, ROLE_NAME, ZOME_NAME);
       relayStore = new RelayStore(relayClient);
       await relayStore.initialize();
@@ -91,6 +94,10 @@
 
   setContext("profilesStore", {
     getStore: () => profilesStore,
+  });
+
+  setContext("profileCreateStore", {
+    getStore: () => profileCreateStore,
   });
 
   setContext("relayStore", {
