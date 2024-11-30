@@ -268,7 +268,7 @@ export class RelayDnaClient {
 
   /********* Contacts **********/
 
-  public async getAllContacts() {
+  async getAllContacts() {
     return this.client.callZome({
       role_name: this.roleName,
       zome_name: this.zomeName,
@@ -277,7 +277,7 @@ export class RelayDnaClient {
     });
   }
 
-  public async createContact(contact: Contact) {
+  async createContact(contact: Contact) {
     return this.client.callZome({
       role_name: this.roleName,
       zome_name: this.zomeName,
@@ -291,7 +291,7 @@ export class RelayDnaClient {
     });
   }
 
-  public async updateContact(contact: Contact) {
+  async updateContact(contact: Contact) {
     return this.client.callZome({
       role_name: this.roleName,
       zome_name: this.zomeName,
