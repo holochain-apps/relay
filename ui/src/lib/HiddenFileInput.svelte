@@ -1,11 +1,15 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  const dispatch = createEventDispatcher<{change: string}>();
+  import { createEventDispatcher } from "svelte";
+  const dispatch = createEventDispatcher<{ change: string }>();
 
   export let accept: string;
   export let id: string;
 
-  function convertImageToDataUrl(img: HTMLImageElement, maxWidth: number = 300, maxHeight: number = 300): string {
+  function convertImageToDataUrl(
+    img: HTMLImageElement,
+    maxWidth: number = 300,
+    maxHeight: number = 300,
+  ): string {
     let width = img.width;
     let height = img.height;
 
@@ -32,7 +36,7 @@
     // Convert canvas data to data url
     return canvas.toDataURL();
   }
-  
+
   function handleFileChange(event: Event, callback: (imageData: string) => void) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
@@ -57,7 +61,6 @@
       reader.readAsDataURL(file);
     }
   }
-
 </script>
 
 <input
@@ -65,9 +68,8 @@
   {accept}
   {id}
   class="hidden"
-  on:change={(event) => 
+  on:change={(event) =>
     handleFileChange(event, (imageData) => {
       dispatch("change", imageData);
-    })
-  }
+    })}
 />
