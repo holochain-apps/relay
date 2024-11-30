@@ -89,7 +89,7 @@ export class RelayClient {
         const cell = c[CellType.Cloned];
 
         try {
-          const configRecord = await this._getConfig(cell.cell_id);
+          const configRecord = await this.getConfig(cell.cell_id);
 
           const config = configRecord ? configRecord.entry : { title: cell.name, image: "" };
 
@@ -108,7 +108,7 @@ export class RelayClient {
     image: string,
     privacy: Privacy,
   ): Promise<ConversationCellAndConfig | null> {
-    return this._cloneConversation(
+    return this.cloneConversation(
       new Date().getTime(),
       title,
       image,
@@ -119,7 +119,7 @@ export class RelayClient {
 
   async joinConversation(invitation: Invitation): Promise<ConversationCellAndConfig | null> {
     // we don't have the image at join time, it get's loaded later
-    return this._cloneConversation(
+    return this.cloneConversation(
       invitation.created,
       invitation.title,
       "",
@@ -130,7 +130,7 @@ export class RelayClient {
     );
   }
 
-  async _cloneConversation(
+  private async cloneConversation(
     created: number,
     title: string,
     image: string,
@@ -157,10 +157,10 @@ export class RelayClient {
       });
 
       if (!networkSeed) {
-        await this._setConfig({ title, image }, cell.cell_id);
+        await this.setConfig({ title, image }, cell.cell_id);
       }
 
-      await this._setMyProfileForConversation(cell.cell_id);
+      await this.setMyProfileForConversation(cell.cell_id);
       const convoCellAndConfig: ConversationCellAndConfig = { cell, config: { title, image } };
       this.conversations[conversationId] = convoCellAndConfig;
       return convoCellAndConfig;
@@ -170,19 +170,7 @@ export class RelayClient {
     }
   }
 
-  public async getAllMessages(
-    conversationId: string,
-    buckets: Array<number>,
-  ): Promise<Array<MessageRecord>> {
-    return this.client.callZome({
-      cell_id: this.conversations[conversationId].cell.cell_id,
-      zome_name: this.zomeName,
-      fn_name: "get_messages_for_buckets",
-      payload: buckets,
-    });
-  }
-
-  public async getMessageHashes(
+  async getMessageHashes(
     conversationId: string,
     bucket: number,
     count: number,
@@ -195,7 +183,7 @@ export class RelayClient {
     });
   }
 
-  public async getMessageEntries(
+  async getMessageEntries(
     conversationId: string,
     hashes: Array<ActionHash>,
   ): Promise<Array<MessageRecord>> {
@@ -207,7 +195,7 @@ export class RelayClient {
     });
   }
 
-  public async getAllAgents(conversationId: string): Promise<{ [key: AgentPubKeyB64]: Profile }> {
+  async getAllAgents(conversationId: string): Promise<{ [key: AgentPubKeyB64]: Profile }> {
     const cellId = this.conversations[conversationId].cell.cell_id;
 
     const agentsResponse = await this.client.callZome({
@@ -237,7 +225,7 @@ export class RelayClient {
     );
   }
 
-  async _setConfig(config: Config, cellId: CellId): Promise<null> {
+  async setConfig(config: Config, cellId: CellId): Promise<null> {
     return this.client.callZome({
       cell_id: cellId,
       zome_name: this.zomeName,
@@ -246,7 +234,7 @@ export class RelayClient {
     });
   }
 
-  async _getConfig(id: CellId | string): Promise<EntryRecord<Config> | undefined> {
+  async getConfig(id: CellId | string): Promise<EntryRecord<Config> | undefined> {
     const cellId = typeof id === "string" ? this.conversations[id].cell.cell_id : id;
 
     const config = await this.client.callZome({
@@ -258,7 +246,7 @@ export class RelayClient {
     return config ? new EntryRecord(config) : undefined;
   }
 
-  public async sendMessage(
+  async sendMessage(
     conversationId: string,
     content: string,
     bucket: number,
@@ -277,7 +265,7 @@ export class RelayClient {
     return new EntryRecord(message);
   }
 
-  async _setMyProfileForConversation(cellId: CellId): Promise<null> {
+  private async setMyProfileForConversation(cellId: CellId): Promise<null> {
     const myProfile = get(this.profilesStore.myProfile);
     const myProfileValue =
       myProfile && myProfile.status === "complete" && (myProfile.value as EntryRecord<Profile>);
@@ -291,7 +279,7 @@ export class RelayClient {
     });
   }
 
-  public async generateMembraneProofForAgent(
+  async generateMembraneProofForAgent(
     conversationId: string,
     forAgent: AgentPubKey,
     role: number = 0,

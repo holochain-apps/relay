@@ -307,7 +307,7 @@ export class ConversationStore {
   }
 
   async getConfig() {
-    const config = await this.relayStore.client._getConfig(this.data.id);
+    const config = await this.relayStore.client.getConfig(this.data.id);
     if (config) {
       this.conversation.update((c) => {
         c.config = { ...config.entry };
@@ -541,7 +541,7 @@ export class ConversationStore {
 
   async updateConfig(config: Config) {
     const cellAndConfig = this.relayStore.client.conversations[this.id];
-    await this.relayStore.client._setConfig(config, cellAndConfig.cell.cell_id);
+    await this.relayStore.client.setConfig(config, cellAndConfig.cell.cell_id);
     this.conversation.update((conversation) => ({ ...conversation, config }));
   }
 

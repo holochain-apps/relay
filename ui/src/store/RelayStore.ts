@@ -34,10 +34,6 @@ export class RelayStore {
     this.conversations = writable([]);
   }
 
-  get contactData() {
-    return get(this.contacts);
-  }
-
   get conversationsData() {
     return get(this.conversations);
   }
@@ -46,7 +42,7 @@ export class RelayStore {
     await this.client.initConversations();
 
     for (const conversation of Object.values(this.client.conversations)) {
-      await this._addConversation(conversation);
+      await this.addConversation(conversation);
     }
 
     await this.fetchAllContacts();
@@ -99,7 +95,7 @@ export class RelayStore {
     });
   }
 
-  async _addConversation(convoCellAndConfig: ConversationCellAndConfig) {
+  private async addConversation(convoCellAndConfig: ConversationCellAndConfig) {
     if (!this.client) return;
     const properties: Properties = decode(
       convoCellAndConfig.cell.dna_modifiers.properties,
@@ -146,7 +142,7 @@ export class RelayStore {
     if (!this.client) return null;
     const convoCellAndConfig = await this.client.createConversation(title, image, privacy);
     if (convoCellAndConfig) {
-      const conversationStore = await this._addConversation(convoCellAndConfig);
+      const conversationStore = await this.addConversation(convoCellAndConfig);
       if (conversationStore) {
         if (initialContacts.length > 0) {
           conversationStore.addContacts(initialContacts);
@@ -161,7 +157,7 @@ export class RelayStore {
     if (!this.client) return null;
     const convoCellAndConfig = await this.client.joinConversation(invitation);
     if (convoCellAndConfig) {
-      return await this._addConversation(convoCellAndConfig);
+      return await this.addConversation(convoCellAndConfig);
     }
     return null;
   }
@@ -175,7 +171,7 @@ export class RelayStore {
     return foundConversation;
   }
 
-  getConversationByCellDnaHash(cellDnaHash: DnaHash): ConversationStore | undefined {
+  private getConversationByCellDnaHash(cellDnaHash: DnaHash): ConversationStore | undefined {
     let foundConversation;
     this.conversations.subscribe((conversations) => {
       foundConversation = conversations.find((conversation) =>
@@ -187,7 +183,7 @@ export class RelayStore {
   }
 
   /***** Contacts ******/
-  async fetchAllContacts() {
+  private async fetchAllContacts() {
     const contactRecords = await this.client.getAllContacts();
     this.contacts.set(
       contactRecords.map((contactRecord: any) => {
