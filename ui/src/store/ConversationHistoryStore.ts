@@ -13,7 +13,7 @@ export class ConversationHistoryStore {
   constructor(conversationId: DnaHashB64, currentBucketIndex: number) {
     this.conversationId = conversationId;
     this.buckets = range(0, currentBucketIndex + 1).map(
-      (i) => new ConversationHistoryBucketStore(this.conversationId, i)
+      (i) => new ConversationHistoryBucketStore(this.conversationId, i),
     );
   }
 
@@ -25,10 +25,7 @@ export class ConversationHistoryStore {
    * @param startingBucketIndex - The bucket index to start searching from
    * @returns Array of selected bucket indices in descending order
    */
-  getBucketsForMessageCount(
-    targetMessagesCount: number,
-    startingBucketIndex: number
-  ): number[] {
+  getBucketsForMessageCount(targetMessagesCount: number, startingBucketIndex: number): number[] {
     const selectedIndexes: Array<number> = [];
 
     let i = startingBucketIndex;
@@ -40,21 +37,6 @@ export class ConversationHistoryStore {
     }
 
     return selectedIndexes;
-  }
-
-  /**
-   * Create bucket at index if it does not exist.
-   *
-   * @param i index of bucket
-   * @returns
-   */
-  ensure(i: number) {
-    if (this.buckets[i]) return;
-
-    this.buckets[i] = new ConversationHistoryBucketStore(
-      this.conversationId,
-      i
-    );
   }
 
   /**
@@ -79,5 +61,17 @@ export class ConversationHistoryStore {
     this.ensure(message.bucket);
 
     this.buckets[message.bucket].add([message.hash]);
+  }
+
+  /**
+   * Create bucket at index if it does not exist.
+   *
+   * @param i index of bucket
+   * @returns
+   */
+  private ensure(i: number) {
+    if (this.buckets[i]) return;
+
+    this.buckets[i] = new ConversationHistoryBucketStore(this.conversationId, i);
   }
 }

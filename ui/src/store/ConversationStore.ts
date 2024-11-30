@@ -32,7 +32,7 @@ import { copyToClipboard, fileToDataUrl, shareText } from "$lib/utils";
 import { persisted, type Persisted } from "@square/svelte-store";
 import toast from "svelte-french-toast";
 import { page } from "$app/stores";
-import { BUCKET_RANGE_MS, TARGET_MESSAGES_COUNT } from '../config';
+import { BUCKET_RANGE_MS, TARGET_MESSAGES_COUNT } from "../config";
 
 export class ConversationStore {
   public conversation: Writable<Conversation>;
@@ -53,7 +53,10 @@ export class ConversationStore {
   ) {
     const messages: Messages = {};
 
-    this.history = new ConversationHistoryStore(encodeHashToBase64(this.cellId[0]), this.currentBucketIndex());
+    this.history = new ConversationHistoryStore(
+      encodeHashToBase64(this.cellId[0]),
+      this.currentBucketIndex(),
+    );
 
     this.conversation = writable({
       id,
@@ -93,16 +96,21 @@ export class ConversationStore {
    * Load the most recent page of messages that has not already been loaded
    */
   async loadMessagesLatestPage() {
-    await this.loadMessageSetFrom(this.oldestBucketIndexLoaded ? this.oldestBucketIndexLoaded : this.currentBucketIndex());
+    await this.loadMessageSetFrom(
+      this.oldestBucketIndexLoaded ? this.oldestBucketIndexLoaded : this.currentBucketIndex(),
+    );
   }
 
   // looks in the history starting at a bucket number for hashes, and retrieves all
   // the actual messages in that bucket as well as any earlier buckets necessary
   // such that at least TARGET_MESSAGES_COUNT messages.
-  async loadMessageSetFrom(bucketIndex: number): Promise<number | undefined> {
-    const bucketIndexes = this.history.getBucketsForMessageCount(TARGET_MESSAGES_COUNT, bucketIndex);
+  private async loadMessageSetFrom(bucketIndex: number): Promise<number | undefined> {
+    const bucketIndexes = this.history.getBucketsForMessageCount(
+      TARGET_MESSAGES_COUNT,
+      bucketIndex,
+    );
 
-    if(bucketIndexes.length === 0) return undefined;
+    if (bucketIndexes.length === 0) return undefined;
 
     await Promise.allSettled(bucketIndexes.map((i) => this.loadMessagesForBucket(i)));
 
@@ -131,7 +139,8 @@ export class ConversationStore {
    * Public joining code for a conversation
    */
   get publicInviteCode() {
-    if(this.data.privacy !== Privacy.Public) throw new Error("Cannot generate public invite code for private conversation");
+    if (this.data.privacy !== Privacy.Public)
+      throw new Error("Cannot generate public invite code for private conversation");
 
     return Base64.fromUint8Array(
       encode({
@@ -140,47 +149,43 @@ export class ConversationStore {
         privacy: this.data.privacy,
         progenitor: this.data.progenitor,
         title: this.title,
-      } as Invitation)
+      } as Invitation),
     );
   }
 
   private async makeInviteCodeForAgent(publicKeyB64: string) {
     if (this.data.privacy === Privacy.Public) return this.publicInviteCode;
 
-      const membraneProof = await this.relayStore.client.generateMembraneProofForAgent(
-        this.data.id,
-        decodeHashFromBase64(publicKeyB64),
-      );
+    const membraneProof = await this.relayStore.client.generateMembraneProofForAgent(
+      this.data.id,
+      decodeHashFromBase64(publicKeyB64),
+    );
 
-      // The name of the conversation we are inviting to should be our name + # of other people invited
-      let myProfile = get(this.relayStore.client.profilesStore.myProfile);
-      const profileData =
-        myProfile.status === "complete" ? myProfile.value?.entry : undefined;
-      let title =
-        (profileData?.fields.firstName || "") +
-        " " +
-        profileData?.fields.lastName;
-      if (this.invitedContactKeys.length > 1) {
-        title = `${title} + ${this.invitedContactKeys.length - 1}`;
-      }
+    // The name of the conversation we are inviting to should be our name + # of other people invited
+    let myProfile = get(this.relayStore.client.profilesStore.myProfile);
+    const profileData = myProfile.status === "complete" ? myProfile.value?.entry : undefined;
+    let title = (profileData?.fields.firstName || "") + " " + profileData?.fields.lastName;
+    if (this.invitedContactKeys.length > 1) {
+      title = `${title} + ${this.invitedContactKeys.length - 1}`;
+    }
 
-      return Base64.fromUint8Array(
-        encode({
-          created: this.created,
-          progenitor: this.data.progenitor,
-          privacy: this.data.privacy,
-          proof: membraneProof,
-          networkSeed: this.data.id,
-          title,
-        } as Invitation)
-      );
+    return Base64.fromUint8Array(
+      encode({
+        created: this.created,
+        progenitor: this.data.progenitor,
+        privacy: this.data.privacy,
+        proof: membraneProof,
+        networkSeed: this.data.id,
+        title,
+      } as Invitation),
+    );
   }
 
   async shareInviteCodeForAgent(publicKeyB64: AgentPubKeyB64) {
     try {
       const code = await this.makeInviteCodeForAgent(publicKeyB64);
       await shareText(code);
-    } catch(e) {
+    } catch (e) {
       console.error("Failed to makeInviteCodeForAgent", e);
       toast.error(get(t)("conversations.unable_to_create_code"));
     }
@@ -190,7 +195,7 @@ export class ConversationStore {
     try {
       const code = await this.makeInviteCodeForAgent(publicKeyB64);
       await copyToClipboard(code);
-    } catch(e) {
+    } catch (e) {
       console.error("Failed to makeInviteCodeForAgent", e);
       toast.error(get(t)("conversations.unable_to_create_code"));
     }
@@ -202,7 +207,7 @@ export class ConversationStore {
     return isEmpty(currentValue) ? [] : currentValue;
   }
 
-  get invitedContacts() {
+  private get invitedContacts() {
     const contacts = get(this.relayStore.contacts);
     return this.invitedContactKeys.map((contactKey) =>
       contacts.find((contact) => contact.publicKeyB64 === contactKey),
@@ -214,9 +219,7 @@ export class ConversationStore {
   }
 
   get open() {
-    return (
-      get(page).url.pathname === `/conversations/${get(this.conversation).id}`
-    );
+    return get(page).url.pathname === `/conversations/${get(this.conversation).id}`;
   }
 
   get unread() {
@@ -228,19 +231,19 @@ export class ConversationStore {
   }
 
   /**
-   * return the list of agents that have joined the conversation, 
-   * checking the relayStore for contacts and using the contact info first 
+   * return the list of agents that have joined the conversation,
+   * checking the relayStore for contacts and using the contact info first
    * and if that doesn't exist using the agent profile
    *
-   * @param includeInvited 
-   * @returns 
+   * @param includeInvited
+   * @returns
    */
   memberList(includeInvited = false) {
     const joinedAgents = this.data.agentProfiles;
     const contacts = get(this.relayStore.contacts);
 
     let agentPubKeysB64 = Object.keys(joinedAgents);
-    if(includeInvited) {
+    if (includeInvited) {
       agentPubKeysB64 = uniq([...agentPubKeysB64, ...this.invitedContactKeys]);
     }
 
@@ -315,16 +318,12 @@ export class ConversationStore {
     return null;
   }
 
-  async loadMessagesForBucket(b: number) {
+  private async loadMessagesForBucket(b: number) {
     try {
       const newMessages: { [key: string]: Message } = this.data.messages;
       let bucket = this.history.getBucket(b);
       const count = bucket.count;
-      const messageHashes = await this.relayStore.client.getMessageHashes(
-        this.data.id,
-        b,
-        count,
-      );
+      const messageHashes = await this.relayStore.client.getMessageHashes(this.data.id, b, count);
 
       const messageHashesB64 = messageHashes.map((h) => encodeHashToBase64(h));
       const missingHashes = bucket.missingHashes(messageHashesB64);
@@ -339,8 +338,10 @@ export class ConversationStore {
       });
 
       if (hashesToLoad.length > 0) {
-        const messageRecords: Array<MessageRecord> =
-          await this.relayStore.client.getMessageEntries(this.data.id, hashesToLoad);
+        const messageRecords: Array<MessageRecord> = await this.relayStore.client.getMessageEntries(
+          this.data.id,
+          hashesToLoad,
+        );
         if (hashesToLoad.length != messageRecords.length) {
           console.log("Warning: not all requested hashes were loaded");
         }
@@ -403,12 +404,12 @@ export class ConversationStore {
     return [];
   }
 
-  bucketFromTimestamp(timestamp: number): number {
+  private bucketFromTimestamp(timestamp: number): number {
     const diff = timestamp - this.created;
     return Math.round(diff / BUCKET_RANGE_MS);
   }
 
-  bucketFromDate(date: Date): number {
+  private bucketFromDate(date: Date): number {
     return this.bucketFromTimestamp(date.getTime());
   }
 
@@ -488,7 +489,7 @@ export class ConversationStore {
     }
   }
 
-  updateMessage(oldMessage: Message, newMessage: Message): void {
+  private updateMessage(oldMessage: Message, newMessage: Message): void {
     this.conversation.update((conversation) => {
       const messages = { ...conversation.messages };
       delete messages[oldMessage.hash];
@@ -562,7 +563,7 @@ export class ConversationStore {
     this.status.update((data) => ({ ...data, unread: false }));
   }
 
-  markAsUnread() {
+  private markAsUnread() {
     // Only mark conversation as unread if user is *not* currently viewing conversation
     if (this.open) return;
 
