@@ -114,7 +114,7 @@
     isHovering = false;
   }
 
-  function toggleMenu() {
+  function toggleMenu(e: MouseEvent) {
     menuOpen = menuOpen === 0 ? (e.currentTarget as HTMLElement).getBoundingClientRect().y : 0;
   }
 
