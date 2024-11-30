@@ -202,7 +202,7 @@
     }
   }
 
-  async function sendMessage(e: SubmitEvent) {
+  async function sendMessage() {
     if (conversation && (newMessageText.trim() || $newMessageImages.length > 0)) {
       conversation.sendMessage(myPubKeyB64, newMessageText, $newMessageImages);
       newMessageText = ""; // Clear input after sending
@@ -210,7 +210,6 @@
       setTimeout(scrollToBottom, 100);
       newMessageInput.focus();
     }
-    e.preventDefault();
   }
 
   async function handleImagesSelected(event: Event) {
@@ -498,7 +497,7 @@
     </div>
   </div>
   <div class="bg-tertiary-500 dark:bg-secondary-500 w-full flex-shrink-0 p-2">
-    <form class="flex" method="POST" on:submit={sendMessage}>
+    <form class="flex" method="POST" on:submit|preventDefault={sendMessage}>
       <input
         type="file"
         accept="image/jpeg, image/png, image/gif"
