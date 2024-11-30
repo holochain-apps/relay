@@ -7,16 +7,11 @@
   import Header from "$lib/Header.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$lib/translations";
-  import {
-    copyToClipboard,
-    handleFileChange,
-    isMobile,
-    MIN_TITLE_LENGTH,
-    shareText,
-  } from "$lib/utils";
+  import { copyToClipboard, handleFileChange, isMobile, shareText } from "$lib/utils";
   import type { RelayStore } from "$store/RelayStore";
   import { Privacy, type Config } from "../../../../types";
   import Button from "$lib/Button.svelte";
+  import { MIN_TITLE_LENGTH } from "../../../../config";
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
   const tAny = t as any;
@@ -223,8 +218,7 @@
               <span class="ml-4 flex-1 text-sm">{contact.firstName + " " + contact.lastName}</span>
               <button
                 class="variant-filled-tertiary flex items-center justify-center rounded-2xl p-2 px-3 text-sm font-bold"
-                on:click={() =>
-                  conversation.copyInviteCodeForAgent(contact.publicKeyB64)}
+                on:click={() => conversation.copyInviteCodeForAgent(contact.publicKeyB64)}
               >
                 <SvgIcon icon="copy" size="18" color="%23FD3524" moreClasses="mr-2" />
                 {$t("conversations.copy_invite")}
@@ -232,8 +226,7 @@
               {#if isMobile()}
                 <button
                   class="variant-filled-tertiary flex items-center justify-center rounded-2xl p-2 px-3 text-sm font-bold"
-                  on:click={() =>
-                    conversation.shareInviteCodeForAgent(contact.publicKeyB64)}
+                  on:click={() => conversation.shareInviteCodeForAgent(contact.publicKeyB64)}
                 >
                   <SvgIcon icon="share" size="18" color="%23FD3524" moreClasses="mr-2" />
                 </button>
