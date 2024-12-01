@@ -5,14 +5,10 @@ export class ConversationHistoryBucketStore {
   /// Hashes of messages in the bucket
   public hashes: Persisted<Set<ActionHashB64>>;
 
-  constructor(
-    conversationId: DnaHashB64,
-    bucketIndex: number,
-    hashes: Array<ActionHashB64> = []
-  ) {
+  constructor(conversationId: DnaHashB64, bucket: number, hashes: Array<ActionHashB64> = []) {
     this.hashes = persisted(
       new Set(hashes),
-      `CONVERSATIONS.${conversationId}.BUCKETS.${bucketIndex}.HASHES`
+      `CONVERSATIONS.${conversationId}.BUCKETS.${bucket}.HASHES`,
     );
   }
 

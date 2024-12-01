@@ -38,7 +38,7 @@ export class ConversationStore {
   public conversation: Writable<Conversation>;
   public history: ConversationHistoryStore;
   public status: Persisted<LocalConversationStatus>;
-  public oldestBucketIndexLoaded: number | undefined;
+  public oldestBucketLoaded: number | undefined;
   public lastMessage: Writable<Message | null>;
   private fileStorageClient: FileStorageClient;
 
@@ -55,7 +55,7 @@ export class ConversationStore {
 
     this.history = new ConversationHistoryStore(
       encodeHashToBase64(this.cellId[0]),
-      this.currentBucketIndex(),
+      this.currentBucket(),
     );
 
     this.conversation = writable({
@@ -89,7 +89,7 @@ export class ConversationStore {
    * Load the page of messages for the current time
    */
   async loadMessagesCurrentPage() {
-    await this.loadMessageSetFrom(this.currentBucketIndex());
+    await this.loadMessageSetFrom(this.currentBucket());
   }
 
   /**
@@ -97,24 +97,24 @@ export class ConversationStore {
    */
   async loadMessagesLatestPage() {
     await this.loadMessageSetFrom(
-      this.oldestBucketIndexLoaded ? this.oldestBucketIndexLoaded : this.currentBucketIndex(),
+      this.oldestBucketLoaded ? this.oldestBucketLoaded : this.currentBucket(),
     );
   }
 
   // looks in the history starting at a bucket number for hashes, and retrieves all
   // the actual messages in that bucket as well as any earlier buckets necessary
   // such that at least TARGET_MESSAGES_COUNT messages.
-  private async loadMessageSetFrom(bucketIndex: number): Promise<number | undefined> {
-    const bucketIndexes = this.history.getBucketsForMessageCount(
+  private async loadMessageSetFrom(currentBucket: number): Promise<number | undefined> {
+    const currentBuckets = this.history.getBucketsForMessageCount(
       TARGET_MESSAGES_COUNT,
-      bucketIndex,
+      currentBucket,
     );
 
-    if (bucketIndexes.length === 0) return undefined;
+    if (currentBuckets.length === 0) return undefined;
 
-    await Promise.allSettled(bucketIndexes.map((i) => this.loadMessagesForBucket(i)));
+    await Promise.allSettled(currentBuckets.map((i) => this.loadMessagesForBucket(i)));
 
-    this.oldestBucketIndexLoaded = bucketIndex - bucketIndexes.length + 1;
+    this.oldestBucketLoaded = currentBucket - currentBuckets.length + 1;
   }
 
   async loadAgents() {
@@ -413,7 +413,7 @@ export class ConversationStore {
     return this.bucketFromTimestamp(date.getTime());
   }
 
-  currentBucketIndex(): number {
+  currentBucket(): number {
     return this.bucketFromDate(new Date());
   }
 

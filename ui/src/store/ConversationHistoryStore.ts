@@ -10,9 +10,9 @@ export class ConversationHistoryStore {
   /**
    * A List of buckets for a given conversation (i.e. a clone of the relay cell)
    */
-  constructor(conversationId: DnaHashB64, currentBucketIndex: number) {
+  constructor(conversationId: DnaHashB64, currentBucket: number) {
     this.conversationId = conversationId;
-    this.buckets = range(0, currentBucketIndex + 1).map(
+    this.buckets = range(0, currentBucket + 1).map(
       (i) => new ConversationHistoryBucketStore(this.conversationId, i),
     );
   }
@@ -22,15 +22,15 @@ export class ConversationHistoryStore {
    * @param targetMessagesCount - The target number of messages contained within all included buckets.
    *  The total number of messages will be *less* than the targetMessagesCount,
    *  unless a single bucket contains more messages than the targetMessagesCount.
-   * @param startingBucketIndex - The bucket index to start searching from
+   * @param startingBucket - The bucket index to start searching from
    * @returns Array of selected bucket indices in descending order
    */
-  getBucketsForMessageCount(targetMessagesCount: number, startingBucketIndex: number): number[] {
+  getBucketsForMessageCount(targetMessagesCount: number, startingBucket: number): number[] {
     const selectedIndexes: Array<number> = [];
 
-    let i = startingBucketIndex;
+    let i = startingBucket;
     let count = 0;
-    for (let i = startingBucketIndex; i >= 0; i--) {
+    for (let i = startingBucket; i >= 0; i--) {
       selectedIndexes.push(i);
       if (this.buckets[i]) count += this.buckets[i].count;
       if (count >= targetMessagesCount) break;
