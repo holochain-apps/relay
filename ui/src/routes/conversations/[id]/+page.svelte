@@ -12,7 +12,7 @@
   import Button from "$lib/Button.svelte";
   import Header from "$lib/Header.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
-  import { t } from "$lib/translations";
+  import { t } from "$translations";
   import { copyToClipboard, isMobile, linkify, sanitizeHTML, shareText } from "$lib/utils";
   import { RelayStore } from "$store/RelayStore";
   import { Privacy, type Conversation, type Message, type Image } from "../../../types";
@@ -92,6 +92,12 @@
   }
   const debouncedHandleResize = debounce(handleResize, 100);
 
+  const checkForData = () => {
+    checkForAgents();
+    checkForConfig();
+    checkForMessages();
+  };
+
   onMount(() => {
     if (!conversation) {
       goto("/conversations");
@@ -101,9 +107,7 @@
         // messages = c.messages;
         numMembers = Object.values(agentProfiles).length;
       });
-      checkForAgents();
-      checkForConfig();
-      checkForMessages();
+      checkForData();
       conversationContainer.addEventListener("scroll", handleScroll);
       window.addEventListener("resize", debouncedHandleResize);
       newMessageInput.focus();
@@ -202,7 +206,7 @@
     }
   }
 
-  async function sendMessage(e: SubmitEvent) {
+  async function sendMessage() {
     if (conversation && (newMessageText.trim() || $newMessageImages.length > 0)) {
       conversation.sendMessage(myPubKeyB64, newMessageText, $newMessageImages);
       newMessageText = ""; // Clear input after sending
@@ -210,7 +214,6 @@
       setTimeout(scrollToBottom, 100);
       newMessageInput.focus();
     }
-    e.preventDefault();
   }
 
   async function handleImagesSelected(event: Event) {
@@ -498,7 +501,7 @@
     </div>
   </div>
   <div class="bg-tertiary-500 dark:bg-secondary-500 w-full flex-shrink-0 p-2">
-    <form class="flex" method="POST" on:submit={sendMessage}>
+    <form class="flex" method="POST" on:submit|preventDefault={sendMessage}>
       <input
         type="file"
         accept="image/jpeg, image/png, image/gif"

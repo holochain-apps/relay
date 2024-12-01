@@ -5,13 +5,8 @@
   import Avatar from "$lib/Avatar.svelte";
   import Header from "$lib/Header.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
-  import { t } from "$lib/translations";
-
-  import { RelayClient } from "$store/RelayClient";
+  import { t } from "$translations";
   import { RelayStore } from "$store/RelayStore";
-
-  const relayClientContext: { getClient: () => RelayClient } = getContext("relayClient");
-  let relayClient = relayClientContext.getClient();
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext("relayStore");
   let relayStore = relayStoreContext.getStore();
@@ -23,7 +18,7 @@
 
 <Header>
   <button on:click={() => goto("/account")}>
-    <Avatar size={24} agentPubKey={relayClient.myPubKey} />
+    <Avatar size={24} agentPubKey={relayStore.myPubKey} />
   </button>
 
   <button on:click={() => goto("/create")} class="absolute right-4">
@@ -40,7 +35,7 @@
 
 <footer class="flex w-full justify-between gap-4 px-10 pb-10">
   <button
-    class="flex h-24 w-28 flex-col items-center rounded-2xl bg-tertiary-500 py-2 text-xs disabled:opacity-50 dark:bg-secondary-500"
+    class="bg-tertiary-500 dark:bg-secondary-500 flex h-24 w-28 flex-col items-center rounded-2xl py-2 text-xs disabled:opacity-50"
     on:click={() => goto("/conversations/join")}
   >
     <SvgIcon
@@ -53,7 +48,7 @@
   </button>
 
   <button
-    class="flex h-24 w-28 flex-col items-center rounded-2xl bg-tertiary-500 py-2 text-xs disabled:opacity-50 dark:bg-secondary-500"
+    class="bg-tertiary-500 dark:bg-secondary-500 flex h-24 w-28 flex-col items-center rounded-2xl py-2 text-xs disabled:opacity-50"
     on:click={() => goto("/contacts/new")}
   >
     <SvgIcon
@@ -66,7 +61,7 @@
   </button>
 
   <button
-    class="flex h-24 w-28 flex-col items-center rounded-2xl bg-tertiary-500 py-2 text-xs disabled:opacity-50 dark:bg-secondary-500"
+    class="bg-tertiary-500 dark:bg-secondary-500 flex h-24 w-28 flex-col items-center rounded-2xl py-2 text-xs disabled:opacity-50"
     on:click={() => goto("/conversations/new")}
   >
     <SvgIcon

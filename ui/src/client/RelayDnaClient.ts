@@ -27,10 +27,10 @@ import type {
   Privacy,
 } from "../types";
 
-export class RelayClient {
+export class RelayDnaClient {
   // conversations is a map of string to ClonedCell
   conversations: { [key: string]: ConversationCellAndConfig } = {};
-  myPubKeyB64: AgentPubKeyB64;
+  public myPubKeyB64: AgentPubKeyB64;
 
   constructor(
     public client: AppClient,
@@ -38,41 +38,11 @@ export class RelayClient {
     public roleName: string,
     public zomeName: string,
   ) {
-    this.myPubKeyB64 = encodeHashToBase64(this.client.myPubKey);
+    this.myPubKeyB64 = encodeHashToBase64(this.myPubKey);
   }
 
   get myPubKey(): AgentPubKey {
     return this.client.myPubKey;
-  }
-
-  async createProfile(firstName: string, lastName: string, avatar: string): Promise<Profile> {
-    return this.client.callZome({
-      role_name: this.roleName,
-      zome_name: "profiles",
-      fn_name: "create_profile",
-      payload: { nickname: firstName + " " + lastName, fields: { avatar, firstName, lastName } },
-    });
-  }
-
-  async updateProfile(firstName: string, lastName: string, avatar: string): Promise<Profile> {
-    const profile = await this.client.callZome({
-      role_name: this.roleName,
-      zome_name: "profiles",
-      fn_name: "update_profile",
-      payload: { nickname: firstName + " " + lastName, fields: { avatar, firstName, lastName } },
-    });
-
-    // Update profile in every conversation I am a part of
-    Object.values(this.conversations).forEach(async (conversation) => {
-      await this.client.callZome({
-        cell_id: conversation.cell.cell_id,
-        zome_name: "profiles",
-        fn_name: "update_profile",
-        payload: { nickname: firstName + " " + lastName, fields: { avatar, firstName, lastName } },
-      });
-    });
-
-    return profile;
   }
 
   /********* Conversations **********/
@@ -284,7 +254,7 @@ export class RelayClient {
 
     const membraneProof = await this.client.callZome({
       cell_id: conversation.cell.cell_id,
-      zome_name: "profiles",
+      zome_name: "relay",
       fn_name: "generate_membrane_proof",
       payload: {
         conversation_id: conversation.cell.dna_modifiers.network_seed,
@@ -298,7 +268,7 @@ export class RelayClient {
 
   /********* Contacts **********/
 
-  public async getAllContacts() {
+  async getAllContacts() {
     return this.client.callZome({
       role_name: this.roleName,
       zome_name: this.zomeName,
@@ -307,7 +277,7 @@ export class RelayClient {
     });
   }
 
-  public async createContact(contact: Contact) {
+  async createContact(contact: Contact) {
     return this.client.callZome({
       role_name: this.roleName,
       zome_name: this.zomeName,
@@ -321,7 +291,7 @@ export class RelayClient {
     });
   }
 
-  public async updateContact(contact: Contact) {
+  async updateContact(contact: Contact) {
     return this.client.callZome({
       role_name: this.roleName,
       zome_name: this.zomeName,

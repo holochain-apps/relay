@@ -12,7 +12,7 @@ import {
 } from "@holochain/client";
 import { ContactStore } from "./ContactStore";
 import { ConversationStore } from "./ConversationStore";
-import { RelayClient } from "$store/RelayClient";
+import { RelayDnaClient } from "../clients/RelayDnaClient";
 import type {
   Contact,
   Image,
@@ -28,10 +28,14 @@ import { enqueueNotification, isMobile } from "$lib/utils";
 export class RelayStore {
   public contacts: Writable<ContactStore[]>;
   public conversations: Writable<ConversationStore[]>;
+  public myPubKey: AgentPubKey;
+  public myPubKeyB64: AgentPubKeyB64;
 
-  constructor(public client: RelayClient) {
+  constructor(public client: RelayDnaClient) {
     this.contacts = writable([]);
     this.conversations = writable([]);
+    this.myPubKey = this.client.myPubKey;
+    this.myPubKeyB64 = this.client.myPubKeyB64;
   }
 
   get conversationsData() {

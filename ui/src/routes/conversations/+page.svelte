@@ -3,7 +3,7 @@
   import { getContext } from "svelte";
   import { derived, get } from "svelte/store";
   import { goto } from "$app/navigation";
-  import { t } from "$lib/translations";
+  import { t } from "$translations";
   import Avatar from "$lib/Avatar.svelte";
   import Header from "$lib/Header.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
@@ -42,7 +42,7 @@
   <div class="relative mb-3 mt-5 flex w-full">
     <input
       type="text"
-      class="text-md h-12 w-full rounded-full border-0 !bg-tertiary-500 pl-10 pr-4 dark:!bg-secondary-500 dark:text-tertiary-500"
+      class="text-md !bg-tertiary-500 dark:!bg-secondary-500 dark:text-tertiary-500 h-12 w-full rounded-full border-0 pl-10 pr-4"
       placeholder={$t("conversations.search_placeholder")}
       bind:value={search}
     />
@@ -56,7 +56,7 @@
   <ul class="flex-1">
     {#if hasArchive}
       <li
-        class="flex items-center rounded-lg py-2 hover:bg-tertiary-500 dark:hover:bg-secondary-500"
+        class="hover:bg-tertiary-500 dark:hover:bg-secondary-500 flex items-center rounded-lg py-2"
       >
         <button on:click={() => goto("/conversations/archive")} class="flex w-full items-center">
           <SvgIcon

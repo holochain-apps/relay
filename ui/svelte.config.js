@@ -16,6 +16,8 @@ const config = {
 
     alias: {
       $store: "./src/store",
+      $client: './src/client',
+      $translations: './src/translations',
     },
   },
 };

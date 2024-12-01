@@ -7,13 +7,9 @@
   import Button from "$lib/Button.svelte";
   import Header from "$lib/Header.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
-  import { t } from "$lib/translations";
-  import { RelayClient } from "$store/RelayClient";
+  import { t } from "$translations";
   import { RelayStore } from "$store/RelayStore";
   import type { Invitation } from "../../../types";
-
-  const relayClientContext: { getClient: () => RelayClient } = getContext("relayClient");
-  let relayClient = relayClientContext.getClient();
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext("relayStore");
   let relayStore = relayStoreContext.getStore();
@@ -22,8 +18,7 @@
   let joining = false;
   let error = false;
 
-  async function joinConversation(e: SubmitEvent) {
-    e.preventDefault();
+  async function joinConversation() {
     joining = true;
     try {
       const msgpack = Base64.toUint8Array(inviteCode);
@@ -52,18 +47,18 @@
   <h1 class="flex-1 text-center">{$t("conversations.join_conversation")}</h1>
 </Header>
 
-<form on:submit={joinConversation} class="contents">
+<form on:submit|preventDefault={joinConversation} class="contents">
   <div class="container mx-auto flex grow flex-col items-start justify-center px-10">
     <h1 class="h1">{$t("conversations.enter_invite_code")}</h1>
     <input
-      class="mt-2 w-full overflow-hidden text-ellipsis border-none bg-surface-900 pl-0.5 outline-none focus:outline-none focus:ring-0"
+      class="bg-surface-900 mt-2 w-full overflow-hidden text-ellipsis border-none pl-0.5 outline-none focus:outline-none focus:ring-0"
       type="text"
       placeholder="e.g. hLBjb252ZXJzYXRpb25OYW1lq0..."
       name="inviteCode"
       bind:value={inviteCode}
     />
     {#if error}
-      <p class="mt-2 text-sm text-error-500">{$t("conversations.error_joining")}</p>
+      <p class="text-error-500 mt-2 text-sm">{$t("conversations.error_joining")}</p>
     {/if}
   </div>
 
