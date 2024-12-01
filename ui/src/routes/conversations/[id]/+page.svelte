@@ -92,6 +92,12 @@
   }
   const debouncedHandleResize = debounce(handleResize, 100);
 
+  const checkForData = () => {
+    checkForAgents();
+    checkForConfig();
+    checkForMessages();
+  };
+
   onMount(() => {
     if (!conversation) {
       goto("/conversations");
@@ -101,9 +107,7 @@
         // messages = c.messages;
         numMembers = Object.values(agentProfiles).length;
       });
-      checkForAgents();
-      checkForConfig();
-      checkForMessages();
+      checkForData();
       conversationContainer.addEventListener("scroll", handleScroll);
       window.addEventListener("resize", debouncedHandleResize);
       newMessageInput.focus();
