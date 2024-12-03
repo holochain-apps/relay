@@ -105,7 +105,7 @@ export class ConversationStore {
   // the actual messages in that bucket as well as any earlier buckets necessary
   // such that at least TARGET_MESSAGES_COUNT messages.
   private async loadMessageSetFrom(currentBucket: number): Promise<number | undefined> {
-    const currentBuckets = this.history.getBucketsForMessageCount(
+    const currentBuckets = await this.history.getBucketsForMessageCount(
       TARGET_MESSAGES_COUNT,
       currentBucket,
     );
@@ -322,11 +322,11 @@ export class ConversationStore {
     try {
       const newMessages: { [key: string]: Message } = this.data.messages;
       let bucket = this.history.getBucket(b);
-      const count = bucket.count;
+      const count = await bucket.count.load();
       const messageHashes = await this.relayStore.client.getMessageHashes(this.data.id, b, count);
 
       const messageHashesB64 = messageHashes.map((h) => encodeHashToBase64(h));
-      const missingHashes = bucket.missingHashes(messageHashesB64);
+      const missingHashes = await bucket.missingHashes(messageHashesB64);
       if (missingHashes.length > 0) {
         this.markAsUnread();
         bucket.add(missingHashes);

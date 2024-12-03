@@ -1,19 +1,19 @@
 import type { ActionHashB64, DnaHashB64 } from "@holochain/client";
-import { persisted, type Persisted, get } from "@square/svelte-store";
+import { persisted, type Persisted, derived, type Loadable, get } from "@square/svelte-store";
 
 export class ConversationHistoryBucketStore {
   /// Hashes of messages in the bucket
   public hashes: Persisted<Set<ActionHashB64>>;
+
+  /// Size of bucket
+  public count: Loadable<number>;
 
   constructor(conversationId: DnaHashB64, bucket: number, hashes: Array<ActionHashB64> = []) {
     this.hashes = persisted(
       new Set(hashes),
       `CONVERSATIONS.${conversationId}.BUCKETS.${bucket}.HASHES`,
     );
-  }
-
-  get count(): number {
-    return get(this.hashes).size;
+    this.count = derived(this.hashes, ($hashes) => ($hashes ? $hashes.size : 0));
   }
 
   add(hashes: Array<ActionHashB64>): boolean {
@@ -24,7 +24,8 @@ export class ConversationHistoryBucketStore {
     return sizeChanged;
   }
 
-  missingHashes(hashes: Array<ActionHashB64>): Array<ActionHashB64> {
+  async missingHashes(hashes: Array<ActionHashB64>): Promise<Array<ActionHashB64>> {
+    await this.hashes.load();
     const s = new Set(hashes);
     const missing = Array.from(s.difference(get(this.hashes)));
 

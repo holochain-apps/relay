@@ -2,6 +2,7 @@ import { type DnaHashB64 } from "@holochain/client";
 import type { Message } from "../types";
 import { ConversationHistoryBucketStore } from "./ConversationHistoryBucketStore";
 import { range } from "lodash-es";
+import { get } from "@square/svelte-store";
 
 export class ConversationHistoryStore {
   private conversationId: DnaHashB64;
@@ -25,15 +26,19 @@ export class ConversationHistoryStore {
    * @param startingBucket - The bucket index to start searching from
    * @returns Array of selected bucket indices in descending order
    */
-  getBucketsForMessageCount(targetMessagesCount: number, startingBucket: number): number[] {
+  async getBucketsForMessageCount(
+    targetMessagesCount: number,
+    startingBucket: number,
+  ): Promise<number[]> {
     const selectedIndexes: Array<number> = [];
 
     let i = startingBucket;
-    let count = 0;
+    let total = 0;
     for (let i = startingBucket; i >= 0; i--) {
       selectedIndexes.push(i);
-      if (this.buckets[i]) count += this.buckets[i].count;
-      if (count >= targetMessagesCount) break;
+      const bucketCount = await this.buckets[i].count.load();
+      if (this.buckets[i]) total += bucketCount;
+      if (total >= targetMessagesCount) break;
     }
 
     return selectedIndexes;
