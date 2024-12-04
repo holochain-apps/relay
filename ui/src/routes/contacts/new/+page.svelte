@@ -8,10 +8,10 @@
   import { scanStore } from "$store/ScanStore";
   import { isMobile } from "$lib/utils";
 
-  let agentPubKeyB64: string | null = null;
+  let agentPubKeyB64: string | undefined;
 
   function loadScanResult() {
-    agentPubKeyB64 = scanStore.readResult();
+    agentPubKeyB64 = scanStore.readResult() || undefined;
   }
   loadScanResult();
 </script>
@@ -30,4 +30,4 @@
   {/if}
 </Header>
 
-<ContactEditor editContactId={agentPubKeyB64} creating={true} />
+<ContactEditor {agentPubKeyB64} creating={true} />

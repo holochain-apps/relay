@@ -1,7 +1,5 @@
 <script lang="ts">
-  import {
-    AppWebsocket,
-  } from "@holochain/client";
+  import { AppWebsocket } from "@holochain/client";
   import { ProfilesClient, ProfilesStore } from "@holochain-open-dev/profiles";
   import { modeCurrent } from "@skeletonlabs/skeleton";
   import { onMount, setContext } from "svelte";
@@ -12,6 +10,7 @@
   import toast, { Toaster } from "svelte-french-toast";
   import { handleLinkClick, initLightDarkModeSwitcher } from "$lib/utils";
   import "../app.postcss";
+  import { AllContactsStore } from "$store/AllContactsStore";
 
   const ROLE_NAME = "relay";
   const ZOME_NAME = "relay";
@@ -19,6 +18,7 @@
   let client: AppWebsocket;
   let relayClient: RelayClient;
   let relayStore: RelayStore;
+  let contactsStore: AllContactsStore;
   let connected = false;
   let profilesStore: ProfilesStore | null = null;
 
@@ -32,7 +32,7 @@
   async function initHolochain() {
     try {
       console.log("__HC_LAUNCHER_ENV__ is", window.__HC_LAUNCHER_ENV__);
-      
+
       // Connect to holochain
       client = await AppWebsocket.connect({ defaultTimeout: 15000 });
 
@@ -59,6 +59,8 @@
       profilesStore = new ProfilesStore(profilesClient);
       relayClient = new RelayClient(client, profilesStore, ROLE_NAME, ZOME_NAME);
       relayStore = new RelayStore(relayClient);
+      contactsStore = new AllContactsStore(relayClient);
+      await contactsStore.initialize();
       await relayStore.initialize();
 
       connected = true;
@@ -72,7 +74,7 @@
   onMount(() => {
     initHolochain();
 
-    initLightDarkModeSwitcher()
+    initLightDarkModeSwitcher();
 
     setTimeout(updateAppHeight, 300);
     window.addEventListener("resize", updateAppHeight);
@@ -96,6 +98,14 @@
 
   setContext("relayStore", {
     getStore: () => relayStore,
+  });
+
+  setContext("contactsStore", {
+    getStore: () => contactsStore,
+  });
+
+  setContext("myPubKey", {
+    getMyPubKey: () => client.myPubKey,
   });
 </script>
 

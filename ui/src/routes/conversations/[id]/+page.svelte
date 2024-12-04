@@ -17,6 +17,7 @@
   import { RelayStore } from "$store/RelayStore";
   import { Privacy, type Conversation, type Message, type Image } from "../../../types";
   import LightboxImage from "$lib/LightboxImage.svelte";
+  import type { AllContactsStore } from "$store/AllContactsStore";
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
   const tAny = t as any;
@@ -25,6 +26,10 @@
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext("relayStore");
   let relayStore = relayStoreContext.getStore();
+
+  const contactsStoreContext: { getStore: () => AllContactsStore } = getContext("contactsStore");
+  let contactsStore = contactsStoreContext.getStore();
+
   let myPubKeyB64 = relayStore.client.myPubKeyB64;
 
   $: conversation = relayStore.getConversation(conversationId);
@@ -48,45 +53,41 @@
   const SCROLL_BOTTOM_THRESHOLD = 100; // How close to the bottom must the user be to consider it "at the bottom"
   const SCROLL_TOP_THRESHOLD = 300; // How close to the top must the user be to consider it "at the top"
 
-  const checkForAgents = () => {
-    conversation &&
-      conversation.fetchAgents().then((agentProfiles) => {
-        if (Object.values(agentProfiles).length < 2) {
-          agentTimeout = setTimeout(() => {
-            checkForAgents();
-          }, 2000);
-        }
-      });
+  const checkForAgents = async () => {
+    if (!conversation) return;
+
+    const agentProfiles = await conversation.loadAgents();
+    if (Object.values(agentProfiles).length < 2) {
+      agentTimeout = setTimeout(() => {
+        checkForAgents();
+      }, 2000);
+    }
   };
 
-  const checkForConfig = () => {
-    conversation &&
-      conversation.getConfig().then((config) => {
-        if (!config?.title) {
-          configTimeout = setTimeout(() => {
-            checkForConfig();
-          }, 2000);
-        }
-      });
+  const checkForConfig = async () => {
+    if (!conversation) return;
+
+    const config = await conversation.getConfig();
+    if (!config?.title) {
+      configTimeout = setTimeout(() => {
+        checkForConfig();
+      }, 2000);
+    }
   };
 
-  const checkForMessages = () => {
-    conversation &&
-      conversation.loadMessageSetFrom(conversation.currentBucket()).then(([_, hashes]) => {
-        // If this we aren't getting anything back and there are no messages loaded at all
-        // then keep trying as this is probably a no network, or a just joined situation
-        if (hashes.length == 0 && Object.keys(conversation.data.messages).length == 0) {
-          messageTimeout = setTimeout(() => {
-            checkForMessages();
-          }, 2000);
-        }
-      });
-  };
+  const checkForMessages = async () => {
+    if (!conversation) return;
 
-  const checkForData = () => {
-    checkForAgents();
-    checkForConfig();
-    checkForMessages();
+    // Fetch the current page of messages
+    await conversation.loadMessagesCurrentPage();
+
+    // If this we aren't getting anything back and there are no messages loaded at all
+    // then keep trying as this is probably a no network, or a just joined situation
+    if (Object.keys(conversation.data.messages).length === 0) {
+      messageTimeout = setTimeout(() => {
+        checkForMessages();
+      }, 2000);
+    }
   };
 
   function handleResize() {
@@ -105,20 +106,18 @@
         // messages = c.messages;
         numMembers = Object.values(agentProfiles).length;
       });
-      checkForData();
+      checkForAgents();
+      checkForConfig();
+      checkForMessages();
       conversationContainer.addEventListener("scroll", handleScroll);
       window.addEventListener("resize", debouncedHandleResize);
       newMessageInput.focus();
-      conversation.setOpen(true);
-      conversation.setUnread(false);
+      conversation.markAsRead();
     }
   });
 
   // Cleanup
   onDestroy(() => {
-    if (conversation) {
-      conversation.setOpen(false);
-    }
     unsubscribe && unsubscribe();
     clearTimeout(agentTimeout);
     clearTimeout(configTimeout);
@@ -144,15 +143,15 @@
           return;
         }
 
-        const contact = $contacts.find((c) => c.publicKeyB64 === message.authorKey);
+        const contactExtended = $contacts[message.authorKey];
 
         const displayMessage = {
           ...message,
           author:
-            contact?.firstName ||
+            contactExtended?.contact.first_name ||
             ($value as Conversation).agentProfiles[message.authorKey].fields.firstName,
           avatar:
-            contact?.avatar ||
+            contactExtended?.contact.avatar ||
             ($value as Conversation).agentProfiles[message.authorKey].fields.avatar,
         };
 
@@ -193,7 +192,7 @@
   const handleScroll = debounce(() => {
     const atTop = conversationContainer.scrollTop < SCROLL_TOP_THRESHOLD;
     if (!scrollAtTop && atTop && conversation) {
-      conversation.loadMessagesSet();
+      conversation.loadMessagesLatestPage();
     }
     scrollAtTop = atTop;
     scrollAtBottom =
@@ -354,23 +353,22 @@
             {#if conversation.allMembers.length === 1}
               <!-- A 1:1 conversation, so this is a pending connection -->
               <div
-                class="mx-8 mb-3 flex flex-col items-center rounded-xl bg-tertiary-500 p-4 dark:bg-secondary-500"
+                class="bg-tertiary-500 dark:bg-secondary-500 mx-8 mb-3 flex flex-col items-center rounded-xl p-4"
               >
                 <SvgIcon icon="handshake" size="36" color={$modeCurrent ? "%23232323" : "white"} />
-                <h1 class="mt-2 text-xl font-bold text-secondary-500 dark:text-tertiary-100">
+                <h1 class="text-secondary-500 dark:text-tertiary-100 mt-2 text-xl font-bold">
                   {$t("contacts.pending_connection_header")}
                 </h1>
-                <p class="mb-6 mt-4 text-center text-sm text-secondary-400 dark:text-tertiary-700">
+                <p class="text-secondary-400 dark:text-tertiary-700 mb-6 mt-4 text-center text-sm">
                   {$tAny("contacts.pending_connection_description", { name: conversation.title })}
                 </p>
                 <div class="flex justify-center">
                   <Button
                     moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
-                    onClick={() => {
-                      copyToClipboard(
-                        conversation.inviteCodeForAgent(conversation.allMembers[0]?.publicKeyB64),
-                      );
-                    }}
+                    on:click={() =>
+                      contactsStore.copyPrivateConversationInviteCode(
+                        conversation.allMembers[0]?.publicKeyB64,
+                      )}
                   >
                     <SvgIcon icon="copy" size="20" color="%23FD3524" moreClasses="mr-2" />
                     {$t("contacts.copy_invite_code")}
@@ -378,11 +376,10 @@
                   {#if isMobile()}
                     <Button
                       moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
-                      onClick={() => {
-                        shareText(
-                          conversation.inviteCodeForAgent(conversation.allMembers[0]?.publicKeyB64),
-                        );
-                      }}
+                      on:click={() =>
+                        contactsStore.sharePrivateConversationInviteCode(
+                          conversation.allMembers[0]?.publicKeyB64,
+                        )}
                     >
                       <SvgIcon icon="share" size="20" color="%23FD3524" moreClasses="mr-2" />
                       {$t("contacts.share_invite_code")}
@@ -391,11 +388,11 @@
                 </div>
               </div>
             {:else}
-              <p class="mx-10 mb-8 text-center text-xs text-secondary-500 dark:text-tertiary-500">
+              <p class="text-secondary-500 dark:text-tertiary-500 mx-10 mb-8 text-center text-xs">
                 {$t("conversations.share_personal_invitations")}
               </p>
               <Button
-                onClick={() => goto(`/conversations/${conversation.data.id}/details`)}
+                on:click={() => goto(`/conversations/${conversation.data.id}/details`)}
                 moreClasses="w-72 justify-center"
               >
                 <SvgIcon icon="ticket" size="24" color={$modeCurrent ? "white" : "%23FD3524"} />
@@ -404,11 +401,11 @@
             {/if}
           {:else}
             <!-- Public conversation, make it easy to copy invite code-->
-            <p class="mx-10 mb-8 text-center text-xs text-secondary-500 dark:text-tertiary-700">
+            <p class="text-secondary-500 dark:text-tertiary-700 mx-10 mb-8 text-center text-xs">
               {$t("conversations.share_invitation_code_msg")}
             </p>
             <Button
-              onClick={() => copyToClipboard(conversation.publicInviteCode)}
+              on:click={() => copyToClipboard(conversation.publicInviteCode)}
               moreClasses="w-64 justify-center variant-filled-tertiary"
             >
               <SvgIcon icon="copy" size="18" color="%23FD3524" />
@@ -416,7 +413,7 @@
             </Button>
             {#if isMobile()}
               <Button
-                onClick={() => shareText(conversation.publicInviteCode)}
+                on:click={() => shareText(conversation.publicInviteCode)}
                 moreClasses="w-64 justify-center variant-filled-tertiary"
               >
                 <SvgIcon icon="share" size="18" color="%23FD3524" />
@@ -432,7 +429,7 @@
               {@const fromMe = message.authorKey === myPubKeyB64}
               {#if message.header}
                 <li class="mb-3 mt-auto">
-                  <div class="text-center text-xs text-secondary-400 dark:text-secondary-300">
+                  <div class="text-secondary-400 dark:text-secondary-300 text-center text-xs">
                     {message.header}
                   </div>
                 </li>
@@ -458,7 +455,7 @@
                   {#if !message.hideDetails}
                     <span class="flex items-baseline {fromMe && 'flex-row-reverse opacity-80'}">
                       <span class="font-bold">{fromMe ? "You" : message.author}</span>
-                      <span class="mx-2 text-xxs"
+                      <span class="text-xxs mx-2"
                         ><Time timestamp={message.timestamp} format="h:mma" /></span
                       >
                     </span>
@@ -474,7 +471,7 @@
                           />
                         {:else if image.status === "loading" || image.status === "pending"}
                           <div
-                            class="mb-2 flex h-20 w-20 items-center justify-center bg-surface-800"
+                            class="bg-surface-800 mb-2 flex h-20 w-20 items-center justify-center"
                           >
                             <SvgIcon
                               icon="spinner"
@@ -484,7 +481,7 @@
                           </div>
                         {:else}
                           <div
-                            class="mb-2 flex h-20 w-20 items-center justify-center bg-surface-800"
+                            class="bg-surface-800 mb-2 flex h-20 w-20 items-center justify-center"
                           >
                             <SvgIcon
                               icon="x"
@@ -507,7 +504,7 @@
       {/if}
     </div>
   </div>
-  <div class="w-full flex-shrink-0 bg-tertiary-500 p-2 dark:bg-secondary-500">
+  <div class="bg-tertiary-500 dark:bg-secondary-500 w-full flex-shrink-0 p-2">
     <form class="flex" method="POST" on:submit={sendMessage}>
       <input
         type="file"
@@ -532,13 +529,13 @@
           type="text"
           bind:this={newMessageInput}
           bind:value={newMessageText}
-          class="w-full border-0 bg-tertiary-500 placeholder:text-sm placeholder:text-gray-400 focus:border-gray-500 focus:ring-0"
+          class="bg-tertiary-500 w-full border-0 placeholder:text-sm placeholder:text-gray-400 focus:border-gray-500 focus:ring-0"
           placeholder={$t("conversations.message_placeholder")}
         />
         <div class="flex flex-row px-4">
           {#each $newMessageImages as image, i}
             {#if image.status === "loading"}
-              <div class="mr-2 flex h-10 w-10 items-center justify-center bg-tertiary-500">
+              <div class="bg-tertiary-500 mr-2 flex h-10 w-10 items-center justify-center">
                 <SvgIcon icon="spinner" color="white" size="10" />
               </div>
             {:else}

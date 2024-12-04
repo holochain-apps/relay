@@ -86,14 +86,14 @@
       <!-- Action Buttons -->
       {#if needsPermission}
         <div class="mt-4">
-          <p class="mt-2 text-sm text-error-500">{$t("common.need_camera_permissions")}</p>
+          <p class="text-error-500 mt-2 text-sm">{$t("common.need_camera_permissions")}</p>
         </div>
       {/if}
 
       <div class="my-8 flex items-center justify-center space-x-4">
         <Button
           moreClasses="w-36 justify-center !variant-filled-tertiary dark:!variant-filled-secondary"
-          onClick={() => scanCancel()}
+          on:click={() => scanCancel()}
         >
           <strong>{$t("common.cancel")}</strong>
         </Button>
@@ -101,7 +101,7 @@
         {#if needsPermission}
           <Button
             moreClasses="w-36 justify-center !variant-filled-tertiary dark:!variant-filled-secondary"
-            onClick={() => {
+            on:click={() => {
               scanCancel();
               openAppSettings();
             }}

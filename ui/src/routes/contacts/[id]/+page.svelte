@@ -15,4 +15,4 @@
   </button>
 </Header>
 
-<ContactEditor editContactId={contactId} />
+<ContactEditor agentPubKeyB64={contactId} />

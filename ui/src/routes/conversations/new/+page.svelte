@@ -7,25 +7,31 @@
   import Header from "$lib/Header.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$lib/translations";
-  import { handleFileChange, MIN_TITLE_LENGTH } from "$lib/utils";
+  import { MIN_TITLE_LENGTH } from "../../../config";
   import { RelayStore } from "$store/RelayStore";
   import { Privacy } from "../../../types";
+  import HiddenFileInput from "$lib/HiddenFileInput.svelte";
+  import toast from "svelte-french-toast";
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext("relayStore");
   let relayStore = relayStoreContext.getStore();
 
   let title = "";
   let imageUrl = writable("");
-  let pendingCreate = false;
+  let creating = false;
 
-  async function createConversation(e: Event, privacy: Privacy) {
-    pendingCreate = true;
-    e.preventDefault();
-    const conversation = await relayStore.createConversation(title, get(imageUrl), privacy);
-    if (conversation) {
+  async function createConversation(privacy: Privacy) {
+    creating = true;
+
+    try {
+      const conversation = await relayStore.createConversation(title, get(imageUrl), privacy);
       goto(`/conversations/${conversation.data.id}`);
-      pendingCreate = false;
+    } catch (e) {
+      console.error("Failed to create conversation", e);
+      toast.error("Failed to create conversation");
     }
+
+    creating = false;
   }
 
   $: valid = title.trim().length >= MIN_TITLE_LENGTH;
@@ -39,19 +45,16 @@
 </Header>
 
 <div class="my-10 flex flex-col items-center justify-center">
-  <!-- Hidden file input -->
-  <input
-    type="file"
-    id="avatarInput"
+  <HiddenFileInput
     accept="image/jpeg, image/png, image/gif"
-    class="hidden"
-    on:change={(event) => handleFileChange(event, (imageData) => imageUrl.set(imageData))}
+    id="avatarInput"
+    on:change={(e) => imageUrl.set(e.detail)}
   />
 
   <!-- Label styled as a big clickable icon -->
   <label
     for="avatarInput"
-    class="file-icon-label flex h-32 w-32 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-tertiary-500 hover:bg-tertiary-600 dark:bg-secondary-500 dark:hover:bg-secondary-400"
+    class="file-icon-label bg-tertiary-500 hover:bg-tertiary-600 dark:bg-secondary-500 dark:hover:bg-secondary-400 flex h-32 w-32 cursor-pointer items-center justify-center overflow-hidden rounded-full"
   >
     {#if $imageUrl}
       <img src={$imageUrl} alt="Avatar" class="h-32 w-32 rounded-full object-cover" />
@@ -77,12 +80,10 @@
 <footer>
   <Button
     moreClasses="w-72 justify-center variant-filled-tertiary"
-    onClick={(e) => {
-      createConversation(e, Privacy.Public);
-    }}
-    disabled={!valid || pendingCreate}
+    on:click={() => createConversation(Privacy.Public)}
+    disabled={!valid || creating}
   >
-    {#if pendingCreate}
+    {#if creating}
       <SvgIcon icon="spinner" size="18" color={$modeCurrent ? "%232e2e2e" : "white"} />
     {/if}
     <strong class="ml-2">{$t("conversations.create_group")}</strong>
