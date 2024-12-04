@@ -28,11 +28,14 @@ import {
 } from "../types";
 import { ConversationHistoryStore } from "./ConversationHistoryStore";
 import pRetry from "p-retry";
-import { copyToClipboard, fileToDataUrl, shareText } from "$lib/utils";
 import { persisted, type Persisted } from "@square/svelte-store";
 import toast from "svelte-french-toast";
 import { page } from "$app/stores";
 import { BUCKET_RANGE_MS, TARGET_MESSAGES_COUNT } from "../config";
+import { fileToDataUrl } from "$lib/utils";
+
+export const MINUTES_IN_BUCKET = 60 * 24 * 1; // 1 day for now
+export const MIN_MESSAGES_LOAD = 20;
 
 export class ConversationStore {
   public conversation: Writable<Conversation>;
@@ -142,13 +145,21 @@ export class ConversationStore {
     if (this.data.privacy !== Privacy.Public)
       throw new Error("Cannot generate public invite code for private conversation");
 
+    // The name of the conversation we are inviting to should be our name + # of other people invited
+    let myProfile = get(this.relayStore.client.profilesStore.myProfile);
+    const profileData = myProfile.status === "complete" ? myProfile.value?.entry : undefined;
+    let title = (profileData?.fields.firstName || "") + " " + profileData?.fields.lastName;
+    if (this.invitedContactKeys.length > 1) {
+      title = `${title} + ${this.invitedContactKeys.length - 1}`;
+    }
+
     return Base64.fromUint8Array(
       encode({
         created: this.created,
         networkSeed: this.data.id,
         privacy: this.data.privacy,
         progenitor: this.data.progenitor,
-        title: this.title,
+        title,
       } as Invitation),
     );
   }
