@@ -30,6 +30,7 @@ import {
 import { MessageHistoryStore } from "./MessageHistoryStore";
 import pRetry from "p-retry";
 import { fileToDataUrl } from "$lib/utils";
+import toast from "svelte-french-toast";
 
 export const MINUTES_IN_BUCKET = 60 * 24 * 1; // 1 day for now
 export const MIN_MESSAGES_LOAD = 20;
@@ -175,7 +176,7 @@ export class ConversationStore {
       const msgpck = encode(invitation);
       return Base64.fromUint8Array(msgpck);
     } else {
-      alert(get(t)("conversations.unable_to_create_code"));
+      toast.error(get(t)("conversations.unable_to_create_code"));
       return "";
     }
   }

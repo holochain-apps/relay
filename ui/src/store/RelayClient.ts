@@ -155,9 +155,10 @@ export class RelayClient {
           },
         },
       });
+      const config: Config = { title, image };
 
       if (!networkSeed) {
-        await this._setConfig({ title, image }, cell.cell_id);
+        await this._setConfig(config, cell.cell_id);
       }
 
       await this._setMyProfileForConversation(cell.cell_id);
@@ -307,7 +308,7 @@ export class RelayClient {
 
       const r = await this.client.callZome({
         cell_id: conversation.cell.cell_id,
-        zome_name: "profiles",
+        zome_name: this.zomeName,
         fn_name: "generate_membrane_proof",
         payload: data,
       });
