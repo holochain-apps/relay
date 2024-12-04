@@ -10,11 +10,6 @@
   import { isMobile, sanitizeHTML } from "$lib/utils";
   import type { ConversationStore } from "$store/ConversationStore";
   import { Privacy } from "../types";
-  import type { AllContactsStore } from "$store/AllContactsStore";
-  import { getContext } from "svelte";
-
-  const contactsStoreContext: { getStore: () => AllContactsStore } = getContext("contactsStore");
-  let contactsStore = contactsStoreContext.getStore();
 
   export let store: ConversationStore;
   $: conversation = store.conversation;
@@ -132,8 +127,8 @@
 
   function archiveConversation() {
     store.toggleArchived();
-    isVisible = true
-    x.set(0)
+    isVisible = true;
+    x.set(0);
   }
 </script>
 
@@ -145,7 +140,7 @@
   >
     <a
       href="/conversations/{$conversation.id}"
-      class={`z-10 flex w-full min-w-0 flex-row items-center rounded-lg bg-surface-100 px-2 py-3 transition-transform duration-300 ease-in-out hover:bg-tertiary-400 dark:bg-surface-900 dark:hover:bg-secondary-500 ${isHovering && "bg-tertiary-400 dark:!bg-secondary-500"}`}
+      class={`bg-surface-100 hover:bg-tertiary-400 dark:bg-surface-900 dark:hover:bg-secondary-500 z-10 flex w-full min-w-0 flex-row items-center rounded-lg px-2 py-3 transition-transform duration-300 ease-in-out ${isHovering && "bg-tertiary-400 dark:!bg-secondary-500"}`}
       style="transform: translateX({-$x}px)"
       use:pan={{ delay: 10 }}
       on:pan={handlePan}
@@ -163,7 +158,7 @@
           {#if allMembers.length == 0}
             <!-- When you join a private conversation and it has not synced yet -->
             <span
-              class="flex h-10 w-10 items-center justify-center rounded-full bg-secondary-300 dark:bg-secondary-400"
+              class="bg-secondary-300 dark:bg-secondary-400 flex h-10 w-10 items-center justify-center rounded-full"
             >
               <SvgIcon icon="group" size="20" color="#ccc" />
             </span>
@@ -214,7 +209,7 @@
         />
       {:else}
         <span
-          class="flex h-10 w-10 items-center justify-center rounded-full bg-secondary-300 dark:bg-secondary-400"
+          class="bg-secondary-300 dark:bg-secondary-400 flex h-10 w-10 items-center justify-center rounded-full"
         >
           <SvgIcon icon="group" size="20" color="#ccc" />
         </span>
@@ -223,7 +218,7 @@
         <span class="text-base">{store.title}</span>
         <span class="flex min-w-0 items-center overflow-hidden text-ellipsis text-nowrap text-xs">
           {#if unread}
-            <span class="mr-2 inline-block h-2 w-2 rounded-full bg-primary-500"></span>
+            <span class="bg-primary-500 mr-2 inline-block h-2 w-2 rounded-full"></span>
           {/if}
           {#if $conversation.privacy === Privacy.Private && joinedMembers.length === 0 && allMembers.length === 1}
             <span class="text-secondary-400">{$t("conversations.unconfirmed")}</span>
@@ -231,14 +226,14 @@
             {lastMessageAuthor || ""}:&nbsp;
             {@html sanitizeHTML($lastMessage.content || "")}
             {#if $lastMessage.images.length > 0}
-              &nbsp;<span class="italic text-secondary-400"
+              &nbsp;<span class="text-secondary-400 italic"
                 >({$tAny("conversations.images", { count: $lastMessage.images.length })})</span
               >
             {/if}
           {/if}
         </span>
       </div>
-      <span class="relative flex flex-row items-center text-xs text-secondary-300">
+      <span class="text-secondary-300 relative flex flex-row items-center text-xs">
         <SvgIcon icon="person" size="8" color={$modeCurrent ? "#aaa" : "#ccc"} />
         <span class="ml-1">{Object.values($conversation.agentProfiles).length}</span>
       </span>
@@ -262,7 +257,7 @@
           : 'bg-primary-500'}"
       >
         <button
-          class="mr-2 flex flex-col items-center justify-center font-bold text-surface-100 dark:text-tertiary-100"
+          class="text-surface-100 dark:text-tertiary-100 mr-2 flex flex-col items-center justify-center font-bold"
           on:click={startArchive}
         >
           <SvgIcon icon="archive" size="20" color="white" moreClasses="" />
@@ -277,7 +272,7 @@
 
 {#if menuOpen > 0}
   <ul
-    class="absolute right-0 top-0 z-30 rounded-md border-2 bg-surface-100 p-2 shadow-md dark:bg-surface-900"
+    class="bg-surface-100 dark:bg-surface-900 absolute right-0 top-0 z-30 rounded-md border-2 p-2 shadow-md"
     style="top: {menuOpen + 22}px;"
     on:mouseover={handleHover}
     on:focus={handleHover}

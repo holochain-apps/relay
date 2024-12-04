@@ -49,7 +49,6 @@
   $: {
     try {
       if (agentPubKeyB64) {
-        console.log("trying to decode");
         agentPubKey = decodeHashFromBase64(agentPubKeyB64);
       }
     } catch (e) {
