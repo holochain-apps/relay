@@ -6,6 +6,7 @@ import {
 } from "@tauri-apps/plugin-notification";
 import { shareText as sharesheetShareText } from "@buildyourwebapp/tauri-plugin-sharesheet";
 import { platform } from "@tauri-apps/plugin-os";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { setModeCurrent } from "@skeletonlabs/skeleton";
 import { goto } from "$app/navigation";
 import { open } from "@tauri-apps/plugin-shell";
@@ -61,7 +62,7 @@ export function copyToClipboard(text: string): Promise<void> {
   const normalized = text.trim();
   if (normalized.length === 0) throw Error("Text is empty");
 
-  return navigator.clipboard.writeText(text);
+  return writeText(text);
 }
 
 /**

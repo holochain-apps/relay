@@ -11,7 +11,9 @@
   import { t } from "$lib/translations";
   import { RelayStore } from "$store/RelayStore";
   import { copyToClipboard, isMobile, shareText } from "$lib/utils";
-  import { type Contact, Privacy } from "../../../../types";
+  import { type ContactExtended, Privacy } from "../../../../types";
+  import type { AllContactsStore } from "$store/AllContactsStore";
+  import type { AgentPubKeyB64 } from "@holochain/client";
 
   const tAny = t as any;
 
@@ -20,41 +22,37 @@
   const relayStoreContext: { getStore: () => RelayStore } = getContext("relayStore");
   let relayStore = relayStoreContext.getStore();
 
+  const contactsStoreContext: { getStore: () => AllContactsStore } = getContext("contactsStore");
+  let contactsStore = contactsStoreContext.getStore();
+
   $: conversation = relayStore.getConversation(conversationId);
 
-  let selectedContacts = writable<Contact[]>([]);
+  let selectedContacts: AgentPubKeyB64[] = [];
   let search = "";
 
-  $: contacts = derived(relayStore.contacts, ($contacts) => {
-    const test = search.trim().toLowerCase();
-    return $contacts
-      .filter(
-        (c) =>
-          c.data.firstName.toLowerCase().includes(test) ||
-          c.data.lastName.toLowerCase().includes(test) ||
-          (test.length > 2 && c.data.publicKeyB64.toLowerCase().includes(test)),
-      )
-      .sort((a, b) => a.data.firstName.localeCompare(b.data.firstName));
-  });
+  /**
+   * Search contacts by name or public key
+   */
+  $: searchNormalized = search.trim().toLowerCase();
+  $: contacts = Object.values($contactsStore)
+    .filter(
+      (c: ContactExtended) =>
+        c.fullName.toLowerCase().includes(searchNormalized) ||
+        (searchNormalized.length > 2 && c.agentPubKeyB64.toLowerCase().includes(searchNormalized)),
+    )
+    .sort((a, b) => a.fullName.localeCompare(b.fullName));
 
-  function selectContact(publicKeyB64: string) {
-    const contact = $contacts.find((c) => c.data.publicKeyB64 === publicKeyB64);
-    if (contact) {
-      selectedContacts.update((currentContacts) => {
-        if (currentContacts.find((c) => c.publicKeyB64 === contact.data.publicKeyB64)) {
-          // If already selected then unselect
-          return currentContacts.filter((c) => c.publicKeyB64 !== contact.data.publicKeyB64);
-        } else {
-          // otherwise select the contact
-          return [...currentContacts, contact];
-        }
-      });
+  function toggleSelectContact(publicKey: string) {
+    if (selectedContacts.includes(publicKey)) {
+      selectedContacts = selectedContacts.filter((v) => v !== publicKey);
+    } else {
+      selectedContacts = [...selectedContacts, publicKey];
     }
   }
 
   async function addContactsToConversation() {
     if (conversation) {
-      conversation.addContacts($selectedContacts);
+      conversation.addContacts(selectedContacts);
       goto(`/conversations/${conversation.id}/details`);
     }
   }
@@ -122,7 +120,7 @@
         />
       </div>
 
-      {#if $contacts.length === 0}
+      {#if contacts.length === 0}
         <img
           src={$modeCurrent ? "/clear-skies-gray.png" : "/clear-skies-white.png"}
           alt="No contacts"
@@ -132,36 +130,35 @@
         <p class="text-center text-xs">{$t("create.no_contacts_text")}</p>
       {:else}
         <div class="w-full font-light">
-          {#each $contacts as contact, i}
-            {#if i === 0 || contact.firstName.charAt(0).toUpperCase() !== $contacts[i - 1].firstName
-                  .charAt(0)
-                  .toUpperCase()}
-              <p class="text-secondary-300 mb-1 mt-2 pl-0">{contact.firstName[0].toUpperCase()}</p>
+          {#each contacts as contactExtended, i}
+            {#if i === 0 || contactExtended.contact.first_name
+                .charAt(0)
+                .toUpperCase() !== contacts[i - 1].contact.first_name.charAt(0).toUpperCase()}
+              <p class="text-secondary-300 mb-1 mt-2 pl-0">
+                {contactExtended.contact.first_name[0].toUpperCase()}
+              </p>
             {/if}
-            {@const selected = $selectedContacts.find(
-              (c) => c.publicKeyB64 === contact.data.publicKeyB64,
-            )}
+            {@const selected = selectedContacts.find((c) => c === contactExtended.agentPubKeyB64)}
             {@const alreadyInvited = !!conversation.invitedContactKeys.find(
-              (k) => k === contact.data.publicKeyB64,
+              (k) => k === contactExtended.agentPubKeyB64,
             )}
             {@const alreadyInConversation = !!conversation
               .memberList()
-              .find((m) => m?.publicKeyB64 === contact.data.publicKeyB64)}
+              .find((m) => m?.publicKeyB64 === contactExtended.agentPubKeyB64)}
             <button
               class="-ml-1 mb-2 flex w-full items-center justify-between rounded-3xl p-2 {selected &&
                 'bg-tertiary-500 dark:bg-secondary-500'} dark:disabled:text-tertiary-700 font-normal disabled:font-light"
-              on:click={() => selectContact(contact.data.publicKeyB64)}
+              on:click={() => toggleSelectContact(contactExtended.agentPubKeyB64)}
               disabled={alreadyInConversation || alreadyInvited}
             >
               <Avatar
                 size={38}
-                image={contact.avatar}
-                agentPubKey={contact.publicKeyB64}
+                image={contactExtended.contact.avatar}
+                agentPubKey={contactExtended.contact.public_key}
                 moreClasses="mr-3"
               />
               <p class="text-secondary-500 dark:text-tertiary-100 flex-1 text-start">
-                {contact.firstName}
-                {contact.lastName}
+                {contactExtended.fullName}
               </p>
               {#if alreadyInConversation}
                 <span class="text-xs font-extralight">{$t("conversations.already_member")}</span>
@@ -174,7 +171,7 @@
           {/each}
         </div>
 
-        {#if $selectedContacts.length > 0}
+        {#if selectedContacts.length > 0}
           <button
             class="max-w-2/3 bg-primary-500 fixed bottom-5 right-5 flex items-center justify-center rounded-full border-0 py-1 pl-2 pr-4 text-white"
             on:click={() => addContactsToConversation()}
@@ -183,12 +180,12 @@
               class="bg-surface-500 text-primary-500 mr-2 flex h-9 w-9 items-center justify-center rounded-full text-sm font-extrabold"
             >
               <SvgIcon icon="person" size="12" color="%23FD3524" moreClasses="mr-1" />
-              {$selectedContacts.length}
+              {selectedContacts.length}
             </span>
             <div class="nowrap overflow-hidden text-ellipsis">
               <div class="text-md text-start">{$t("conversations.add_to_conversation")}</div>
               <div class="pb-1 text-start text-xs font-light">
-                with {$selectedContacts.map((c) => c.firstName).join(", ")}
+                with {selectedContacts.map((c) => $contactsStore[c].contact.first_name).join(", ")}
               </div>
             </div>
           </button>

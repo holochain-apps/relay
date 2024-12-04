@@ -10,6 +10,11 @@
   import { isMobile, sanitizeHTML } from "$lib/utils";
   import type { ConversationStore } from "$store/ConversationStore";
   import { Privacy } from "../types";
+  import type { AllContactsStore } from "$store/AllContactsStore";
+  import { getContext } from "svelte";
+
+  const contactsStoreContext: { getStore: () => AllContactsStore } = getContext("contactsStore");
+  let contactsStore = contactsStoreContext.getStore();
 
   export let store: ConversationStore;
   $: conversation = store.conversation;

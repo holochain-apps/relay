@@ -1,7 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import {
   CellType,
-  decodeHashFromBase64,
   encodeHashToBase64,
   type AgentPubKey,
   type AppClient,
@@ -10,6 +9,9 @@ import {
   type MembraneProof,
   type AgentPubKeyB64,
   type ActionHash,
+  type Record,
+  type ClonedCell,
+  type AppInfo,
 } from "@holochain/client";
 import { decode } from "@msgpack/msgpack";
 import { EntryRecord } from "@holochain-open-dev/utils";
@@ -17,7 +19,8 @@ import type { Profile, ProfilesStore } from "@holochain-open-dev/profiles";
 import { get } from "svelte/store";
 import type {
   Config,
-  Contact,
+  Contact2,
+  ContactRecord,
   ConversationCellAndConfig,
   ImageStruct,
   Invitation,
@@ -25,6 +28,7 @@ import type {
   Message,
   MessageRecord,
   Privacy,
+  UpdateContactInput,
 } from "../types";
 
 export class RelayClient {
@@ -101,6 +105,31 @@ export class RelayClient {
         }
       }
     }
+  }
+
+  async findClonedRelayCellInfoByName(
+    appInfo: AppInfo,
+    name: string,
+  ): Promise<ClonedCell | undefined> {
+    if (!appInfo) throw new Error("Failed to fetch app info");
+
+    const cellInfo = appInfo.cell_info[this.roleName].find(
+      /* @ts-ignore-next-line */
+      (c: CellInfo) => c[CellType.Cloned]?.name === name,
+    );
+
+    /* @ts-ignore-next-line */
+    return cellInfo ? cellInfo[CellType.Cloned] : undefined;
+  }
+
+  findCellIdByName(cellInfos: CellInfo[], name: string): CellId | undefined {
+    const cellInfo = cellInfos.find(
+      /* @ts-ignore-next-line */
+      (c: CellInfo) => c[CellType.Cloned]?.name === name,
+    );
+
+    /* @ts-ignore-next-line */
+    return cellInfo ? cellInfo[CellType.Cloned].cell_id : undefined;
   }
 
   async createConversation(
@@ -276,18 +305,16 @@ export class RelayClient {
   }
 
   async generateMembraneProofForAgent(
-    conversationId: string,
+    cellInfo: ClonedCell,
     forAgent: AgentPubKey,
     role: number = 0,
-  ): Promise<MembraneProof | undefined> {
-    const conversation = this.conversations[conversationId];
-
+  ): Promise<MembraneProof> {
     const membraneProof = await this.client.callZome({
-      cell_id: conversation.cell.cell_id,
-      zome_name: "profiles",
+      cell_id: cellInfo.cell_id,
+      zome_name: this.zomeName,
       fn_name: "generate_membrane_proof",
       payload: {
-        conversation_id: conversation.cell.dna_modifiers.network_seed,
+        conversation_id: cellInfo.dna_modifiers.network_seed,
         for_agent: forAgent,
         as_role: role,
       } as MembraneProofData,
@@ -298,7 +325,7 @@ export class RelayClient {
 
   /********* Contacts **********/
 
-  public async getAllContacts() {
+  public getAllContacts(): Promise<ContactRecord[]> {
     return this.client.callZome({
       role_name: this.roleName,
       zome_name: this.zomeName,
@@ -307,35 +334,21 @@ export class RelayClient {
     });
   }
 
-  public async createContact(contact: Contact) {
+  public async createContact(payload: Contact2): Promise<Record> {
     return this.client.callZome({
       role_name: this.roleName,
       zome_name: this.zomeName,
       fn_name: "create_contact",
-      payload: {
-        avatar: contact.avatar,
-        first_name: contact.firstName,
-        last_name: contact.lastName,
-        public_key: decodeHashFromBase64(contact.publicKeyB64),
-      },
+      payload,
     });
   }
 
-  public async updateContact(contact: Contact) {
+  public async updateContact(payload: UpdateContactInput): Promise<Record> {
     return this.client.callZome({
       role_name: this.roleName,
       zome_name: this.zomeName,
       fn_name: "update_contact",
-      payload: {
-        original_contact_hash: contact.originalActionHash,
-        previous_contact_hash: contact.currentActionHash,
-        updated_contact: {
-          avatar: contact.avatar,
-          first_name: contact.firstName,
-          last_name: contact.lastName,
-          public_key: decodeHashFromBase64(contact.publicKeyB64),
-        },
-      },
+      payload,
     });
   }
 }

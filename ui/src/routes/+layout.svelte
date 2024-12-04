@@ -10,6 +10,7 @@
   import toast, { Toaster } from "svelte-french-toast";
   import { handleLinkClick, initLightDarkModeSwitcher } from "$lib/utils";
   import "../app.postcss";
+  import { AllContactsStore } from "$store/AllContactsStore";
 
   const ROLE_NAME = "relay";
   const ZOME_NAME = "relay";
@@ -17,6 +18,7 @@
   let client: AppWebsocket;
   let relayClient: RelayClient;
   let relayStore: RelayStore;
+  let contactsStore: AllContactsStore;
   let connected = false;
   let profilesStore: ProfilesStore | null = null;
 
@@ -57,6 +59,8 @@
       profilesStore = new ProfilesStore(profilesClient);
       relayClient = new RelayClient(client, profilesStore, ROLE_NAME, ZOME_NAME);
       relayStore = new RelayStore(relayClient);
+      contactsStore = new AllContactsStore(relayClient);
+      await contactsStore.initialize();
       await relayStore.initialize();
 
       connected = true;
@@ -94,6 +98,14 @@
 
   setContext("relayStore", {
     getStore: () => relayStore,
+  });
+
+  setContext("contactsStore", {
+    getStore: () => contactsStore,
+  });
+
+  setContext("myPubKey", {
+    getMyPubKey: () => client.myPubKey,
   });
 </script>
 

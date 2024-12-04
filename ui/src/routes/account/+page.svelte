@@ -12,6 +12,7 @@
   import { ProfilesStore } from "@holochain-open-dev/profiles";
   import { get } from "svelte/store";
   import HiddenFileInput from "$lib/HiddenFileInput.svelte";
+  import { MIN_FIRST_NAME_LENGTH } from "$lib/constants";
 
   const relayClientContext: { getClient: () => RelayClient } = getContext("relayClient");
   let relayClient = relayClientContext.getClient();
@@ -22,8 +23,6 @@
   $: profileData = $prof?.status === "complete" ? $prof.value?.entry : undefined;
 
   const agentPublicKey64 = relayClient.myPubKeyB64;
-
-  const MIN_FIRST_NAME_LENGTH = 3;
 
   $: firstName = profileData?.fields.firstName || "";
   $: lastName = profileData?.fields.lastName || "";

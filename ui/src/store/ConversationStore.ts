@@ -153,54 +153,6 @@ export class ConversationStore {
     );
   }
 
-  private async makeInviteCodeForAgent(publicKeyB64: string) {
-    if (this.data.privacy === Privacy.Public) return this.publicInviteCode;
-
-    const membraneProof = await this.relayStore.client.generateMembraneProofForAgent(
-      this.data.id,
-      decodeHashFromBase64(publicKeyB64),
-    );
-
-    // The name of the conversation we are inviting to should be our name + # of other people invited
-    let myProfile = get(this.relayStore.client.profilesStore.myProfile);
-    const profileData = myProfile.status === "complete" ? myProfile.value?.entry : undefined;
-    let title = (profileData?.fields.firstName || "") + " " + profileData?.fields.lastName;
-    if (this.invitedContactKeys.length > 1) {
-      title = `${title} + ${this.invitedContactKeys.length - 1}`;
-    }
-
-    return Base64.fromUint8Array(
-      encode({
-        created: this.created,
-        progenitor: this.data.progenitor,
-        privacy: this.data.privacy,
-        proof: membraneProof,
-        networkSeed: this.data.id,
-        title,
-      } as Invitation),
-    );
-  }
-
-  async shareInviteCodeForAgent(publicKeyB64: AgentPubKeyB64) {
-    try {
-      const code = await this.makeInviteCodeForAgent(publicKeyB64);
-      await shareText(code);
-    } catch (e) {
-      console.error("Failed to makeInviteCodeForAgent", e);
-      toast.error(get(t)("conversations.unable_to_create_code"));
-    }
-  }
-
-  async copyInviteCodeForAgent(publicKeyB64: AgentPubKeyB64) {
-    try {
-      const code = await this.makeInviteCodeForAgent(publicKeyB64);
-      await copyToClipboard(code);
-    } catch (e) {
-      console.error("Failed to makeInviteCodeForAgent", e);
-      toast.error(get(t)("conversations.unable_to_create_code"));
-    }
-  }
-
   get invitedContactKeys(): string[] {
     if (this.data.privacy === Privacy.Public) return [];
     const currentValue = get(this.status).invitedContactKeys;
@@ -209,9 +161,7 @@ export class ConversationStore {
 
   private get invitedContacts() {
     const contacts = get(this.relayStore.contacts);
-    return this.invitedContactKeys.map((contactKey) =>
-      contacts.find((contact) => contact.publicKeyB64 === contactKey),
-    );
+    return this.invitedContactKeys.map((contactKey) => contacts[contactKey]);
   }
 
   get archived() {
@@ -254,14 +204,14 @@ export class ConversationStore {
       .filter((k) => k !== this.relayStore.client.myPubKeyB64)
       .map((agentKey) => {
         const agentProfile = joinedAgents[agentKey];
-        const contactProfile = contacts.find((contact) => contact.publicKeyB64 === agentKey);
+        const contactProfile = contacts[agentKey];
 
         return {
           publicKeyB64: agentKey,
-          avatar: contactProfile?.data.avatar || agentProfile?.fields.avatar,
-          firstName: contactProfile?.data.firstName || agentProfile?.fields.firstName,
-          lastName: contactProfile?.data.firstName
-            ? contactProfile?.data.lastName
+          avatar: contactProfile?.contact.avatar || agentProfile?.fields.avatar,
+          firstName: contactProfile?.contact.first_name || agentProfile?.fields.firstName,
+          lastName: contactProfile?.contact.first_name
+            ? contactProfile?.contact.last_name
             : agentProfile?.fields.lastName, // if any contact profile exists use that data
         };
       })
@@ -274,13 +224,13 @@ export class ConversationStore {
     return this.invitedContactKeys
       .filter((contactKey) => !joinedAgents[contactKey]) // filter out already joined agents
       .map((contactKey) => {
-        const contactProfile = contacts.find((contact) => contact.publicKeyB64 === contactKey);
+        const contactProfile = contacts[contactKey];
 
         return {
           publicKeyB64: contactKey,
-          avatar: contactProfile?.data.avatar,
-          firstName: contactProfile?.data.firstName,
-          lastName: contactProfile?.data.lastName,
+          avatar: contactProfile?.contact.avatar,
+          firstName: contactProfile?.contact.first_name,
+          lastName: contactProfile?.contact.last_name,
         };
       });
   }
@@ -546,12 +496,10 @@ export class ConversationStore {
   }
 
   // Invite more contacts to this private conversation
-  addContacts(invitedContacts: Contact[]) {
+  addContacts(invitedAgents: AgentPubKeyB64[]) {
     this.status.update((data) => ({
       ...data,
-      invitedContactKeys: this.invitedContactKeys.concat(
-        invitedContacts.map((c) => c.publicKeyB64),
-      ),
+      invitedContactKeys: [...this.invitedContactKeys, ...invitedAgents],
     }));
   }
 

@@ -17,6 +17,7 @@
   import { RelayStore } from "$store/RelayStore";
   import { Privacy, type Conversation, type Message, type Image } from "../../../types";
   import LightboxImage from "$lib/LightboxImage.svelte";
+  import type { AllContactsStore } from "$store/AllContactsStore";
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
   const tAny = t as any;
@@ -25,6 +26,10 @@
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext("relayStore");
   let relayStore = relayStoreContext.getStore();
+
+  const contactsStoreContext: { getStore: () => AllContactsStore } = getContext("contactsStore");
+  let contactsStore = contactsStoreContext.getStore();
+
   let myPubKeyB64 = relayStore.client.myPubKeyB64;
 
   $: conversation = relayStore.getConversation(conversationId);
@@ -138,15 +143,15 @@
           return;
         }
 
-        const contact = $contacts.find((c) => c.publicKeyB64 === message.authorKey);
+        const contactExtended = $contacts[message.authorKey];
 
         const displayMessage = {
           ...message,
           author:
-            contact?.firstName ||
+            contactExtended?.contact.first_name ||
             ($value as Conversation).agentProfiles[message.authorKey].fields.firstName,
           avatar:
-            contact?.avatar ||
+            contactExtended?.contact.avatar ||
             ($value as Conversation).agentProfiles[message.authorKey].fields.avatar,
         };
 
@@ -361,7 +366,9 @@
                   <Button
                     moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
                     on:click={() =>
-                      conversation.copyInviteCodeForAgent(conversation.allMembers[0]?.publicKeyB64)}
+                      contactsStore.copyPrivateConversationInviteCode(
+                        conversation.allMembers[0]?.publicKeyB64,
+                      )}
                   >
                     <SvgIcon icon="copy" size="20" color="%23FD3524" moreClasses="mr-2" />
                     {$t("contacts.copy_invite_code")}
@@ -370,7 +377,7 @@
                     <Button
                       moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
                       on:click={() =>
-                        conversation.shareInviteCodeForAgent(
+                        contactsStore.sharePrivateConversationInviteCode(
                           conversation.allMembers[0]?.publicKeyB64,
                         )}
                     >

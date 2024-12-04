@@ -12,6 +12,7 @@ import type {
   DeleteLink,
   MembraneProof,
   ClonedCell,
+  DnaHashB64,
 } from "@holochain/client";
 
 import type { Profile } from "@holochain-open-dev/profiles";
@@ -74,6 +75,34 @@ export interface Contact {
   publicKeyB64: AgentPubKeyB64;
 }
 
+export interface ContactExtended {
+  originalActionHash: ActionHash;
+  latestActionHash: ActionHash;
+  contact: Contact2;
+  privateConversationCellInfo: ClonedCell;
+  privateConversationId: DnaHashB64;
+  fullName: string;
+  agentPubKeyB64: AgentPubKeyB64;
+}
+
+export interface Contact2 {
+  public_key: AgentPubKey;
+  first_name: string;
+  last_name: string;
+  avatar: string;
+}
+
+export interface ContactRecord {
+  original_action: ActionHash;
+  signed_action: SignedActionHashed;
+  contact?: Contact2;
+}
+
+export interface UpdateContactInput {
+  original_contact_hash: ActionHash;
+  previous_contact_hash: ActionHash;
+  updated_contact: Contact2;
+}
 export interface MessageInput {
   content: string;
   bucket: number;

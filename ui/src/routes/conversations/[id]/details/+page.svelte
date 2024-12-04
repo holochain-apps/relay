@@ -13,6 +13,7 @@
   import Button from "$lib/Button.svelte";
   import { MIN_TITLE_LENGTH } from "../../../../config";
   import HiddenFileInput from "$lib/HiddenFileInput.svelte";
+  import type { AllContactsStore } from "$store/AllContactsStore";
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
   const tAny = t as any;
@@ -20,6 +21,10 @@
   $: conversationId = $page.params.id;
   const relayStoreContext: { getStore: () => RelayStore } = getContext("relayStore");
   let relayStore = relayStoreContext.getStore();
+
+  const contactsStoreContext: { getStore: () => AllContactsStore } = getContext("contactsStore");
+  let contactsStore = contactsStoreContext.getStore();
+
   const myPublicKey64 = relayStore.client.myPubKeyB64;
   $: conversation = relayStore.getConversation(conversationId);
 
@@ -215,7 +220,8 @@
               <span class="ml-4 flex-1 text-sm">{contact.firstName + " " + contact.lastName}</span>
               <button
                 class="variant-filled-tertiary flex items-center justify-center rounded-2xl p-2 px-3 text-sm font-bold"
-                on:click={() => conversation.copyInviteCodeForAgent(contact.publicKeyB64)}
+                on:click={() =>
+                  contactsStore.copyPrivateConversationInviteCode(contact.publicKeyB64)}
               >
                 <SvgIcon icon="copy" size="18" color="%23FD3524" moreClasses="mr-2" />
                 {$t("conversations.copy_invite")}
@@ -223,7 +229,8 @@
               {#if isMobile()}
                 <button
                   class="variant-filled-tertiary flex items-center justify-center rounded-2xl p-2 px-3 text-sm font-bold"
-                  on:click={() => conversation.shareInviteCodeForAgent(contact.publicKeyB64)}
+                  on:click={() =>
+                    contactsStore.sharePrivateConversationInviteCode(contact.publicKeyB64)}
                 >
                   <SvgIcon icon="share" size="18" color="%23FD3524" moreClasses="mr-2" />
                 </button>
