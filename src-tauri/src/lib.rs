@@ -129,7 +129,6 @@ async fn setup(handle: AppHandle) -> anyhow::Result<()> {
             .install_app(
                 String::from(APP_ID),
                 happ_bundle()?,
-                HashMap::new(),
                 None,
                 None,
                 Some(random_seed),
