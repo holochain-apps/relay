@@ -80,6 +80,37 @@
     })
   }
 
+  const downloadImage = (image: Image) => {
+    if (image.status != 'loaded') {
+      console.error('Image not loaded');
+      return;
+    }
+    if (!image.dataURL) {
+      console.error('Image dataURL is undefined');
+      return;
+    }
+    try {
+      const imageBytes = base64ToBytes(image.dataURL);
+      const blob: Blob = new Blob([imageBytes], { type: 'image/png' });
+      const link: HTMLAnchorElement = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = image.name;
+      link.click();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const base64ToBytes = (dataURL: string): Uint8Array => {
+    const imageBase64: string = dataURL.split(',')[1];
+    const imageString: string = atob(imageBase64);
+    const imageByteArray: Uint8Array = new Uint8Array(imageString.length);
+    for (let i = 0; i < imageString.length; i++) {
+      imageByteArray[i] = imageString.charCodeAt(i);
+    }
+    return imageByteArray;
+  };
+
   function handleResize() {
     if (scrollAtBottom) {
       scrollToBottom();
@@ -363,7 +394,23 @@
                       {#each message.images as image}
                         <div class='flex {fromMe ? 'justify-end' : 'justify-start'}'>
                           {#if image.status === 'loaded'}
-                            <LightboxImage btnClass='inline max-w-2/3 mb-2' src={image.dataURL} alt={image.name} />
+                          <div class="flex justify-between items-start mb-2">
+                            <LightboxImage
+                              btnClass="inline max-w-2/3"
+                              src={image.dataURL}
+                              alt={image.name}
+                            />
+                            <button
+                              on:click={() => downloadImage(image)}
+                              class="bg-black bg-opacity-50 text-white p-1 rounded-full"
+                            >
+                              <SvgIcon
+                                icon="caretDown"
+                                color="white"
+                                size="16"
+                              />
+                            </button>
+                          </div>                          
                           {:else if image.status === 'loading' || image.status === 'pending'}
                             <div class='w-20 h-20 bg-surface-800 mb-2 flex items-center justify-center'>
                               <SvgIcon icon='spinner' color={$modeCurrent ? '%232e2e2e' : 'white'} size='30' />
