@@ -6,7 +6,7 @@ import {
   type ClonedCell,
 } from "@holochain/client";
 import { writable, get, type Writable, type Subscriber, type Unsubscriber } from "svelte/store";
-import { Privacy, type Contact2, type ContactExtended } from "../types";
+import { Privacy, type Contact, type ContactExtended } from "../types";
 import type { RelayClient } from "./RelayClient";
 import { copyToClipboard } from "$lib/utils";
 import { shareText } from "@buildyourwebapp/tauri-plugin-sharesheet";
@@ -72,7 +72,7 @@ export class AllContactsStore {
    * @param contact
    * @returns
    */
-  async create(contact: Contact2): Promise<AgentPubKeyB64> {
+  async create(contact: Contact): Promise<AgentPubKeyB64> {
     const appInfo = await this.client.client.appInfo();
     if (!appInfo) throw new Error("AppInfo is empty");
     const agentPubKeyB64 = encodeHashToBase64(contact.public_key);
@@ -114,7 +114,7 @@ export class AllContactsStore {
    * @param contact
    * @returns
    */
-  async update(contact: Contact2): Promise<AgentPubKeyB64> {
+  async update(contact: Contact): Promise<AgentPubKeyB64> {
     const agentPubKeyB64 = encodeHashToBase64(contact.public_key);
 
     // Update the Contact
@@ -159,7 +159,7 @@ export class AllContactsStore {
   }
 
   private makeContactExtended(
-    contact: Contact2,
+    contact: Contact,
     privateConversationCellInfo: ClonedCell,
     originalActionHash: ActionHash,
     latestActionHash: ActionHash,
@@ -175,7 +175,7 @@ export class AllContactsStore {
     };
   }
 
-  private makeFullName(contact: Contact2) {
+  private makeFullName(contact: Contact) {
     return `${contact.first_name}${contact.last_name ? " " + contact.last_name : ""}`;
   }
 }

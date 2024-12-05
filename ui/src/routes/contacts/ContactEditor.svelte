@@ -16,7 +16,7 @@
   import { t } from "$lib/translations";
   import { copyToClipboard, isMobile, shareText } from "$lib/utils";
   import HiddenFileInput from "$lib/HiddenFileInput.svelte";
-  import type { Contact2 } from "../../types";
+  import type { Contact } from "../../types";
   import type { AllContactsStore } from "$store/AllContactsStore";
   import { MIN_FIRST_NAME_LENGTH } from "$lib/constants";
 
@@ -98,7 +98,7 @@
     pendingSave = true;
 
     try {
-      const newContactData: Contact2 = {
+      const newContactData: Contact = {
         avatar,
         first_name: firstName,
         last_name: lastName,
@@ -119,14 +119,14 @@
     editing = false;
   }
 
-  async function updateContact(newContactData: Contact2) {
+  async function updateContact(newContactData: Contact) {
     const agentPubKeyB64 = await contactsStore.update(newContactData);
     const contactExtended = get(contactsStore.contacts)[agentPubKeyB64];
 
     existingContactExtended = contactExtended;
   }
 
-  async function createContact(newContactData: Contact2) {
+  async function createContact(newContactData: Contact) {
     const agentPubKeyB64 = await contactsStore.create(newContactData);
     const contactExtended = get(contactsStore.contacts)[agentPubKeyB64];
 

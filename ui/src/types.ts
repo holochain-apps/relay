@@ -65,27 +65,17 @@ export interface Properties {
 
 export type EntryTypes = { type: "Message" } & MessageInput;
 
-export interface Contact {
-  currentActionHash?: ActionHash;
-  originalActionHash?: ActionHash;
-  avatar: string;
-  privateConversationId?: string; // the network seed of the 1:1 conversation with this contact, either the one you created, or the one they created if you join that one first
-  firstName: string;
-  lastName: string;
-  publicKeyB64: AgentPubKeyB64;
-}
-
 export interface ContactExtended {
   originalActionHash: ActionHash;
   latestActionHash: ActionHash;
-  contact: Contact2;
+  contact: Contact;
   privateConversationCellInfo: ClonedCell;
   privateConversationId: DnaHashB64;
   fullName: string;
   agentPubKeyB64: AgentPubKeyB64;
 }
 
-export interface Contact2 {
+export interface Contact {
   public_key: AgentPubKey;
   first_name: string;
   last_name: string;
@@ -95,13 +85,13 @@ export interface Contact2 {
 export interface ContactRecord {
   original_action: ActionHash;
   signed_action: SignedActionHashed;
-  contact?: Contact2;
+  contact?: Contact;
 }
 
 export interface UpdateContactInput {
   original_contact_hash: ActionHash;
   previous_contact_hash: ActionHash;
-  updated_contact: Contact2;
+  updated_contact: Contact;
 }
 export interface MessageInput {
   content: string;

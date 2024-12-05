@@ -19,7 +19,7 @@ import type { Profile, ProfilesStore } from "@holochain-open-dev/profiles";
 import { get } from "svelte/store";
 import type {
   Config,
-  Contact2,
+  Contact,
   ContactRecord,
   ConversationCellAndConfig,
   ImageStruct,
@@ -334,7 +334,7 @@ export class RelayClient {
     });
   }
 
-  public async createContact(payload: Contact2): Promise<Record> {
+  public async createContact(payload: Contact): Promise<Record> {
     return this.client.callZome({
       role_name: this.roleName,
       zome_name: this.zomeName,
