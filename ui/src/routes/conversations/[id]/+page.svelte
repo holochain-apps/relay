@@ -19,6 +19,7 @@
   import LightboxImage from '$lib/LightboxImage.svelte';
   import { save } from '@tauri-apps/plugin-dialog';
   import MessageActions from "$lib/MessageActions.svelte";
+  import { press, type PressCustomEvent } from 'svelte-gestures';
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
   const tAny = t as any;
@@ -83,36 +84,36 @@
   }
 
   const downloadImage = async (image: Image) => {
-        if (image.status !== 'loaded') {
-            console.error('Image not loaded');
-            return;
-        }
-        if (!image.dataURL) {
-            console.error('Image dataURL is undefined');
-            return;
-        }
-        try {
-            const base64Response = await fetch(image.dataURL);
-            const blob = await base64Response.blob();
-            const savePath = await save({
-                title: 'Save Image',
-                defaultPath: image.name,
-                filters: [{
-                    name: 'Image',
-                    extensions: ['png', 'jpg', 'gif']
-                }]
-            });
+    if (image.status !== 'loaded') {
+      console.error('Image not loaded');
+      return;
+    }
+    if (!image.dataURL) {
+      console.error('Image dataURL is undefined');
+      return;
+    }
+    try {
+      const base64Response = await fetch(image.dataURL);
+      const blob = await base64Response.blob();
+      const savePath = await save({
+        title: 'Save Image',
+        defaultPath: image.name,
+        filters: [{
+          name: 'Image',
+          extensions: ['png', 'jpg', 'gif']
+        }]
+      });
 
-            if (savePath) {
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = savePath;
-                link.click();
-            }
-        } catch (err) {
-            console.error('Download failed', err);
-        }
-    };
+      if (savePath) {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = savePath;
+        link.click();
+      }
+    }catch (err) {
+      console.error('Download failed', err);
+    }
+  };
 
   function handleResize() {
     if (scrollAtBottom) {
@@ -300,7 +301,7 @@
       }
     }
   
-    function handlePress(messageHash: string) {
+    function handlePress(messageHash: string, event: PressCustomEvent) {
       if(isMobile()) {
         toggleMessageSelection(messageHash);
       }
@@ -429,7 +430,8 @@
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
                 <div
                   class="w-full flex {fromMe ? 'justify-end' : 'justify-start'} {isSelected ? 'selected-message' : ''}"
-                  on:press={() => handlePress(message.hash)}
+                  use:press={{ timeframe: 300, triggerBeforeFinished: false }}
+                  on:press={(e) => handlePress(message.hash, e)}
                   on:click={(e) => handleMessageClick(message.hash, e)}
                   role="button"
                   tabindex="0"
