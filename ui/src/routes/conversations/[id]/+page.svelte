@@ -271,53 +271,49 @@
     }
   }
 
-  const selectedMessage: Writable<string | null> = writable(null);
+  let selectedMessageHash: string | null = null;
     
     function toggleMessageSelection(messageHash: string) {
-      selectedMessage.update(current => {
-        if (current === messageHash) {
-          return null;
-        }
-        return messageHash;
-      });
+      selectedMessageHash = selectedMessageHash === messageHash ? null : messageHash;
     }
-
+  
     function unselectMessage() {
-      selectedMessage.set(null);
+      selectedMessageHash = null;
     }
-
-  function handleGlobalClick(event: MouseEvent) {
-    if (!event.target) return;
-    //Its for checking, if the click is inside a selected message or its actions
-    const isInsideSelectedMessage = 
-      (event.target as HTMLElement).closest('.selected-message-container') ||
-      (event.target as HTMLElement).closest('.toolbar-container');
-    if (!isInsideSelectedMessage) {
-      selectedMessage.set(null);
+  
+    function handleGlobalClick(event: MouseEvent) {
+      if (!event.target) return;
+      
+      const isInsideSelectedMessage = 
+        (event.target as HTMLElement).closest('.selected-message-container') ||
+        (event.target as HTMLElement).closest('.toolbar-container');
+      
+      if (!isInsideSelectedMessage) {
+        selectedMessageHash = null;
+      }
     }
-  }
-
-  function handleMessageClick(messageHash: string, event: MouseEvent) {
-    if(!isMobile()){
-      event.preventDefault();
-      toggleMessageSelection(messageHash);
+  
+    function handleMessageClick(messageHash: string, event: MouseEvent) {
+      if(!isMobile()){
+        event.preventDefault();
+        toggleMessageSelection(messageHash);
+      }
     }
-  }
-
-  function handlePress(messageHash: string) {
-    if(isMobile()) {
-      toggleMessageSelection(messageHash);
+  
+    function handlePress(messageHash: string) {
+      if(isMobile()) {
+        toggleMessageSelection(messageHash);
+      }
     }
-  }
-
-  onMount(() => {
-    document.addEventListener('click', handleGlobalClick);
-  })
-
-  onDestroy(() => {
-    selectedMessage.set(null);
-    document.removeEventListener('click', handleGlobalClick);
-  });
+  
+    onMount(() => {
+      document.addEventListener('click', handleGlobalClick);
+    });
+  
+    onDestroy(() => {
+      selectedMessageHash = null;
+      document.removeEventListener('click', handleGlobalClick);
+    });
 
 </script>
 
@@ -422,7 +418,7 @@
           <ul>
             {#each $processedMessages as message (message.hash)}
               {@const fromMe = message.authorKey === myPubKeyB64}
-              {@const isSelected = $selectedMessage === message.hash}
+              {@const isSelected = selectedMessageHash === message.hash}
               {#if message.header}
                 <li class='mt-auto mb-2'>
                   <div class="text-center text-xs text-secondary-400 dark:text-secondary-300">{message.header}</div>
