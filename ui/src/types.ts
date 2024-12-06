@@ -127,8 +127,8 @@ export interface MessageAction {
   id: string;
   label: string;
   icon: string;
-  action: (messageHashes: Set<string>) => void;
-  condition?: (messageHashes: Set<string>) => boolean;
+  action: (messageHash: string) => void;
+  condition?: (messageHash: string) => boolean;
 }
 
 export interface Image {

@@ -17,6 +17,8 @@
   import { RelayStore } from '$store/RelayStore';
   import { Privacy, type Conversation, type Message, type Image, type MessageAction } from '../../../types';
   import LightboxImage from '$lib/LightboxImage.svelte';
+  import { save } from '@tauri-apps/plugin-dialog';
+  import MessageActions from "$lib/MessageActions.svelte";
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
   const tAny = t as any;
@@ -80,36 +82,37 @@
     })
   }
 
-  const downloadImage = (image: Image) => {
-    if (image.status != 'loaded') {
-      console.error('Image not loaded');
-      return;
-    }
-    if (!image.dataURL) {
-      console.error('Image dataURL is undefined');
-      return;
-    }
-    try {
-      const imageBytes = base64ToBytes(image.dataURL);
-      const blob: Blob = new Blob([imageBytes], { type: 'image/png' });
-      const link: HTMLAnchorElement = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = image.name;
-      link.click();
-    } catch (err) {
-      console.log(err);
-    }
-  };
+  const downloadImage = async (image: Image) => {
+        if (image.status !== 'loaded') {
+            console.error('Image not loaded');
+            return;
+        }
+        if (!image.dataURL) {
+            console.error('Image dataURL is undefined');
+            return;
+        }
+        try {
+            const base64Response = await fetch(image.dataURL);
+            const blob = await base64Response.blob();
+            const savePath = await save({
+                title: 'Save Image',
+                defaultPath: image.name,
+                filters: [{
+                    name: 'Image',
+                    extensions: ['png', 'jpg', 'gif']
+                }]
+            });
 
-  const base64ToBytes = (dataURL: string): Uint8Array => {
-    const imageBase64: string = dataURL.split(',')[1];
-    const imageString: string = atob(imageBase64);
-    const imageByteArray: Uint8Array = new Uint8Array(imageString.length);
-    for (let i = 0; i < imageString.length; i++) {
-      imageByteArray[i] = imageString.charCodeAt(i);
-    }
-    return imageByteArray;
-  };
+            if (savePath) {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = savePath;
+                link.click();
+            }
+        } catch (err) {
+            console.error('Download failed', err);
+        }
+    };
 
   function handleResize() {
     if (scrollAtBottom) {
@@ -268,112 +271,52 @@
     }
   }
 
-  const selectedMessages: Writable<Set<string>> = writable(new Set());
+  const selectedMessage: Writable<string | null> = writable(null);
     
     function toggleMessageSelection(messageHash: string) {
-      selectedMessages.update(selected => {
-        const newSelection = new Set(selected);
-        if (newSelection.has(messageHash)) {
-          newSelection.delete(messageHash);
-        } else {
-          newSelection.add(messageHash);
+      selectedMessage.update(current => {
+        if (current === messageHash) {
+          return null;
         }
-        return newSelection;
+        return messageHash;
       });
     }
 
-    const messageActions: MessageAction[] = [{
-      id: 'copy',
-      label: 'Copy',
-      icon: 'copy',
-      condition: (messageHashes: Set<string>): boolean => {
-        // Check if all selected messages have content and no images
-        return Array.from(messageHashes).every(hash => {
-          const message = conversation?.data.messages[hash];
-          return !!message?.content && (!message.images || message.images.length === 0);
-        });
-      },
-      action: async (messageHashes: Set<string>) => {
-        const messagesToCopy = Array.from(messageHashes)
-          .map(hash => {
-            const message = conversation?.data.messages[hash];
-            return message?.content;
-          })
-          .filter(Boolean)
-          .join('\n');
-        copyToClipboard(messagesToCopy);
-      }
-    }, {
-      id: 'download',
-      label: 'Download',
-      icon: 'caretDown',
-      condition: (messageHashes: Set<string>) => {
-        return Array.from(messageHashes).some(messageHash => {
-          const message = conversation?.data.messages[messageHash];
-          return message?.images 
-            ? message.images.some(img => img.status === 'loaded')
-            : false;
-        });
-      },
-      action: async (messageHashes: Set<string>) => {
-        await Promise.all(Array.from(messageHashes).map(async (hash) => {
-          const message = conversation?.data.messages[hash];
-          if (message?.images) {
-            const loadedImages = message.images.filter(img => img.status === 'loaded');
-            await Promise.all(loadedImages.map(downloadImage));
-          }
-        }));
-      }
-    },{
-      id: 'cancel',
-      label: 'Cancel',
-      icon: 'x',
-      action: (selectedMessageHashes: Set<string>) => {
-        selectedMessages.update(current => {
-          const newSelection = new Set(current);
-          Array.from(selectedMessageHashes).forEach(hash => {
-            newSelection.delete(hash);
-          });
-          return newSelection;
-        });
-      }
-    }];
+    function unselectMessage() {
+      selectedMessage.set(null);
+    }
 
-  //Function to handle long press
-  let longPressTimeout: NodeJS.Timeout;
-  let isLongPressing = false;
-
-  function handleMessageMouseDown(messageHash: string) {
-    isLongPressing = false;
-    longPressTimeout = setTimeout(() => {
-      isLongPressing = true;
-      toggleMessageSelection(messageHash);
-    }, 1000);
-  }
-
-  function handleMessageMouseUp() {
-    clearTimeout(longPressTimeout);
-  }
-
-  function handleMessageTouchStart(messageHash: string) {
-    handleMessageMouseDown(messageHash);
-  }
-
-  function handleMessageTouchEnd() {
-    handleMessageMouseUp();
-  }
-
-  //Preventing the default context menu on long press
-  function handleContextMenu(e: Event) {
-    if (isLongPressing) {
-      e.preventDefault();
+  function handleGlobalClick(event: MouseEvent) {
+    if (!event.target) return;
+    //Its for checking, if the click is inside a selected message or its actions
+    const isInsideSelectedMessage = 
+      (event.target as HTMLElement).closest('.selected-message-container') ||
+      (event.target as HTMLElement).closest('.toolbar-container');
+    if (!isInsideSelectedMessage) {
+      selectedMessage.set(null);
     }
   }
 
-  //Clearing selection when navigating away
+  function handleMessageClick(messageHash: string, event: MouseEvent) {
+    if(!isMobile()){
+      event.preventDefault();
+      toggleMessageSelection(messageHash);
+    }
+  }
+
+  function handlePress(messageHash: string) {
+    if(isMobile()) {
+      toggleMessageSelection(messageHash);
+    }
+  }
+
+  onMount(() => {
+    document.addEventListener('click', handleGlobalClick);
+  })
+
   onDestroy(() => {
-    selectedMessages.set(new Set());
-    clearTimeout(longPressTimeout);
+    selectedMessage.set(null);
+    document.removeEventListener('click', handleGlobalClick);
   });
 
 </script>
@@ -479,20 +422,21 @@
           <ul>
             {#each $processedMessages as message (message.hash)}
               {@const fromMe = message.authorKey === myPubKeyB64}
-              {@const isSelected = $selectedMessages.has(message.hash)}
+              {@const isSelected = $selectedMessage === message.hash}
               {#if message.header}
                 <li class='mt-auto mb-2'>
                   <div class="text-center text-xs text-secondary-400 dark:text-secondary-300">{message.header}</div>
                 </li>
               {/if}
               <li class='mt-auto {!message.hideDetails && "mt-3"} relative {isSelected ? 'selected-message-container' : ''}'>
-                <button
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                <div
                   class="w-full flex {fromMe ? 'justify-end' : 'justify-start'} {isSelected ? 'selected-message' : ''}"
-                  on:mousedown={() => handleMessageMouseDown(message.hash)}
-                  on:mouseup={handleMessageMouseUp}
-                  on:touchstart={() => handleMessageTouchStart(message.hash)}
-                  on:touchend={handleMessageTouchEnd}
-                  on:contextmenu={handleContextMenu}
+                  on:press={() => handlePress(message.hash)}
+                  on:click={(e) => handleMessageClick(message.hash, e)}
+                  role="button"
+                  tabindex="0"
                   aria-pressed={isSelected}
                   aria-label={`Message from ${fromMe ? 'you' : message.author}`}
                 >
@@ -540,42 +484,15 @@
                       {@html sanitizeHTML(linkify(message.content))}
                     </div>
                   </div>
-                </button>
+                </div>
                 
                 {#if isSelected}
-                  <div 
-                    class="absolute z-50 w-full flex justify-center"
-                    style="left: 0;"
-                  >
-                    <div class="w-full flex  justify-center gap-4 bg-tertiary-500 dark:bg-secondary-500 p-2 toolbar-container shadow-lg">
-                      {#each messageActions as action}
-                        {#if !action.condition || action.condition($selectedMessages)}
-                          <button
-                            class="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-600"
-                            on:click={() => {
-                              //handling cancel operation separately
-                              //as cancel requires specific message
-                              //else it will deselect every selected message
-                              if (action.id === 'cancel') {
-                                $selectedMessages.forEach(hash => {
-                                  action.action(new Set([hash]));
-                                });
-                              } else {
-                                action.action($selectedMessages);
-                              }
-                            }}
-                          >
-                            <SvgIcon 
-                              icon={action.icon} 
-                              size="15" 
-                              color={$modeCurrent ? 'white' : '%232e2e2e'} 
-                            />
-                            <span class="text-sm text-black">{action.label}</span>
-                          </button>
-                        {/if}
-                      {/each}
-                    </div>
-                  </div>
+                  <MessageActions 
+                    message={message} 
+                    messageHash={message.hash}
+                    downloadImage={downloadImage}
+                    unselectMessage={unselectMessage}
+                  />
                 {/if}
               </li>
             {/each}
@@ -633,7 +550,8 @@
     border-bottom-right-radius: 0;
   }
   .selected-message-container {
-    margin-bottom: 4rem;
+    margin-bottom: 5rem;
+    margin-top: 0.5rem;
   }
 
   .toolbar-container {
