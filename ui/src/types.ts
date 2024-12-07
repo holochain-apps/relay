@@ -12,40 +12,40 @@ import type {
   DeleteLink,
   MembraneProof,
   ClonedCell,
-} from '@holochain/client';
+} from "@holochain/client";
 
-import type { Profile } from '@holochain-open-dev/profiles';
+import type { Profile } from "@holochain-open-dev/profiles";
 
 export type RelaySignal =
   | {
-      type: 'Message';
+      type: "Message";
       action: SignedActionHashed<Create>;
       message: Message;
       from: AgentPubKey;
     }
   | {
-      type: 'EntryCreated';
+      type: "EntryCreated";
       action: SignedActionHashed<Create>;
       app_entry: EntryTypes;
     }
   | {
-      type: 'EntryUpdated';
+      type: "EntryUpdated";
       action: SignedActionHashed<Update>;
       app_entry: EntryTypes;
       original_app_entry: EntryTypes;
     }
   | {
-      type: 'EntryDeleted';
+      type: "EntryDeleted";
       action: SignedActionHashed<Delete>;
       original_app_entry: EntryTypes;
     }
   | {
-      type: 'LinkCreated';
+      type: "LinkCreated";
       action: SignedActionHashed<CreateLink>;
       link_type: string;
     }
   | {
-      type: 'LinkDeleted';
+      type: "LinkDeleted";
       action: SignedActionHashed<DeleteLink>;
       link_type: string;
     };
@@ -62,7 +62,7 @@ export interface Properties {
   progenitor: AgentPubKeyB64;
 }
 
-export type EntryTypes = { type: 'Message' } & MessageInput;
+export type EntryTypes = { type: "Message" } & MessageInput;
 
 export interface Contact {
   currentActionHash?: ActionHash;
@@ -123,14 +123,6 @@ export interface ImageStruct {
   file_type: string;
 }
 
-export interface MessageAction {
-  id: string;
-  label: string;
-  icon: string;
-  action: (messageHash: string) => void;
-  condition?: (messageHash: string) => boolean;
-}
-
 export interface Image {
   dataURL?: string;
   fileType: string;
@@ -139,7 +131,7 @@ export interface Image {
   lastModified: number;
   size: number;
   storageEntryHash?: EntryHash;
-  status?: 'loading' | 'loaded' | 'pending' | 'error'; // Pending = not yet sent to holochain, loading = loading from holochain, loaded = loaded from holochain, error = failed to load
+  status?: "loading" | "loaded" | "pending" | "error"; // Pending = not yet sent to holochain, loading = loading from holochain, loaded = loaded from holochain, error = failed to load
 }
 
 export interface Message {
@@ -151,7 +143,7 @@ export interface Message {
   header?: string; // an optional header to display above this message in the conversation UI
   images: Image[];
   hideDetails?: boolean; // Used in the UI to toggle the display of the message details
-  status?: 'pending' | 'confirmed' | 'delivered' | 'read'; // status of the message
+  status?: "pending" | "confirmed" | "delivered" | "read"; // status of the message
   timestamp: Date;
   bucket: number;
 }

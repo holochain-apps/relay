@@ -15,9 +15,8 @@
   import { t } from '$lib/translations';
   import { copyToClipboard, isMobile, linkify, sanitizeHTML, shareText } from '$lib/utils';
   import { RelayStore } from '$store/RelayStore';
-  import { Privacy, type Conversation, type Message, type Image, type MessageAction } from '../../../types';
+  import { Privacy, type Conversation, type Message, type Image } from '../../../types';
   import LightboxImage from '$lib/LightboxImage.svelte';
-  import { save } from '@tauri-apps/plugin-dialog';
   import MessageActions from "$lib/MessageActions.svelte";
   import { press, type PressCustomEvent } from 'svelte-gestures';
 
@@ -82,38 +81,6 @@
       }
     })
   }
-
-  const downloadImage = async (image: Image) => {
-    if (image.status !== 'loaded') {
-      console.error('Image not loaded');
-      return;
-    }
-    if (!image.dataURL) {
-      console.error('Image dataURL is undefined');
-      return;
-    }
-    try {
-      const base64Response = await fetch(image.dataURL);
-      const blob = await base64Response.blob();
-      const savePath = await save({
-        title: 'Save Image',
-        defaultPath: image.name,
-        filters: [{
-          name: 'Image',
-          extensions: ['png', 'jpg', 'gif']
-        }]
-      });
-
-      if (savePath) {
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = savePath;
-        link.click();
-      }
-    }catch (err) {
-      console.error('Download failed', err);
-    }
-  };
 
   function handleResize() {
     if (scrollAtBottom) {
@@ -273,48 +240,56 @@
   }
 
   let selectedMessageHash: string | null = null;
-    
-    function toggleMessageSelection(messageHash: string) {
-      selectedMessageHash = selectedMessageHash === messageHash ? null : messageHash;
-    }
   
-    function unselectMessage() {
-      selectedMessageHash = null;
-    }
+  function unselectMessage() {
+    selectedMessageHash = null;
+  }
   
-    function handleGlobalClick(event: MouseEvent) {
-      if (!event.target) return;
-      
-      const isInsideSelectedMessage = 
-        (event.target as HTMLElement).closest('.selected-message-container') ||
-        (event.target as HTMLElement).closest('.toolbar-container');
-      
-      if (!isInsideSelectedMessage) {
+  function clickOutside(node: HTMLElement, callback: () => void) {
+    const handleClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (
+        node &&
+        !node.contains(target) &&
+        !target.closest('[data-message-actions]') &&
+        !target.closest('[data-message-selection]')
+      ) {
+        callback();
+      }
+    };
+
+    document.addEventListener('click', handleClick, true);
+
+    return {
+      destroy() {
+        document.removeEventListener('click', handleClick, true);
+      }
+    };
+  }
+  
+  function handleMessageClick(messageHash: string) {
+    if (!isMobile()) {
+      if (selectedMessageHash === messageHash) {
         selectedMessageHash = null;
+      } else if (selectedMessageHash !== null) {
+        selectedMessageHash = null;
+      } else {
+        selectedMessageHash = messageHash;
       }
     }
-  
-    function handleMessageClick(messageHash: string, event: MouseEvent) {
-      if(!isMobile()){
-        event.preventDefault();
-        toggleMessageSelection(messageHash);
+  }
+
+  function handleMessagePress(messageHash: string) {
+    if (isMobile()) {
+      if (selectedMessageHash === messageHash) {
+        selectedMessageHash = null;
+      } else if (selectedMessageHash !== null) {
+        selectedMessageHash = null;
+      } else {
+        selectedMessageHash = messageHash;
       }
     }
-  
-    function handlePress(messageHash: string, event: PressCustomEvent) {
-      if(isMobile()) {
-        toggleMessageSelection(messageHash);
-      }
-    }
-  
-    onMount(() => {
-      document.addEventListener('click', handleGlobalClick);
-    });
-  
-    onDestroy(() => {
-      selectedMessageHash = null;
-      document.removeEventListener('click', handleGlobalClick);
-    });
+  }
 
 </script>
 
@@ -415,7 +390,7 @@
           {/if}
         </div>
       {:else}
-        <div id='message-box' class="flex-1 p-4 flex flex-col-reverse w-full">
+        <div id='message-box' class="flex-1 p-4 flex flex-col-reverse w-full" use:clickOutside={() => selectedMessageHash = null}>
           <ul>
             {#each $processedMessages as message (message.hash)}
               {@const fromMe = message.authorKey === myPubKeyB64}
@@ -425,16 +400,12 @@
                   <div class="text-center text-xs text-secondary-400 dark:text-secondary-300">{message.header}</div>
                 </li>
               {/if}
-              <li class='mt-auto {!message.hideDetails && "mt-3"} relative {isSelected ? 'selected-message-container' : ''}'>
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-no-static-element-interactions -->
-                <div
-                  class="w-full flex {fromMe ? 'justify-end' : 'justify-start'} {isSelected ? 'selected-message' : ''}"
+              <li class='mt-auto {!message.hideDetails && "mt-3"} relative {isSelected ? 'mb-20 mt-2 bg-secondary-500 rounded-t-xl' : ''}' data-message-selection={isSelected ? 'true' : undefined}>
+                <button
+                  class="w-full flex {fromMe ? 'justify-end' : 'justify-start'} {isSelected ? 'px-2.5 py-1.5 bg-secondary-500 rounded-t-xl rounded-b-none' : 'bg-transparent'} text-left bg-transparent border-0"
                   use:press={{ timeframe: 300, triggerBeforeFinished: false }}
-                  on:press={(e) => handlePress(message.hash, e)}
-                  on:click={(e) => handleMessageClick(message.hash, e)}
-                  role="button"
-                  tabindex="0"
+                  on:press={(e) => handleMessagePress(message.hash)}
+                  on:click|preventDefault={() => handleMessageClick(message.hash)}
                   aria-pressed={isSelected}
                   aria-label={`Message from ${fromMe ? 'you' : message.author}`}
                 >
@@ -482,15 +453,15 @@
                       {@html sanitizeHTML(linkify(message.content))}
                     </div>
                   </div>
-                </div>
+                </button>
                 
                 {#if isSelected}
+                <div data-message-actions>
                   <MessageActions 
-                    message={message} 
-                    messageHash={message.hash}
-                    downloadImage={downloadImage}
+                    message={message}
                     unselectMessage={unselectMessage}
                   />
+                </div>
                 {/if}
               </li>
             {/each}
@@ -538,24 +509,5 @@
 <style type='text/css'>
   .message :global(a) {
     color: rgba(var(--color-primary-500));
-  }
-  .selected-message {
-    padding: 5px 10px;
-    background-color: rgb(var(--color-secondary-500));
-    border-top-left-radius: 0.75rem;
-    border-top-right-radius: 0.75rem;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-  }
-  .selected-message-container {
-    margin-bottom: 5rem;
-    margin-top: 0.5rem;
-  }
-
-  .toolbar-container {
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-    border-bottom-left-radius: 0.75rem;
-    border-bottom-right-radius: 0.75rem;
   }
 </style>
