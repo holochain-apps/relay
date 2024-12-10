@@ -1,6 +1,7 @@
 <script lang="ts">
+  import type { AppClient } from "@holochain/client";
   import {
-    type AppClient, AppWebsocket
+    AppWebsocket
   } from "@holochain/client";
   import { ProfilesClient, ProfilesStore } from "@holochain-open-dev/profiles";
   import { modeCurrent } from "@skeletonlabs/skeleton";
