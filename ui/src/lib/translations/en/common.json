@@ -31,7 +31,6 @@
   "holochain_connect_error": "Error connecting to Holochain",
   "first_name_update_error": "First name must be at least 3 characters long",
   "profile_update_error": "Failed to update profile",
-  "update_avatar_error": "Failed to update avatar",
   "copy_code_success": "Copied to clipboard",
   "copy_code_error": "Failed to copy"
 }
