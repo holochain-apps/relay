@@ -1,8 +1,7 @@
 use holochain_types::prelude::AppBundle;
 use lair_keystore::dependencies::sodoken::{BufRead, BufWrite};
 use std::path::PathBuf;
-use std::time::UNIX_EPOCH;
-use std::{collections::HashMap, time::SystemTime};
+use std::time::{UNIX_EPOCH, SystemTime};
 use tauri::{AppHandle, Listener};
 #[cfg(desktop)]
 use tauri::Manager;
@@ -129,7 +128,6 @@ async fn setup(handle: AppHandle) -> anyhow::Result<()> {
             .install_app(
                 String::from(APP_ID),
                 happ_bundle()?,
-                HashMap::new(),
                 None,
                 None,
                 Some(random_seed),
