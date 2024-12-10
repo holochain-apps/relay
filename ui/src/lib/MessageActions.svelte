@@ -22,7 +22,6 @@
       return;
     }
     try {
-      const imageBlob = convertDataURIToUint8Array(image.dataURL);
       const defaultDir = await downloadDir();
       const savePath = await save({
         title: 'Save Image',
@@ -36,6 +35,7 @@
       if (!savePath) return;
 
       try {
+        const imageBlob = convertDataURIToUint8Array(image.dataURL);
         await writeFile(savePath, imageBlob, {create: true});
       } catch(e) {
         console.error("Saving file failed", e);
