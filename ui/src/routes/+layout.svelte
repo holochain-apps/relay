@@ -1,6 +1,6 @@
 <script lang="ts">
   import {
-    AppWebsocket,
+    type AppClient, AppWebsocket
   } from "@holochain/client";
   import { ProfilesClient, ProfilesStore } from "@holochain-open-dev/profiles";
   import { modeCurrent } from "@skeletonlabs/skeleton";
@@ -16,7 +16,7 @@
   const ROLE_NAME = "relay";
   const ZOME_NAME = "relay";
 
-  let client: AppWebsocket;
+  let client: AppClient;
   let relayClient: RelayClient;
   let relayStore: RelayStore;
   let connected = false;
