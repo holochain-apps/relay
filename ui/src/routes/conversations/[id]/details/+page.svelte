@@ -11,6 +11,7 @@
   import type { RelayStore } from '$store/RelayStore';
   import { Privacy, type Config } from '../../../../types';
   import Button from '$lib/Button.svelte';
+  import toast, { Toaster } from "svelte-french-toast";
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
   const tAny = t as any
@@ -156,7 +157,17 @@
               <SvgIcon icon='addPerson' size='24' color='%23FD3524'/>
             </span>
             <span class='ml-4 text-sm font-bold flex-1'>{$t('conversations.add_members')}</span>
-            <button class='rounded-full bg-surface-500 text-secondary-500 font-bold text-xs py-2 px-2 mr-1 flex items-center justify-center' on:click={() => copyToClipboard(conversation.publicInviteCode)}>
+            <button
+              class='rounded-full bg-surface-500 text-secondary-500 font-bold text-xs py-2 px-2 mr-1 flex items-center justify-center'
+              on:click={() => {
+                try {
+                  copyToClipboard(conversation.publicInviteCode);
+                  toast.success(`${$t("common.copy_code_success")}`);
+                } catch (e) {
+                  toast.error(`${$t("common.copy_code_error")}: ${e.message}`);
+                }
+              }}
+            >
               <SvgIcon icon='copy' size='14' color='%23FD3524' moreClasses='mr-2' />
               {$t('conversations.copy_invite')}
             </button>
@@ -173,7 +184,17 @@
             <li class='text-xl flex flex-row mb-4 px-2 items-center'>
               <Avatar image={contact.avatar} agentPubKey={contact.publicKeyB64} size='38' moreClasses='-ml-30'/>
               <span class='ml-4 text-sm flex-1'>{contact.firstName + ' ' + contact.lastName}</span>
-              <button class='rounded-2xl variant-filled-tertiary font-bold text-sm p-2 px-3 flex items-center justify-center' on:click={() => copyToClipboard(conversation.inviteCodeForAgent(contact.publicKeyB64)) }>
+              <button 
+                class='rounded-2xl variant-filled-tertiary font-bold text-sm p-2 px-3 flex items-center justify-center'
+                on:click={() => {
+                  try {
+                    copyToClipboard(conversation.inviteCodeForAgent(contact.publicKeyB64))
+                    toast.success(`${$t("common.copy_code_success")}`);
+                  } catch (e) {
+                    toast.error(`${$t("common.copy_code_error")}: ${e.message}`);
+                  }
+                }}
+              >
                 <SvgIcon icon='copy' size='18' color='%23FD3524' moreClasses='mr-2' />
                 {$t('conversations.copy_invite')}
               </button>
@@ -209,3 +230,5 @@
     </div>
   </div>
 {/if}
+
+<Toaster position="bottom-end" />

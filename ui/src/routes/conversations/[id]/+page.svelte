@@ -17,6 +17,7 @@
   import { RelayStore } from '$store/RelayStore';
   import { Privacy, type Conversation, type Message, type Image } from '../../../types';
   import LightboxImage from '$lib/LightboxImage.svelte';
+  import toast, { Toaster } from "svelte-french-toast";
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
   const tAny = t as any;
@@ -299,7 +300,18 @@
                 <h1 class='text-secondary-500 dark:text-tertiary-100 text-xl font-bold mt-2'>{$t('contacts.pending_connection_header')}</h1>
                 <p class='text-sm text-center text-secondary-400 dark:text-tertiary-700 mt-4 mb-6'>{$tAny('contacts.pending_connection_description', { name: conversation.title })}</p>
                 <div class='flex justify-center'>
-                  <Button moreClasses='bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900' onClick={() => { copyToClipboard(conversation.inviteCodeForAgent(conversation.allMembers[0]?.publicKeyB64))}}>
+                  <Button 
+                    moreClasses='bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900'
+                    onClick={() => {
+                      try {
+                        const inviteCode = conversation.inviteCodeForAgent(conversation.allMembers[0]?.publicKeyB64);
+                        copyToClipboard(inviteCode);
+                        toast.success(`${$t("common.copy_code_success")}`);
+                      } catch (e) {
+                        toast.error(`${$t("common.copy_code_error")}: ${e.message}`);
+                      }
+                    }}
+                  >
                     <SvgIcon icon='copy' size='20' color='%23FD3524' moreClasses='mr-2' />
                     {$t('contacts.copy_invite_code')}
                   </Button>
@@ -321,7 +333,17 @@
           {:else}
             <!-- Public conversation, make it easy to copy invite code-->
             <p class='text-xs text-center text-secondary-500 dark:text-tertiary-700 mx-10 mb-8'>{$t('conversations.share_invitation_code_msg')}</p>
-            <Button onClick={() => copyToClipboard(conversation.publicInviteCode)} moreClasses='w-64 justify-center variant-filled-tertiary'>
+            <Button 
+              moreClasses='w-64 justify-center variant-filled-tertiary'
+              onClick={() => {
+                try {
+                  copyToClipboard(conversation.publicInviteCode);
+                  toast.success(`${$t("common.copy_code_success")}`);
+                } catch (e) {
+                  toast.error(`${$t("common.copy_code_error")}: ${e.message}`);
+                }
+              }}
+              >
               <SvgIcon icon='copy' size='18' color='%23FD3524' />
               <strong class='ml-2 text-sm'>{$t('conversations.copy_invite_code')}</strong>
             </Button>
@@ -422,6 +444,8 @@
     </form>
   </div>
 {/if}
+
+<Toaster position="bottom-end" />
 
 <style type='text/css'>
   .message :global(a) {

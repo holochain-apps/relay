@@ -11,6 +11,7 @@
   import { RelayClient } from "$store/RelayClient";
   import { ProfilesStore } from "@holochain-open-dev/profiles";
   import { get } from "svelte/store";
+  import toast, { Toaster } from "svelte-french-toast";
 
 	const relayClientContext: { getClient: () => RelayClient } = getContext('relayClient')
 	let relayClient = relayClientContext.getClient()
@@ -32,11 +33,18 @@
   let lastNameElem: HTMLInputElement
 
   $: saveName = async () => {
-    if (profileData && firstNameElem.value?.length >= MIN_FIRST_NAME_LENGTH) {
-      firstName = firstNameElem.value
-      lastName = lastNameElem.value
-      await relayClient.updateProfile(firstName, lastName, profileData.fields.avatar)
-      editingName = false
+    try{
+      if (profileData && firstNameElem.value?.length >= MIN_FIRST_NAME_LENGTH) {
+        firstName = firstNameElem.value
+        lastName = lastNameElem.value
+        await relayClient.updateProfile(firstName, lastName, profileData.fields.avatar)
+        editingName = false
+      } else {
+        toast.error(`${$t("common.first_name_update_error")}`);
+      }
+    } catch (e) {
+      toast.error(`${$t("common.profile_update_error")}: ${e.message}`);
+      console.error(e);
     }
   }
 
@@ -131,7 +139,17 @@
 
   <p class='w-64 text-nowrap overflow-hidden text-ellipsis mt-8 text-secondary-400 dark:text-tertiary-700 mb-4'>{agentPublicKey64}</p>
 
-  <Button onClick={() => copyToClipboard(agentPublicKey64)} moreClasses='w-64 text-sm variant-filled-tertiary dark:!bg-tertiary-200'>
+  <Button 
+    onClick={() =>{
+      try{
+        copyToClipboard(agentPublicKey64);
+        toast.success(`${$t("common.copy_code_success")}`);
+      } catch(e) {
+        toast.error(`${$t("common.copy_contact_code_error")}: ${e.message}`);
+      }
+    }}  
+    moreClasses='w-64 text-sm variant-filled-tertiary dark:!bg-tertiary-200'
+  >
     <SvgIcon icon='copy' size='22' color='%23FD3524' moreClasses='mr-3' />
     <strong>{$t('common.copy_your_contact_code')}</strong>
   </Button>
@@ -143,3 +161,5 @@
   {/if}
 </div>
 {/if}
+
+<Toaster position="bottom-end" />

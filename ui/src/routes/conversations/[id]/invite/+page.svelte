@@ -11,7 +11,8 @@
   import { t } from '$lib/translations';
   import { RelayStore } from '$store/RelayStore';
   import { copyToClipboard, isMobile, shareText } from '$lib/utils';
-  import { type Contact, Privacy } from '../../../../types'
+  import { type Contact, Privacy } from '../../../../types';
+  import toast, { Toaster } from "svelte-french-toast";
 
   const tAny = t as any
 
@@ -72,7 +73,17 @@
     </div>
 
     <footer>
-      <Button onClick={() => copyToClipboard(conversation.publicInviteCode)} moreClasses='w-64'>
+      <Button 
+        moreClasses='w-64'
+        onClick={() => {
+          try {
+            copyToClipboard(conversation.publicInviteCode);
+            toast.success(`${$t("common.copy_code_success")}`);
+          } catch (e) {
+            toast.error(`${$t("common.copy_code_error")}: ${e.message}`);
+          }
+        }}
+      >
         <p class='w-64 text-nowrap overflow-hidden text-ellipsis'>{conversation.publicInviteCode}</p>
         <img src="/copy.svg" alt="Copy Icon" width='16' />&nbsp;<span class='text-xs text-tertiary-500'>{$t('common.copy')}</span>
       </Button>
@@ -146,3 +157,5 @@
     </div>
   {/if}
 {/if}
+
+<Toaster position="bottom-end" />
