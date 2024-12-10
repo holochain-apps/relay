@@ -21,6 +21,8 @@
     "sharesheet:allow-share-text",
     "shell:default",
     "barcode-scanner:default",
-    "os:allow-platform"
+    "os:allow-platform",
+    "dialog:allow-save",
+    "fs:write-all"
   ]
 }

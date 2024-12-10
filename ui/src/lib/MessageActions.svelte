@@ -3,8 +3,10 @@
   import Button from '$lib/Button.svelte';
   import SvgIcon from '$lib/SvgIcon.svelte';
   import { t } from '$lib/translations';
-  import { copyToClipboard } from '$lib/utils';
+  import { convertDataURIToUint8Array, copyToClipboard } from '$lib/utils';
   import { save } from '@tauri-apps/plugin-dialog';
+  import { create, writeFile } from '@tauri-apps/plugin-fs';
+  import { downloadDir } from '@tauri-apps/api/path';
 
   export let message: Message;
   export let unselectMessage: () => void;
@@ -20,24 +22,25 @@
       return;
     }
     try {
-      const base64Response = await fetch(image.dataURL);
-      const blob = await base64Response.blob();
+      const imageBlob = convertDataURIToUint8Array(image.dataURL);
+      const defaultDir = await downloadDir();
       const savePath = await save({
         title: 'Save Image',
-        defaultPath: image.name,
+        defaultPath: `${defaultDir}/${image.name}`,
         filters: [{
           name: 'Image',
           extensions: ['png', 'jpg', 'gif']
         }]
       });
 
-      if (savePath) {
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = savePath;
-        link.click();
+      if (!savePath) return;
+
+      try {
+        await writeFile(savePath, imageBlob, {create: true});
+      } catch(e) {
+        console.error("Saving file failed", e);
       }
-    }catch (err) {
+    } catch (err) {
       console.error('Download failed', err);
     }
   };

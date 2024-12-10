@@ -221,3 +221,17 @@ export function handleLinkClick(event: MouseEvent) {
     }
   }
 }
+
+export function convertDataURIToUint8Array(dataURI: string): Uint8Array {
+  const BASE64_MARKER = ";base64,";
+  const base64Index = dataURI.indexOf(BASE64_MARKER) + BASE64_MARKER.length;
+  const base64 = dataURI.substring(base64Index);
+  const raw = window.atob(base64);
+  const array = new Uint8Array(new ArrayBuffer(raw.length));
+
+  for (let i = 0; i < raw.length; i++) {
+    array[i] = raw.charCodeAt(i);
+  }
+
+  return array;
+}
