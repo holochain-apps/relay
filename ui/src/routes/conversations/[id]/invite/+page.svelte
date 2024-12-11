@@ -11,7 +11,8 @@
   import { t } from '$lib/translations';
   import { RelayStore } from '$store/RelayStore';
   import { copyToClipboard, isMobile, shareText } from '$lib/utils';
-  import { type Contact, Privacy } from '../../../../types'
+  import { type Contact, Privacy } from '../../../../types';
+  import toast from "svelte-french-toast";
 
   const tAny = t as any
 
@@ -47,11 +48,14 @@
   }
 
   async function addContactsToConversation() {
-    // TODO: update config.title?
-
-    if (conversation) {
-      conversation.addContacts($selectedContacts)
-      goto(`/conversations/${conversation.id}/details`)
+    // TODO: update config.title? 
+    try {
+      if (conversation) {
+        conversation.addContacts($selectedContacts)
+        goto(`/conversations/${conversation.id}/details`)
+      }
+    } catch(e) {
+      toast.error(`${$t("common.add_contact_to_conversation_error")}: ${e.message}`);
     }
   }
 </script>
@@ -72,7 +76,17 @@
     </div>
 
     <footer>
-      <Button onClick={() => copyToClipboard(conversation.publicInviteCode)} moreClasses='w-64'>
+      <Button 
+        moreClasses='w-64'
+        onClick={async() => {
+          try {
+            await copyToClipboard(conversation.publicInviteCode);
+            toast.success(`${$t("common.copy_success")}`);
+          } catch (e) {
+            toast.error(`${$t("common.copy_error")}: ${e.message}`);
+          }
+        }}
+      >
         <p class='w-64 text-nowrap overflow-hidden text-ellipsis'>{conversation.publicInviteCode}</p>
         <img src="/copy.svg" alt="Copy Icon" width='16' />&nbsp;<span class='text-xs text-tertiary-500'>{$t('common.copy')}</span>
       </Button>
@@ -137,7 +151,7 @@
               {$selectedContacts.length}
             </span>
             <div class='overflow-hidden text-ellipsis nowrap'>
-              <div class='text-md text-start'>{$t('conversations.add_to_conversation')}</div>
+              <div class='text-md text-start'>{$t('conversations.add_contact_to_conversation_error')}</div>
               <div class='text-xs font-light text-start pb-1'>with {$selectedContacts.map(c => c.firstName).join(', ')}</div>
             </div>
           </button>
