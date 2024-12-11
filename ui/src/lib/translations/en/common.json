@@ -37,7 +37,7 @@
   "permission_error": "Failed to request camera permissions. Please try again or grant permissions manually in settings.",
   "scan_error": "Failed to scan the QR code.",
   "update_profile_error": "Failed to update the profile.",
-  "upload_image_error": "Error uploading the image",
+  "upload_image_error": "Failed to upload image",
   "create_conversation_error": "Failed to create conversation",
   "add_to_conversation_error": "Failed to add to conversation"
 }
