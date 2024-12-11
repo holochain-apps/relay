@@ -35,7 +35,7 @@
   "create_account_error": "Failed to create account",
   "share_text_error": "Failed to share code",
   "permission_error": "Failed to request camera permissions. Please try again or grant permissions manually in settings.",
-  "scan_error": "Failed to scan the QR code. Please try again.",
+  "scan_error": "Failed to scan the QR code.",
   "update_profile_error": "Failed to update the profile.",
   "upload_image_error": "Error uploading the image",
   "create_conversation_error": "Failed to create conversation",
