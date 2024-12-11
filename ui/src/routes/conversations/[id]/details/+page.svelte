@@ -17,6 +17,7 @@
   import type { RelayStore } from "$store/RelayStore";
   import { Privacy, type Config } from "../../../../types";
   import Button from "$lib/Button.svelte";
+  import toast from "svelte-french-toast";
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
   const tAny = t as any;
@@ -190,10 +191,17 @@
             >
               <SvgIcon icon="addPerson" size="24" color="%23FD3524" />
             </span>
-            <span class="ml-4 flex-1 text-sm font-bold">{$t("conversations.add_members")}</span>
+            <span class="ml-4 text-sm font-bold flex-1">{$t("conversations.add_members")}</span>
             <button
-              class="mr-1 flex items-center justify-center rounded-full bg-surface-500 px-2 py-2 text-xs font-bold text-secondary-500"
-              on:click={() => copyToClipboard(conversation.publicInviteCode)}
+              class="rounded-full bg-surface-500 text-secondary-500 font-bold text-xs py-2 px-2 mr-1 flex items-center justify-center"
+              on:click={async () => {
+                try {
+                  await copyToClipboard(conversation.publicInviteCode);
+                  toast.success(`${$t("common.copy_success")}`);
+                } catch (e) {
+                  toast.error(`${$t("common.copy_error")}: ${e.message}`);
+                }
+              }}
             >
               <SvgIcon icon="copy" size="14" color="%23FD3524" moreClasses="mr-2" />
               {$t("conversations.copy_invite")}
@@ -213,18 +221,24 @@
             {$t("conversations.unconfirmed_invitations")}
           </h3>
           {#each conversation.invitedUnjoined as contact}
-            <li class="mb-4 flex flex-row items-center px-2 text-xl">
+            <li class="text-xl flex flex-row mb-4 px-2 items-center">
               <Avatar
                 image={contact.avatar}
                 agentPubKey={contact.publicKeyB64}
                 size="38"
                 moreClasses="-ml-30"
               />
-              <span class="ml-4 flex-1 text-sm">{contact.firstName + " " + contact.lastName}</span>
+              <span class="ml-4 text-sm flex-1">{contact.firstName + " " + contact.lastName}</span>
               <button
-                class="variant-filled-tertiary flex items-center justify-center rounded-2xl p-2 px-3 text-sm font-bold"
-                on:click={() =>
-                  copyToClipboard(conversation.inviteCodeForAgent(contact.publicKeyB64))}
+                class="rounded-2xl variant-filled-tertiary font-bold text-sm p-2 px-3 flex items-center justify-center"
+                on:click={async () => {
+                  try {
+                    await copyToClipboard(conversation.inviteCodeForAgent(contact.publicKeyB64));
+                    toast.success(`${$t("common.copy_success")}`);
+                  } catch (e) {
+                    toast.error(`${$t("common.copy_error")}: ${e.message}`);
+                  }
+                }}
               >
                 <SvgIcon icon="copy" size="18" color="%23FD3524" moreClasses="mr-2" />
                 {$t("conversations.copy_invite")}

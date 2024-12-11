@@ -10,6 +10,7 @@
   import { handleFileChange, MIN_TITLE_LENGTH } from "$lib/utils";
   import { RelayStore } from "$store/RelayStore";
   import { Privacy } from "../../../types";
+  import toast from "svelte-french-toast";
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext("relayStore");
   let relayStore = relayStoreContext.getStore();
@@ -21,10 +22,14 @@
   async function createConversation(e: Event, privacy: Privacy) {
     pendingCreate = true;
     e.preventDefault();
-    const conversation = await relayStore.createConversation(title, get(imageUrl), privacy);
-    if (conversation) {
-      goto(`/conversations/${conversation.data.id}`);
-      pendingCreate = false;
+    try {
+      const conversation = await relayStore.createConversation(title, get(imageUrl), privacy);
+      if (conversation) {
+        goto(`/conversations/${conversation.data.id}`);
+        pendingCreate = false;
+      }
+    } catch (e) {
+      toast.error(`${$t("common.create_conversation_error")}: ${e.message}`);
     }
   }
 
@@ -45,7 +50,13 @@
     id="avatarInput"
     accept="image/jpeg, image/png, image/gif"
     class="hidden"
-    on:change={(event) => handleFileChange(event, (imageData) => imageUrl.set(imageData))}
+    on:change={(event) => {
+      try {
+        handleFileChange(event, (imageData) => imageUrl.set(imageData));
+      } catch (e) {
+        toast.error(`${$t("common.upload_image_error")}: ${e.message}`);
+      }
+    }}
   />
 
   <!-- Label styled as a big clickable icon -->
