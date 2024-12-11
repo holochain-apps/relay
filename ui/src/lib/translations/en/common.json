@@ -31,7 +31,7 @@
   "holochain_connect_error": "Error connecting to Holochain",
   "profile_update_error": "Failed to update profile",
   "copy_success": "Copied to clipboard",
-  "copy_error": "Failed to copy",
+  "copy_error": "Failed to copy to clipboard",
   "create_account_error": "Failed to create account",
   "share_text_error": "Failed to share code",
   "permission_error": "Failed to request camera permissions. Please try again or grant permissions manually in settings.",
