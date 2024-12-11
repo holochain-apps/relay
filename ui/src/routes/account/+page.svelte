@@ -26,7 +26,8 @@
   const MIN_FIRST_NAME_LENGTH = 3;
 
   $: firstName = profileData?.fields.firstName || '';
-  $: lastName = profileData?.fields.lastName || ''
+  $: lastName = profileData?.fields.lastName || '';
+  $: isFirstNameValid = firstName.trim().length >= MIN_FIRST_NAME_LENGTH;
 
   let editingName = false
   let firstNameElem: HTMLInputElement
@@ -116,7 +117,7 @@
       <Button
         moreClasses="h-6 w-6 rounded-md py-0 !px-0 mb-0 mr-2 bg-primary-100 flex items-center justify-center"
         onClick={() => saveName()}
-        disabled={firstName.trim().length < MIN_FIRST_NAME_LENGTH}
+        disabled={isFirstNameValid}
       >
         <SvgIcon icon='checkMark' color='%23FD3524' size='12' />
       </Button>
