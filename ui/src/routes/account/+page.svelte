@@ -161,7 +161,7 @@
         try{
           await shareText(agentPublicKey64)
         } catch(e) {
-          toast.error(`${$t("common.share_text_error")}: ${e.message}`);
+          toast.error(`${$t("common.share_code_error")}: ${e.message}`);
         }
       }}
       moreClasses='w-64 text-sm variant-filled-tertiary dark:!bg-tertiary-200'

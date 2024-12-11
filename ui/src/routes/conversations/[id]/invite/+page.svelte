@@ -49,13 +49,13 @@
 
   async function addContactsToConversation() {
     // TODO: update config.title? 
-    try{
+    try {
       if (conversation) {
         conversation.addContacts($selectedContacts)
         goto(`/conversations/${conversation.id}/details`)
       }
     } catch(e) {
-      toast.error(`${$t("common.add_to_conversation_error")}: ${e.message}`);
+      toast.error(`${$t("common.add_contact_to_conversation_error")}: ${e.message}`);
     }
   }
 </script>
@@ -151,7 +151,7 @@
               {$selectedContacts.length}
             </span>
             <div class='overflow-hidden text-ellipsis nowrap'>
-              <div class='text-md text-start'>{$t('conversations.add_to_conversation')}</div>
+              <div class='text-md text-start'>{$t('conversations.add_contact_to_conversation_error')}</div>
               <div class='text-xs font-light text-start pb-1'>with {$selectedContacts.map(c => c.firstName).join(', ')}</div>
             </div>
           </button>
