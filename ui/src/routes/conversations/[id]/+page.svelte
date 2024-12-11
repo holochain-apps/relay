@@ -17,7 +17,7 @@
   import { RelayStore } from '$store/RelayStore';
   import { Privacy, type Conversation, type Message, type Image } from '../../../types';
   import LightboxImage from '$lib/LightboxImage.svelte';
-  import toast, { Toaster } from "svelte-french-toast";
+  import toast from "svelte-french-toast";
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
   const tAny = t as any;
@@ -302,13 +302,13 @@
                 <div class='flex justify-center'>
                   <Button 
                     moreClasses='bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900'
-                    onClick={() => {
+                    onClick={async() => {
                       try {
                         const inviteCode = conversation.inviteCodeForAgent(conversation.allMembers[0]?.publicKeyB64);
-                        copyToClipboard(inviteCode);
-                        toast.success(`${$t("common.copy_code_success")}`);
+                        await copyToClipboard(inviteCode);
+                        toast.success(`${$t("common.copy_success")}`);
                       } catch (e) {
-                        toast.error(`${$t("common.copy_code_error")}: ${e.message}`);
+                        toast.error(`${$t("common.copy_error")}: ${e.message}`);
                       }
                     }}
                   >
@@ -335,12 +335,12 @@
             <p class='text-xs text-center text-secondary-500 dark:text-tertiary-700 mx-10 mb-8'>{$t('conversations.share_invitation_code_msg')}</p>
             <Button 
               moreClasses='w-64 justify-center variant-filled-tertiary'
-              onClick={() => {
+              onClick={async() => {
                 try {
-                  copyToClipboard(conversation.publicInviteCode);
-                  toast.success(`${$t("common.copy_code_success")}`);
+                  await copyToClipboard(conversation.publicInviteCode);
+                  toast.success(`${$t("common.copy_success")}`);
                 } catch (e) {
-                  toast.error(`${$t("common.copy_code_error")}: ${e.message}`);
+                  toast.error(`${$t("common.copy_error")}: ${e.message}`);
                 }
               }}
               >
@@ -444,8 +444,6 @@
     </form>
   </div>
 {/if}
-
-<Toaster position="bottom-end" />
 
 <style type='text/css'>
   .message :global(a) {

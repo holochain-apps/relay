@@ -11,7 +11,7 @@
   import type { RelayStore } from '$store/RelayStore';
   import { Privacy, type Config } from '../../../../types';
   import Button from '$lib/Button.svelte';
-  import toast, { Toaster } from "svelte-french-toast";
+  import toast from "svelte-french-toast";
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
   const tAny = t as any
@@ -159,12 +159,12 @@
             <span class='ml-4 text-sm font-bold flex-1'>{$t('conversations.add_members')}</span>
             <button
               class='rounded-full bg-surface-500 text-secondary-500 font-bold text-xs py-2 px-2 mr-1 flex items-center justify-center'
-              on:click={() => {
+              on:click={async() => {
                 try {
-                  copyToClipboard(conversation.publicInviteCode);
-                  toast.success(`${$t("common.copy_code_success")}`);
+                  await copyToClipboard(conversation.publicInviteCode);
+                  toast.success(`${$t("common.copy_success")}`);
                 } catch (e) {
-                  toast.error(`${$t("common.copy_code_error")}: ${e.message}`);
+                  toast.error(`${$t("common.copy_error")}: ${e.message}`);
                 }
               }}
             >
@@ -186,12 +186,12 @@
               <span class='ml-4 text-sm flex-1'>{contact.firstName + ' ' + contact.lastName}</span>
               <button 
                 class='rounded-2xl variant-filled-tertiary font-bold text-sm p-2 px-3 flex items-center justify-center'
-                on:click={() => {
+                on:click={async() => {
                   try {
-                    copyToClipboard(conversation.inviteCodeForAgent(contact.publicKeyB64))
-                    toast.success(`${$t("common.copy_code_success")}`);
+                    await copyToClipboard(conversation.inviteCodeForAgent(contact.publicKeyB64))
+                    toast.success(`${$t("common.copy_success")}`);
                   } catch (e) {
-                    toast.error(`${$t("common.copy_code_error")}: ${e.message}`);
+                    toast.error(`${$t("common.copy_error")}: ${e.message}`);
                   }
                 }}
               >
@@ -230,5 +230,3 @@
     </div>
   </div>
 {/if}
-
-<Toaster position="bottom-end" />

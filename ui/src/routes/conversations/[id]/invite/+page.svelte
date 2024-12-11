@@ -12,7 +12,7 @@
   import { RelayStore } from '$store/RelayStore';
   import { copyToClipboard, isMobile, shareText } from '$lib/utils';
   import { type Contact, Privacy } from '../../../../types';
-  import toast, { Toaster } from "svelte-french-toast";
+  import toast from "svelte-french-toast";
 
   const tAny = t as any
 
@@ -48,11 +48,14 @@
   }
 
   async function addContactsToConversation() {
-    // TODO: update config.title?
-
-    if (conversation) {
-      conversation.addContacts($selectedContacts)
-      goto(`/conversations/${conversation.id}/details`)
+    // TODO: update config.title? 
+    try{
+      if (conversation) {
+        conversation.addContacts($selectedContacts)
+        goto(`/conversations/${conversation.id}/details`)
+      }
+    } catch(e) {
+      toast.error(`${$t("common.add_to_conversation_error")}: ${e.message}`);
     }
   }
 </script>
@@ -75,12 +78,12 @@
     <footer>
       <Button 
         moreClasses='w-64'
-        onClick={() => {
+        onClick={async() => {
           try {
-            copyToClipboard(conversation.publicInviteCode);
-            toast.success(`${$t("common.copy_code_success")}`);
+            await copyToClipboard(conversation.publicInviteCode);
+            toast.success(`${$t("common.copy_success")}`);
           } catch (e) {
-            toast.error(`${$t("common.copy_code_error")}: ${e.message}`);
+            toast.error(`${$t("common.copy_error")}: ${e.message}`);
           }
         }}
       >
@@ -157,5 +160,3 @@
     </div>
   {/if}
 {/if}
-
-<Toaster position="bottom-end" />
