@@ -10,6 +10,7 @@
   import { handleFileChange, MIN_TITLE_LENGTH } from '$lib/utils';
   import { RelayStore } from '$store/RelayStore';
   import { Privacy } from '../../../types';
+  import toast from 'svelte-french-toast';
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext('relayStore')
 	let relayStore = relayStoreContext.getStore()
@@ -21,10 +22,14 @@
   async function createConversation(e: Event, privacy: Privacy) {
     pendingCreate = true;
     e.preventDefault();
-    const conversation = await relayStore.createConversation(title, get(imageUrl), privacy);
-    if (conversation) {
-      goto(`/conversations/${conversation.data.id}`)
-      pendingCreate = false
+    try{
+      const conversation = await relayStore.createConversation(title, get(imageUrl), privacy);
+      if (conversation) {
+        goto(`/conversations/${conversation.data.id}`)
+        pendingCreate = false
+      }
+    } catch(e) {
+      toast.error(`${$t("common.create_conversation_error")}: ${e.message}`);
     }
   }
 
@@ -38,7 +43,16 @@
 
 <div class='flex justify-center items-center flex-col my-10'>
   <!-- Hidden file input -->
-  <input type="file" id="avatarInput" accept="image/jpeg, image/png, image/gif" class='hidden' on:change={(event)=>handleFileChange(event,(imageData)=>imageUrl.set(imageData))} />
+  <input 
+    type="file" id="avatarInput" accept="image/jpeg, image/png, image/gif" class='hidden'
+    on:change={(event) => {
+      try {
+        handleFileChange(event, (imageData) => imageUrl.set(imageData));
+      } catch (e) {
+        toast.error(`${$t("common.upload_image_error")}: ${e.message}`);
+      }
+    }}  
+  />
 
   <!-- Label styled as a big clickable icon -->
   <label for="avatarInput" class="file-icon-label cursor-pointer bg-tertiary-500 hover:bg-tertiary-600 dark:bg-secondary-500 dark:hover:bg-secondary-400 w-32 h-32 rounded-full flex items-center justify-center overflow-hidden">

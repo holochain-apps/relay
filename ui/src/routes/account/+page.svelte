@@ -11,6 +11,7 @@
   import { RelayClient } from "$store/RelayClient";
   import { ProfilesStore } from "@holochain-open-dev/profiles";
   import { get } from "svelte/store";
+  import toast from "svelte-french-toast";
 
 	const relayClientContext: { getClient: () => RelayClient } = getContext('relayClient')
 	let relayClient = relayClientContext.getClient()
@@ -25,7 +26,8 @@
   const MIN_FIRST_NAME_LENGTH = 3;
 
   $: firstName = profileData?.fields.firstName || '';
-  $: lastName = profileData?.fields.lastName || ''
+  $: lastName = profileData?.fields.lastName || '';
+  $: isFirstNameValid = firstName.trim().length >= MIN_FIRST_NAME_LENGTH;
 
   let editingName = false
   let firstNameElem: HTMLInputElement
@@ -38,6 +40,7 @@
       await relayClient.updateProfile(firstName, lastName, profileData.fields.avatar)
       editingName = false
     }
+    toast.error(`${$t("common.update_profile_error")}: ${e.message}`);
   }
 
   $: cancelEditName = () => {
@@ -60,12 +63,19 @@
 <div class='flex flex-col grow items-center w-full pt-10' >
 
   <!-- Hidden file input -->
-  <input type="file" id="avatarInput" accept="image/jpeg, image/png, image/gif" class='hidden'
-    on:change={(event) => handleFileChange(event,
-      (imageData) => {
-        relayClient.updateProfile(firstName, lastName, imageData)
+  <input 
+    type="file" id="avatarInput" accept="image/jpeg, image/png, image/gif" class='hidden'
+    on:change={(event) => {
+      try{
+        handleFileChange(event,
+          (imageData) => {
+            relayClient.updateProfile(firstName, lastName, imageData)
+          }
+        )
+      } catch(e) {
+        toast.error(`${$t("common.upload_image_error")}: ${e.message}`);
       }
-    )}
+    }}
   />
   <div style="position:relative">
     <Avatar agentPubKey={relayClient.myPubKey} size='128' moreClasses='mb-4'/>
@@ -107,6 +117,7 @@
       <Button
         moreClasses="h-6 w-6 rounded-md py-0 !px-0 mb-0 mr-2 bg-primary-100 flex items-center justify-center"
         onClick={() => saveName()}
+        disabled={isFirstNameValid}
       >
         <SvgIcon icon='checkMark' color='%23FD3524' size='12' />
       </Button>
@@ -131,12 +142,31 @@
 
   <p class='w-64 text-nowrap overflow-hidden text-ellipsis mt-8 text-secondary-400 dark:text-tertiary-700 mb-4'>{agentPublicKey64}</p>
 
-  <Button onClick={() => copyToClipboard(agentPublicKey64)} moreClasses='w-64 text-sm variant-filled-tertiary dark:!bg-tertiary-200'>
+  <Button 
+    onClick={async() =>{
+      try{
+        await copyToClipboard(agentPublicKey64);
+        toast.success(`${$t("common.copy_success")}`);
+      } catch(e) {
+        toast.error(`${$t("common.copy_error")}: ${e.message}`);
+      }
+    }}  
+    moreClasses='w-64 text-sm variant-filled-tertiary dark:!bg-tertiary-200'
+  >
     <SvgIcon icon='copy' size='22' color='%23FD3524' moreClasses='mr-3' />
     <strong>{$t('common.copy_your_contact_code')}</strong>
   </Button>
   {#if isMobile()}
-    <Button onClick={() => shareText(agentPublicKey64)} moreClasses='w-64 text-sm variant-filled-tertiary dark:!bg-tertiary-200'>
+    <Button
+      onClick={async() => {
+        try{
+          await shareText(agentPublicKey64)
+        } catch(e) {
+          toast.error(`${$t("common.share_code_error")}: ${e.message}`);
+        }
+      }}
+      moreClasses='w-64 text-sm variant-filled-tertiary dark:!bg-tertiary-200'
+    >
       <SvgIcon icon='share' size='22' color='%23FD3524' moreClasses='mr-3' />
       <strong>{$t('common.share_your_contact_code')}</strong>
     </Button>
