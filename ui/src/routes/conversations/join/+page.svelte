@@ -56,14 +56,14 @@
   <div class="container mx-auto flex grow flex-col items-start justify-center px-10">
     <h1 class="h1">{$t("conversations.enter_invite_code")}</h1>
     <input
-      class="mt-2 w-full overflow-hidden text-ellipsis border-none bg-surface-900 pl-0.5 outline-none focus:outline-none focus:ring-0"
+      class="bg-surface-900 mt-2 w-full overflow-hidden text-ellipsis border-none pl-0.5 outline-none focus:outline-none focus:ring-0"
       type="text"
       placeholder="e.g. hLBjb252ZXJzYXRpb25OYW1lq0..."
       name="inviteCode"
       bind:value={inviteCode}
     />
     {#if error}
-      <p class="mt-2 text-sm text-error-500">{$t("conversations.error_joining")}</p>
+      <p class="text-error-500 mt-2 text-sm">{$t("conversations.error_joining")}</p>
     {/if}
   </div>
 

@@ -409,13 +409,13 @@
             {#if conversation.allMembers.length === 1}
               <!-- A 1:1 conversation, so this is a pending connection -->
               <div
-                class="flex flex-col items-center bg-tertiary-500 dark:bg-secondary-500 rounded-xl p-4 mx-8 mb-3"
+                class="bg-tertiary-500 dark:bg-secondary-500 mx-8 mb-3 flex flex-col items-center rounded-xl p-4"
               >
                 <SvgIcon icon="handshake" size="36" color={$modeCurrent ? "%23232323" : "white"} />
-                <h1 class="text-secondary-500 dark:text-tertiary-100 text-xl font-bold mt-2">
+                <h1 class="text-secondary-500 dark:text-tertiary-100 mt-2 text-xl font-bold">
                   {$t("contacts.pending_connection_header")}
                 </h1>
-                <p class="text-sm text-center text-secondary-400 dark:text-tertiary-700 mt-4 mb-6">
+                <p class="text-secondary-400 dark:text-tertiary-700 mb-6 mt-4 text-center text-sm">
                   {$tAny("contacts.pending_connection_description", { name: conversation.title })}
                 </p>
                 <div class="flex justify-center">
@@ -452,7 +452,7 @@
                 </div>
               </div>
             {:else}
-              <p class="mx-10 mb-8 text-center text-xs text-secondary-500 dark:text-tertiary-500">
+              <p class="text-secondary-500 dark:text-tertiary-500 mx-10 mb-8 text-center text-xs">
                 {$t("conversations.share_personal_invitations")}
               </p>
               <Button
@@ -465,7 +465,7 @@
             {/if}
           {:else}
             <!-- Public conversation, make it easy to copy invite code-->
-            <p class="text-xs text-center text-secondary-500 dark:text-tertiary-700 mx-10 mb-8">
+            <p class="text-secondary-500 dark:text-tertiary-700 mx-10 mb-8 text-center text-xs">
               {$t("conversations.share_invitation_code_msg")}
             </p>
             <Button
@@ -496,7 +496,7 @@
       {:else}
         <div
           id="message-box"
-          class="flex-1 p-4 flex flex-col-reverse w-full"
+          class="flex w-full flex-1 flex-col-reverse p-4"
           use:clickOutside={() => (selectedMessageHash = null)}
         >
           <ul>
@@ -504,22 +504,22 @@
               {@const fromMe = message.authorKey === myPubKeyB64}
               {@const isSelected = selectedMessageHash === message.hash}
               {#if message.header}
-                <li class="mt-auto mb-2">
-                  <div class="text-center text-xs text-secondary-400 dark:text-secondary-300">
+                <li class="mb-2 mt-auto">
+                  <div class="text-secondary-400 dark:text-secondary-300 text-center text-xs">
                     {message.header}
                   </div>
                 </li>
               {/if}
               <li
                 class="mt-auto {!message.hideDetails && 'mt-3'} relative {isSelected
-                  ? 'mb-20 mt-2 bg-secondary-500 rounded-t-xl'
+                  ? 'bg-secondary-500 mb-20 mt-2 rounded-t-xl'
                   : ''}"
                 data-message-selection={isSelected ? "true" : undefined}
               >
                 <button
-                  class="w-full flex {fromMe ? 'justify-end' : 'justify-start'} {isSelected
-                    ? 'px-2.5 py-1.5 bg-secondary-500 rounded-t-xl rounded-b-none'
-                    : 'bg-transparent'} text-left bg-transparent border-0"
+                  class="flex w-full {fromMe ? 'justify-end' : 'justify-start'} {isSelected
+                    ? 'bg-secondary-500 rounded-b-none rounded-t-xl px-2.5 py-1.5'
+                    : 'bg-transparent'} border-0 bg-transparent text-left"
                   use:press={{ timeframe: 300, triggerBeforeFinished: false }}
                   on:press={(e) => handleMessagePress(message.hash)}
                   on:click|preventDefault={() => handleMessageClick(message.hash)}
@@ -535,7 +535,7 @@
                         moreClasses="items-start mt-1"
                       />
                     {:else}
-                      <span class="min-w-6 inline-block"></span>
+                      <span class="inline-block min-w-6"></span>
                     {/if}
                   {/if}
 
@@ -543,7 +543,7 @@
                     {#if !message.hideDetails}
                       <span class="flex items-baseline {fromMe && 'flex-row-reverse opacity-80'}">
                         <span class="font-bold">{fromMe ? "You" : message.author}</span>
-                        <span class="mx-2 text-xxs"
+                        <span class="text-xxs mx-2"
                           ><Time timestamp={message.timestamp} format="h:mma" /></span
                         >
                       </span>
@@ -553,7 +553,7 @@
                       {#each message.images as image}
                         <div class="flex {fromMe ? 'justify-end' : 'justify-start'}">
                           {#if image.status === "loaded"}
-                            <div class="flex justify-between items-start mb-2">
+                            <div class="mb-2 flex items-start justify-between">
                               <LightboxImage
                                 btnClass="inline max-w-2/3"
                                 src={image.dataURL}
@@ -562,7 +562,7 @@
                             </div>
                           {:else if image.status === "loading" || image.status === "pending"}
                             <div
-                              class="w-20 h-20 bg-surface-800 mb-2 flex items-center justify-center"
+                              class="bg-surface-800 mb-2 flex h-20 w-20 items-center justify-center"
                             >
                               <SvgIcon
                                 icon="spinner"
@@ -572,7 +572,7 @@
                             </div>
                           {:else}
                             <div
-                              class="w-20 h-20 bg-surface-800 mb-2 flex items-center justify-center"
+                              class="bg-surface-800 mb-2 flex h-20 w-20 items-center justify-center"
                             >
                               <SvgIcon
                                 icon="x"
@@ -585,7 +585,7 @@
                       {/each}
                     {/if}
 
-                    <div class="message font-light break-words w-full {fromMe && 'text-end'}">
+                    <div class="message w-full break-words font-light {fromMe && 'text-end'}">
                       {@html sanitizeHTML(linkify(message.content))}
                     </div>
                   </div>
@@ -603,7 +603,7 @@
       {/if}
     </div>
   </div>
-  <div class="w-full flex-shrink-0 bg-tertiary-500 p-2 dark:bg-secondary-500">
+  <div class="bg-tertiary-500 dark:bg-secondary-500 w-full flex-shrink-0 p-2">
     <form class="flex" method="POST" on:submit={sendMessage}>
       <input
         type="file"
@@ -628,13 +628,13 @@
           type="text"
           bind:this={newMessageInput}
           bind:value={newMessageText}
-          class="w-full border-0 bg-tertiary-500 placeholder:text-sm placeholder:text-gray-400 focus:border-gray-500 focus:ring-0"
+          class="bg-tertiary-500 w-full border-0 placeholder:text-sm placeholder:text-gray-400 focus:border-gray-500 focus:ring-0"
           placeholder={$t("conversations.message_placeholder")}
         />
         <div class="flex flex-row px-4">
           {#each $newMessageImages as image, i}
             {#if image.status === "loading"}
-              <div class="mr-2 flex h-10 w-10 items-center justify-center bg-tertiary-500">
+              <div class="bg-tertiary-500 mr-2 flex h-10 w-10 items-center justify-center">
                 <SvgIcon icon="spinner" color="white" size="10" />
               </div>
             {:else}

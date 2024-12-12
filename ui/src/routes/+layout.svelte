@@ -1,8 +1,6 @@
 <script lang="ts">
   import type { AppClient } from "@holochain/client";
-  import {
-    AppWebsocket
-  } from "@holochain/client";
+  import { AppWebsocket } from "@holochain/client";
   import { ProfilesClient, ProfilesStore } from "@holochain-open-dev/profiles";
   import { modeCurrent } from "@skeletonlabs/skeleton";
   import { onMount, setContext } from "svelte";
@@ -33,7 +31,7 @@
   async function initHolochain() {
     try {
       console.log("__HC_LAUNCHER_ENV__ is", window.__HC_LAUNCHER_ENV__);
-      
+
       // Connect to holochain
       client = await AppWebsocket.connect({ defaultTimeout: 15000 });
 
@@ -73,7 +71,7 @@
   onMount(() => {
     initHolochain();
 
-    initLightDarkModeSwitcher()
+    initLightDarkModeSwitcher();
 
     setTimeout(updateAppHeight, 300);
     window.addEventListener("resize", updateAppHeight);

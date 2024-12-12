@@ -86,7 +86,7 @@
       <!-- Action Buttons -->
       {#if needsPermission}
         <div class="mt-4">
-          <p class="mt-2 text-sm text-error-500">{$t("common.need_camera_permissions")}</p>
+          <p class="text-error-500 mt-2 text-sm">{$t("common.need_camera_permissions")}</p>
         </div>
       {/if}
 
