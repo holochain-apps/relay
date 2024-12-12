@@ -12,6 +12,7 @@
   import { RelayStore } from "$store/RelayStore";
   import { copyToClipboard, isMobile, shareText } from "$lib/utils";
   import { type Contact, Privacy } from "../../../../types";
+  import toast from "svelte-french-toast";
 
   const tAny = t as any;
 
@@ -53,9 +54,14 @@
   }
 
   async function addContactsToConversation() {
-    if (conversation) {
-      conversation.addContacts($selectedContacts);
-      goto(`/conversations/${conversation.id}/details`);
+    // TODO: update config.title?
+    try {
+      if (conversation) {
+        conversation.addContacts($selectedContacts);
+        goto(`/conversations/${conversation.id}/details`);
+      }
+    } catch (e) {
+      toast.error(`${$t("common.add_contact_to_conversation_error")}: ${e.message}`);
     }
   }
 </script>
@@ -80,8 +86,18 @@
     </div>
 
     <footer>
-      <Button onClick={() => copyToClipboard(conversation.publicInviteCode)} moreClasses="w-64">
-        <p class="w-64 overflow-hidden text-ellipsis text-nowrap">
+      <Button
+        moreClasses="w-64"
+        onClick={async () => {
+          try {
+            await copyToClipboard(conversation.publicInviteCode);
+            toast.success(`${$t("common.copy_success")}`);
+          } catch (e) {
+            toast.error(`${$t("common.copy_error")}: ${e.message}`);
+          }
+        }}
+      >
+        <p class="w-64 text-nowrap overflow-hidden text-ellipsis">
           {conversation.publicInviteCode}
         </p>
         <img src="/copy.svg" alt="Copy Icon" width="16" />&nbsp;<span
@@ -185,9 +201,11 @@
               <SvgIcon icon="person" size="12" color="%23FD3524" moreClasses="mr-1" />
               {$selectedContacts.length}
             </span>
-            <div class="nowrap overflow-hidden text-ellipsis">
-              <div class="text-md text-start">{$t("conversations.add_to_conversation")}</div>
-              <div class="pb-1 text-start text-xs font-light">
+            <div class="overflow-hidden text-ellipsis nowrap">
+              <div class="text-md text-start">
+                {$t("conversations.add_contact_to_conversation_error")}
+              </div>
+              <div class="text-xs font-light text-start pb-1">
                 with {$selectedContacts.map((c) => c.firstName).join(", ")}
               </div>
             </div>

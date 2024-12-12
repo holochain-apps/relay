@@ -10,6 +10,7 @@
   import { t } from "$lib/translations";
   import { copyToClipboard, handleFileChange, isMobile, shareText } from "$lib/utils";
   import { RelayStore } from "$store/RelayStore";
+  import toast from "svelte-french-toast";
 
   // Silly thing to get around typescript issues with sveltekit-i18n
   const tAny = t as any;
@@ -209,7 +210,18 @@
         >
           {contact?.publicKeyB64}
         </span>
-        <button on:click={() => contact?.publicKeyB64 && copyToClipboard(contact.publicKeyB64)}>
+        <button
+          on:click={async () => {
+            try {
+              if (contact?.publicKeyB64) {
+                await copyToClipboard(contact.publicKeyB64);
+                toast.success(`${$t("common.copy_success")}`);
+              }
+            } catch (e) {
+              toast.error(`${$t("common.copy_error")}: ${e.message}`);
+            }
+          }}
+        >
           <SvgIcon icon="copy" size="20" color="%23999" />
         </button>
         {#if isMobile()}
