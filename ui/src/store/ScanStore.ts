@@ -15,7 +15,7 @@ class ScanStore {
   constructor() {
     const currentPlatform = platform();
     this.isSupported = writable(
-      Boolean(currentPlatform === "ios" || currentPlatform === "android"),
+      Boolean(currentPlatform === "ios" || currentPlatform === "android")
     );
     this.value = writable(null);
     this.onCompleteGoto = writable(null);

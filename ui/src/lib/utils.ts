@@ -91,7 +91,7 @@ export function resizeAndExportAvatar(img: HTMLImageElement) {
 
 export function handleFileChange(
   event: Event,
-  callback: (imageData: string) => void,
+  callback: (imageData: string) => void
 ) {
   const input = event.target as HTMLInputElement;
   if (input.files && input.files.length > 0) {
@@ -169,7 +169,7 @@ export async function fileToDataUrl(file: File): Promise<string> {
         resolve(reader.result);
       } else {
         reject(
-          "Failed to convert File to Image: File contents are not a string",
+          "Failed to convert File to Image: File contents are not a string"
         );
       }
     };
@@ -182,7 +182,9 @@ export async function fileToDataUrl(file: File): Promise<string> {
 function setLightDarkMode(value: boolean) {
   const elemHtmlClasses = document.documentElement.classList;
   const classDark = `dark`;
-  value === true ? elemHtmlClasses.remove(classDark) : elemHtmlClasses.add(classDark);
+  value === true
+    ? elemHtmlClasses.remove(classDark)
+    : elemHtmlClasses.add(classDark);
   setModeCurrent(value);
 }
 

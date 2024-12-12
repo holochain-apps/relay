@@ -15,13 +15,13 @@ export class ContactStore {
     public lastName: string,
     public originalActionHash: ActionHash | undefined,
     public publicKeyB64: AgentPubKeyB64,
-    public conversationId?: string | undefined,
+    public conversationId?: string | undefined
   ) {
     const privateConversationId = get(
       LocalStorageStore(
         `contact_${publicKeyB64}_private_conversation`,
-        conversationId,
-      ),
+        conversationId
+      )
     );
     this.contact = writable({
       avatar,

@@ -51,7 +51,7 @@ export class ConversationStore {
     public config: Config,
     public created: number,
     public privacy: Privacy,
-    public progenitor: AgentPubKey,
+    public progenitor: AgentPubKey
   ) {
     const messages: Messages = {};
 
@@ -69,7 +69,7 @@ export class ConversationStore {
     });
     this.localDataStore = LocalStorageStore<LocalConversationData>(
       `conversation_${this.data.id}`,
-      { archived: false, invitedContactKeys: [], open: false, unread: false },
+      { archived: false, invitedContactKeys: [], open: false, unread: false }
     );
     this.lastMessage = writable(null);
     this.client = relayStore.client;
@@ -77,7 +77,7 @@ export class ConversationStore {
       this.client.client,
       "UNUSED ROLE NAME", // this is not used when cellId is specified, but the FileStorageClient still requires the parameter
       "file_storage",
-      cellId,
+      cellId
     );
   }
 
@@ -156,7 +156,7 @@ export class ConversationStore {
     }
     const proof = await this.relayStore.inviteAgentToConversation(
       this.data.id,
-      decodeHashFromBase64(publicKeyB64),
+      decodeHashFromBase64(publicKeyB64)
     );
     if (proof !== undefined) {
       // The name of the conversation we are inviting to should be our name + # of other people invited
@@ -196,7 +196,7 @@ export class ConversationStore {
   get invitedContacts() {
     const contacts = get(this.relayStore.contacts);
     return this.invitedContactKeys.map((contactKey) =>
-      contacts.find((contact) => contact.publicKeyB64 === contactKey),
+      contacts.find((contact) => contact.publicKeyB64 === contactKey)
     );
   }
 
@@ -223,8 +223,8 @@ export class ConversationStore {
 
     const keys = uniq(
       Object.keys(joinedAgents).concat(
-        includeInvited ? this.invitedContactKeys : [],
-      ),
+        includeInvited ? this.invitedContactKeys : []
+      )
     );
 
     // Filter out progenitor, as they are always in the list,
@@ -235,7 +235,7 @@ export class ConversationStore {
       .map((agentKey) => {
         const agentProfile = joinedAgents[agentKey];
         const contactProfile = contacts.find(
-          (contact) => contact.publicKeyB64 === agentKey,
+          (contact) => contact.publicKeyB64 === agentKey
         );
 
         return {
@@ -258,7 +258,7 @@ export class ConversationStore {
       .filter((contactKey) => !joinedAgents[contactKey]) // filter out already joined agents
       .map((contactKey) => {
         const contactProfile = contacts.find(
-          (contact) => contact.publicKeyB64 === contactKey,
+          (contact) => contact.publicKeyB64 === contactKey
         );
 
         return {
@@ -313,7 +313,7 @@ export class ConversationStore {
       const messageHashes = await this.client.getMessageHashes(
         this.data.id,
         b,
-        count,
+        count
       );
 
       const messageHashesB64 = messageHashes.map((h) => encodeHashToBase64(h));
@@ -343,16 +343,16 @@ export class ConversationStore {
             const message = messageRecord.message;
             if (message) {
               message.hash = encodeHashToBase64(
-                messageRecord.signed_action.hashed.hash,
+                messageRecord.signed_action.hashed.hash
               );
               message.timestamp = new Date(
-                messageRecord.signed_action.hashed.content.timestamp / 1000,
+                messageRecord.signed_action.hashed.content.timestamp / 1000
               );
               if (!lastMessage || message.timestamp > lastMessage.timestamp) {
                 lastMessage = message;
               }
               message.authorKey = encodeHashToBase64(
-                messageRecord.signed_action.hashed.content.author,
+                messageRecord.signed_action.hashed.content.author
               );
               message.images = ((message.images as any[]) || []).map((i) => ({
                 fileType: i.file_type,
@@ -372,7 +372,7 @@ export class ConversationStore {
                   (m) =>
                     m.status === "pending" &&
                     m.authorKey === message.authorKey &&
-                    m.content === message.content,
+                    m.content === message.content
                 );
                 if (matchesPending) {
                   delete newMessages[matchesPending.hash];
@@ -384,7 +384,7 @@ export class ConversationStore {
             console.error(
               "Unable to parse message, ignoring",
               messageRecord,
-              e,
+              e
             );
           }
         }
@@ -451,14 +451,14 @@ export class ConversationStore {
             storage_entry_hash: hash,
             file_type: image.file!.type,
           };
-        }),
+        })
     );
     const newMessageEntry = await this.client.sendMessage(
       this.data.id,
       content,
       bucket,
       imageStructs,
-      Object.keys(this.data.agentProfiles).map((k) => decodeHashFromBase64(k)),
+      Object.keys(this.data.agentProfiles).map((k) => decodeHashFromBase64(k))
     );
     const newMessage: Message = {
       ...oldMessage,
@@ -507,7 +507,7 @@ export class ConversationStore {
     if (message.images?.length === 0) return;
 
     const images = await Promise.all(
-      message.images.map((image) => this.loadImage(image)),
+      message.images.map((image) => this.loadImage(image))
     );
     this.conversation.update((conversation) => {
       conversation.messages[message.hash].images = images;
@@ -524,7 +524,7 @@ export class ConversationStore {
       const file = await pRetry(
         () =>
           this.fileStorageClient.downloadFile(
-            image.storageEntryHash as Uint8Array,
+            image.storageEntryHash as Uint8Array
           ),
         {
           retries: 10,
@@ -533,10 +533,10 @@ export class ConversationStore {
           onFailedAttempt: (e) => {
             console.error(
               `Failed to download file from hash ${encodeHashToBase64(image.storageEntryHash as Uint8Array)}`,
-              e,
+              e
             );
           },
-        },
+        }
       );
 
       // Convert image blob to data url
@@ -560,7 +560,7 @@ export class ConversationStore {
     this.localDataStore.update((data) => ({
       ...data,
       invitedContactKeys: this.invitedContactKeys.concat(
-        invitedContacts.map((c) => c.publicKeyB64),
+        invitedContacts.map((c) => c.publicKeyB64)
       ),
     }));
   }

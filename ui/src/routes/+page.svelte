@@ -1,32 +1,31 @@
 <script lang="ts">
-	import { ProfilesStore } from '@holochain-open-dev/profiles';
+  import { ProfilesStore } from "@holochain-open-dev/profiles";
   import "@holochain-open-dev/profiles/dist/elements/create-profile.js";
-	import { modeCurrent } from '@skeletonlabs/skeleton';
-	import { getContext } from 'svelte';
-	import { goto } from '$app/navigation';
-	import Header from '$lib/Header.svelte';
-	import SvgIcon from '$lib/SvgIcon.svelte';
-	import { t } from '$lib/translations';
-	import { RelayStore } from '$store/RelayStore';
+  import { modeCurrent } from "@skeletonlabs/skeleton";
+  import { getContext } from "svelte";
+  import { goto } from "$app/navigation";
+  import Header from "$lib/Header.svelte";
+  import SvgIcon from "$lib/SvgIcon.svelte";
+  import { t } from "$lib/translations";
+  import { RelayStore } from "$store/RelayStore";
 
-	const profilesContext: { getStore: () => ProfilesStore } = getContext('profiles')
-	let profilesStore = profilesContext.getStore()
-	$: prof = profilesStore ? profilesStore.myProfile : undefined
-	$: loggedIn = $prof && $prof.status == "complete" && $prof.value !== undefined
+  const profilesContext: { getStore: () => ProfilesStore } = getContext("profiles");
+  let profilesStore = profilesContext.getStore();
+  $: prof = profilesStore ? profilesStore.myProfile : undefined;
+  $: loggedIn = $prof && $prof.status == "complete" && $prof.value !== undefined;
 
-	const relayStoreContext: { getStore: () => RelayStore } = getContext('relayStore')
-	let relayStore = relayStoreContext.getStore()
+  const relayStoreContext: { getStore: () => RelayStore } = getContext("relayStore");
+  let relayStore = relayStoreContext.getStore();
 
-	$: if (loggedIn) {
-		if (relayStore.conversationsData.length > 0) {
-			goto('/conversations')
-		}
-		goto('/welcome')
-	}
+  $: if (loggedIn) {
+    if (relayStore.conversationsData.length > 0) {
+      goto("/conversations");
+    }
+    goto("/welcome");
+  }
 </script>
 
-<Header>
-</Header>
+<Header></Header>
 
 {#if !loggedIn}
   <div class="flex grow flex-col items-center justify-center">
@@ -52,7 +51,7 @@
     </div>
   {:else}
     <a
-      class="variant-filled-tertiary mb-8 flex items-center rounded-full px-6 py-3 dark:variant-filled-tertiary"
+      class="variant-filled-tertiary dark:variant-filled-tertiary mb-8 flex items-center rounded-full px-6 py-3"
       href="/register"
     >
       <SvgIcon icon="lock" size="24" color="%23fd3524" />

@@ -1,7 +1,5 @@
 <script lang="ts">
-  import {
-    AppWebsocket,
-  } from "@holochain/client";
+  import { AppWebsocket } from "@holochain/client";
   import { ProfilesClient, ProfilesStore } from "@holochain-open-dev/profiles";
   import { modeCurrent } from "@skeletonlabs/skeleton";
   import { onMount, setContext } from "svelte";
@@ -16,23 +14,23 @@
   const ROLE_NAME = "relay";
   const ZOME_NAME = "relay";
 
-	let client: AppWebsocket
-	let relayClient: RelayClient
-	let relayStore: RelayStore
-	let connected = false
-	let profilesStore : ProfilesStore|null = null
+  let client: AppWebsocket;
+  let relayClient: RelayClient;
+  let relayStore: RelayStore;
+  let connected = false;
+  let profilesStore: ProfilesStore | null = null;
 
-	let appHeight: number;
+  let appHeight: number;
 
-	function updateAppHeight() {
-		appHeight = window.innerHeight;
-		document.documentElement.style.setProperty('--app-height', `${appHeight}px`);
+  function updateAppHeight() {
+    appHeight = window.innerHeight;
+    document.documentElement.style.setProperty("--app-height", `${appHeight}px`);
   }
 
   async function initHolochain() {
     try {
       console.log("__HC_LAUNCHER_ENV__ is", window.__HC_LAUNCHER_ENV__);
-      
+
       // Connect to holochain
       client = await AppWebsocket.connect({ defaultTimeout: 15000 });
 
@@ -72,32 +70,31 @@
   onMount(() => {
     initHolochain();
 
-    initLightDarkModeSwitcher()
+    initLightDarkModeSwitcher();
 
-		setTimeout(updateAppHeight, 300)
-		window.addEventListener('resize', updateAppHeight);
+    setTimeout(updateAppHeight, 300);
+    window.addEventListener("resize", updateAppHeight);
 
-    document.addEventListener('click', handleLinkClick);
+    document.addEventListener("click", handleLinkClick);
     return () => {
-      document.removeEventListener('click', handleLinkClick);
-			window.removeEventListener('resize', updateAppHeight);
+      document.removeEventListener("click", handleLinkClick);
+      window.removeEventListener("resize", updateAppHeight);
     };
-	})
-
-	$: prof = profilesStore ? profilesStore.myProfile : undefined
-
-	setContext('relayClient', {
-    getClient: () => relayClient
   });
 
-	setContext('profiles', {
-    getStore: () => profilesStore
+  $: prof = profilesStore ? profilesStore.myProfile : undefined;
+
+  setContext("relayClient", {
+    getClient: () => relayClient,
   });
 
-	setContext('relayStore', {
-    getStore: () => relayStore
+  setContext("profiles", {
+    getStore: () => profilesStore,
   });
 
+  setContext("relayStore", {
+    getStore: () => relayStore,
+  });
 </script>
 
 <div class="wrapper full-screen mx-auto flex h-screen flex-col items-center px-5 py-4">
@@ -140,17 +137,17 @@
     position: fixed;
     width: 100%;
     height: 100%;
-		background-color: var(--app-background-color);
+    background-color: var(--app-background-color);
   }
 
-	.wrapper {
-		max-width: 1000px;
-		margin: 0 auto;
-		height: var(--app-height);
-		overflow-y: auto;
-	}
+  .wrapper {
+    max-width: 1000px;
+    margin: 0 auto;
+    height: var(--app-height);
+    overflow-y: auto;
+  }
 
-	.wrapper.full-screen {
-		padding: 0;
-	}
+  .wrapper.full-screen {
+    padding: 0;
+  }
 </style>

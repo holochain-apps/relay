@@ -1,3 +1,3 @@
-<div class='flex flex-row items-center w-full pt-4 px-4 relative'>
+<div class="relative flex w-full flex-row items-center px-4 pt-4">
   <slot></slot>
 </div>
