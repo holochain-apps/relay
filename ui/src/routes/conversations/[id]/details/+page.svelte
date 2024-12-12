@@ -18,6 +18,7 @@
   import { Privacy, type Config } from "../../../../types";
   import Button from "$lib/Button.svelte";
   import toast from "svelte-french-toast";
+  import { goto } from "$app/navigation";
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
   const tAny = t as any;
@@ -60,9 +61,12 @@
 </script>
 
 <Header>
-  <a class="absolute z-10 pr-5" href={`/conversations/${conversationId}`}
-    ><SvgIcon icon="caretLeft" color={$modeCurrent ? "%232e2e2e" : "white"} size="10" /></a
+  <button
+    class="absolute z-10 pr-5 text-left"
+    on:click={() => goto(`/conversations/${conversationId}`)}
   >
+    <SvgIcon icon="caretLeft" color={$modeCurrent ? "%232e2e2e" : "white"} size="10" />
+  </button>
   {#if conversation}
     <h1 class="flex-1 grow text-center">
       {#if conversation.data.privacy === Privacy.Public}{$t(
@@ -70,9 +74,12 @@
         )}{:else}{conversation.title}{/if}
     </h1>
     {#if conversation.data.privacy === Privacy.Private && encodeHashToBase64(conversation.data.progenitor) === relayStore.client.myPubKeyB64}
-      <a class="absolute right-5" href="/conversations/{conversation.data.id}/invite"
-        ><SvgIcon icon="addPerson" color="white" /></a
+      <button
+        class="absolute right-5"
+        on:click={() => goto("/conversations/{conversation.data.id}/invite")}
       >
+        <SvgIcon icon="addPerson" color="white" />
+      </button>
     {/if}
   {/if}
 </Header>
