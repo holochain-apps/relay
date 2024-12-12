@@ -1,15 +1,15 @@
 <script lang="ts">
-  import BiggerPicture from 'bigger-picture';
-  import 'bigger-picture/css';
+  import BiggerPicture from "bigger-picture";
+  import "bigger-picture/css";
 
   export let btnClass = "";
   export let src = "";
   export let alt = "";
 
   let biggerPicture = BiggerPicture({
-		target: document.body
-	});
-  
+    target: document.body,
+  });
+
   function show(e: PointerEvent | MouseEvent) {
     const targetImg = e.target as HTMLImageElement;
     biggerPicture.open({
@@ -21,19 +21,19 @@
           width: targetImg.width * 10,
           height: targetImg.height * 10,
           img: src,
-        }
-      ]
-    })
+        },
+      ],
+    });
   }
 </script>
 
-<button on:click={(e) => show(e)} class={btnClass}}>
+<button on:click={(e) => show(e)} class="{btnClass}}">
   <img {src} {alt} class="object-cover" />
 </button>
 
 <style>
   :global(.bp-zoomed.bp-small .bp-controls) {
-    opacity: 1 !important;  
+    opacity: 1 !important;
   }
 
   :global(.bp-close) {
