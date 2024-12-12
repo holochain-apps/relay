@@ -7,8 +7,8 @@ import {
 import { shareText as sharesheetShareText } from "@buildyourwebapp/tauri-plugin-sharesheet";
 import { platform } from "@tauri-apps/plugin-os";
 import { setModeCurrent } from "@skeletonlabs/skeleton";
-import { goto } from "$app/navigation";
 import { open } from "@tauri-apps/plugin-shell";
+import linkifyStr from "linkify-string";
 
 export const MIN_TITLE_LENGTH = 3;
 
@@ -16,15 +16,20 @@ export function sanitizeHTML(html: string) {
   return DOMPurify.sanitize(html);
 }
 
-export function linkify(text: string) {
-  const urlPattern =
-    /(?:https?:(?:\/\/)?)?(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
-  return text.replace(urlPattern, (match) => {
-    // XXX: not quite sure why this is needed, but if i dont do this sveltekit navigates internally and externally at the same time
-    const href = match.includes("://") ? match : `https://${match}`;
-    return `<a href="${href}" target="_blank" rel="noopener noreferrer">${match}</a>`;
+/**
+ * Search the provided text for URLs, replacing them with HTML link tags pointing to that URL
+ *
+ * @param text
+ * @returns
+ */
+export const linkify = (text: string): string =>
+  linkifyStr(text, {
+    defaultProtocol: "https",
+    rel: {
+      url: "noopener noreferrer",
+    },
+    target: "_blank",
   });
-}
 
 export function shareText(text: string | Promise<string>) {
   if (typeof text === "string") {
@@ -197,31 +202,21 @@ export function initLightDarkModeSwitcher() {
   };
 }
 
-// Prevent internal links from opening in the browser when using Tauri
-export function handleLinkClick(event: MouseEvent) {
-  const target = event.target as HTMLElement;
-  // Ensure the clicked element is an anchor and has a href attribute
-  if (target.closest("a[href]")) {
-    // Prevent default action
-    event.preventDefault();
-    event.stopPropagation();
+/**
+ * Ensure that external links are opened with the system default browser or mail client.
+ *
+ * @param e: click event
+ * @returns
+ */
+export function handleLinkClick(e: MouseEvent) {
+  // Abort if clicked element is not a link
+  const anchor = (e.target as HTMLElement).closest("a[href]") as HTMLAnchorElement;
+  if (!anchor || anchor?.href.startsWith(window.location.origin)) return;
 
-    const anchor = target.closest("a") as HTMLAnchorElement;
-    let link = anchor.getAttribute("href");
-    if (
-      anchor &&
-      anchor.href.startsWith(window.location.origin) &&
-      !anchor.getAttribute("rel")?.includes("noopener")
-    ) {
-      return goto(anchor.pathname); // Navigate internally using SvelteKit's goto
-    } else if (anchor && link) {
-      // Handle external links using Tauri's API
-      if (!link.includes("://")) {
-        link = `https://${link}`;
-      }
-      open(link);
-    }
-  }
+  // Handle external links using Tauri's API
+  e.preventDefault();
+  e.stopPropagation();
+  open(anchor.getAttribute("href") as string);
 }
 
 export function convertDataURIToUint8Array(dataURI: string): Uint8Array {

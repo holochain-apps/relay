@@ -317,14 +317,17 @@
 </script>
 
 <Header>
-  <a class="flex-none pr-5" href={`/conversations${conversation?.archived ? "/archive" : ""}`}
-    ><SvgIcon icon="caretLeft" color={$modeCurrent ? "%232e2e2e" : "white"} size="10" /></a
+  <button
+    class="flex-none pr-5"
+    on:click={() => goto(`/conversations${conversation?.archived ? "/archive" : ""}`)}
   >
+    <SvgIcon icon="caretLeft" color={$modeCurrent ? "%232e2e2e" : "white"} size="10" />
+  </button>
   {#if conversation}
     <h1 class="block grow self-center overflow-hidden text-ellipsis whitespace-nowrap text-center">
-      <a href={`/conversations/${conversationId}/details`} class="w-full">
+      <button on:click={() => goto(`/conversations/${conversationId}/details`)} class="w-full">
         {conversation.title}
-      </a>
+      </button>
     </h1>
     <button
       class="self-center pl-2"
@@ -333,12 +336,15 @@
       <SvgIcon icon="gear" size="18" color={$modeCurrent ? "%232e2e2e" : "white"} />
     </button>
     {#if conversation.data.privacy === Privacy.Public || encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64}
-      <a
+      <button
         class="flex-none pl-5"
-        href={`/conversations/${conversation.data.id}/${conversation.data.privacy === Privacy.Public ? "details" : "invite"}`}
+        on:click={() =>
+          goto(
+            `/conversations/${conversation.data.id}/${conversation.data.privacy === Privacy.Public ? "details" : "invite"}`,
+          )}
       >
         <SvgIcon icon="addPerson" size="24" color={$modeCurrent ? "%232e2e2e" : "white"} />
-      </a>
+      </button>
     {:else}
       <span class="flex-none pl-8">&nbsp;</span>
     {/if}
@@ -392,9 +398,12 @@
       {/if}
       <h1 class="b-1 break-all text-3xl">{conversation.title}</h1>
       <!-- if joining a conversation created by someone else, say still syncing here until there are at least 2 members -->
-      <a href={`/conversations/${conversationId}/details`} class="text-sm">
+      <button
+        on:click={() => goto(`/conversations/${conversationId}/details`)}
+        class="text-left text-sm"
+      >
         {$tAny("conversations.num_members", { count: numMembers })}
-      </a>
+      </button>
       {#if $processedMessages.length === 0 && encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64 && numMembers === 1}
         <!-- No messages yet, no one has joined, and this is a conversation I created. Display a helpful message to invite others -->
         <div class="flex h-full w-full flex-col items-center justify-center">
