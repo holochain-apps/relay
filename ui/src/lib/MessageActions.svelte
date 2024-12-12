@@ -7,7 +7,7 @@
   import { save } from '@tauri-apps/plugin-dialog';
   import { create, writeFile } from '@tauri-apps/plugin-fs';
   import { downloadDir } from '@tauri-apps/api/path';
-    import toast from 'svelte-french-toast';
+  import toast from 'svelte-french-toast';
 
   export let message: Message;
   export let unselectMessage: () => void;
@@ -62,8 +62,12 @@
 
   const download = async () => {
     if (message?.images) {
-      const loadedImages = message.images.filter(img => img.status === 'loaded');
-      await Promise.all(loadedImages.map(downloadImage));
+      for (const image of message.images) {
+        if (image.status === 'loaded') {
+           //Downloads only the loaded images sequentially
+          await downloadImage(image);
+        }
+      }
     }
     unselectMessage();
   };
