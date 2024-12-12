@@ -32,6 +32,7 @@
     "@tsconfig/svelte": "^5.0.4",
     "@types/dompurify": "^3.0.5",
     "@types/lodash-es": "^4.17.12",
+    "@types/node": "^22.10.1",
     "@types/uuid": "^9.0.8",
     "bestzip": "^2.2.0",
     "concurrently": "^8.2.2",
@@ -48,6 +49,7 @@
     "typescript": "^5.4.4"
   },
   "dependencies": {
+    "@tauri-apps/plugin-dialog": "^2.0.1",
     "dompurify": "^3.1.6",
     "lodash-es": "^4.17.21",
     "svelte-gestures": "^5.0.4",
