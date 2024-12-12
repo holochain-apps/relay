@@ -32,7 +32,7 @@
   <div class="relative my-2 my-5 w-full">
     <input
       type="text"
-      class="text-md h-12 w-full rounded-full border-0 !bg-tertiary-500 pl-10 pr-4 dark:!bg-secondary-500 dark:text-tertiary-500"
+      class="text-md !bg-tertiary-500 dark:!bg-secondary-500 dark:text-tertiary-500 h-12 w-full rounded-full border-0 pl-10 pr-4"
       placeholder={$t("conversations.search_placeholder")}
       bind:value={search}
     />

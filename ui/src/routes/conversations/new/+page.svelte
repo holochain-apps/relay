@@ -62,7 +62,7 @@
   <!-- Label styled as a big clickable icon -->
   <label
     for="avatarInput"
-    class="file-icon-label flex h-32 w-32 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-tertiary-500 hover:bg-tertiary-600 dark:bg-secondary-500 dark:hover:bg-secondary-400"
+    class="file-icon-label bg-tertiary-500 hover:bg-tertiary-600 dark:bg-secondary-500 dark:hover:bg-secondary-400 flex h-32 w-32 cursor-pointer items-center justify-center overflow-hidden rounded-full"
   >
     {#if $imageUrl}
       <img src={$imageUrl} alt="Avatar" class="h-32 w-32 rounded-full object-cover" />

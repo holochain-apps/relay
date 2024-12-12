@@ -51,7 +51,7 @@
     </div>
   {:else}
     <a
-      class="variant-filled-tertiary mb-8 flex items-center rounded-full px-6 py-3 dark:variant-filled-tertiary"
+      class="variant-filled-tertiary dark:variant-filled-tertiary mb-8 flex items-center rounded-full px-6 py-3"
       href="/register"
     >
       <SvgIcon icon="lock" size="24" color="%23fd3524" />
