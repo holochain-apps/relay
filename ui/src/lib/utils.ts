@@ -9,6 +9,7 @@ import { platform } from "@tauri-apps/plugin-os";
 import { setModeCurrent } from "@skeletonlabs/skeleton";
 import { goto } from "$app/navigation";
 import { open } from "@tauri-apps/plugin-shell";
+import linkifyStr from "linkify-string";
 
 export const MIN_TITLE_LENGTH = 3;
 
@@ -16,15 +17,20 @@ export function sanitizeHTML(html: string) {
   return DOMPurify.sanitize(html);
 }
 
-export function linkify(text: string) {
-  const urlPattern =
-    /(?:https?:(?:\/\/)?)?(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
-  return text.replace(urlPattern, (match) => {
-    // XXX: not quite sure why this is needed, but if i dont do this sveltekit navigates internally and externally at the same time
-    const href = match.includes("://") ? match : `https://${match}`;
-    return `<a href="${href}" target="_blank" rel="noopener noreferrer">${match}</a>`;
+/**
+ * Search the provided text for URLs, replacing them with HTML link tags pointing to that URL
+ *
+ * @param text
+ * @returns
+ */
+export const linkify = (text: string): string =>
+  linkifyStr(text, {
+    defaultProtocol: "https",
+    rel: {
+      url: "noopener noreferrer",
+    },
+    target: "_blank",
   });
-}
 
 export function shareText(text: string | Promise<string>) {
   if (typeof text === "string") {
