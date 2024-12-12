@@ -59,7 +59,7 @@
   </div>
 
   <div class='items-right w-full flex justify-end pr-4'>
-    <Button on:click={saveName} disabled={isFirstNameValid}>
+    <Button on:click={saveName} disabled={!isFirstNameValid}>
       {@html $t('common.next_avatar')} <SvgIcon icon='arrowRight' size='42' color={$modeCurrent ? 'white' : '%23FD3524'} />
     </Button>
   </div>
