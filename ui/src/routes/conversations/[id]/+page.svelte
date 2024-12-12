@@ -17,6 +17,8 @@
   import { RelayStore } from '$store/RelayStore';
   import { Privacy, type Conversation, type Message, type Image } from '../../../types';
   import LightboxImage from '$lib/LightboxImage.svelte';
+  import MessageActions from "$lib/MessageActions.svelte";
+  import { press } from 'svelte-gestures';
   import toast from "svelte-french-toast";
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
@@ -237,6 +239,59 @@
       })
     }
   }
+
+  let selectedMessageHash: string | null = null;
+  
+  function unselectMessage() {
+    selectedMessageHash = null;
+  }
+  
+  function clickOutside(node: HTMLElement, callback: () => void) {
+    const handleClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (
+        node &&
+        !node.contains(target) &&
+        !target.closest('[data-message-actions]') &&
+        !target.closest('[data-message-selection]')
+      ) {
+        callback();
+      }
+    };
+
+    document.addEventListener('click', handleClick, true);
+
+    return {
+      destroy() {
+        document.removeEventListener('click', handleClick, true);
+      }
+    };
+  }
+  
+  function handleMessageClick(messageHash: string) {
+    if (!isMobile()) {
+      if (selectedMessageHash === messageHash) {
+        selectedMessageHash = null;
+      } else if (selectedMessageHash !== null) {
+        selectedMessageHash = null;
+      } else {
+        selectedMessageHash = messageHash;
+      }
+    }
+  }
+
+  function handleMessagePress(messageHash: string) {
+    if (isMobile()) {
+      if (selectedMessageHash === messageHash) {
+        selectedMessageHash = null;
+      } else if (selectedMessageHash !== null) {
+        selectedMessageHash = null;
+      } else {
+        selectedMessageHash = messageHash;
+      }
+    }
+  }
+
 </script>
 
 <Header>
@@ -357,35 +412,52 @@
           {/if}
         </div>
       {:else}
-        <div id='message-box' class="flex-1 p-4 flex flex-col-reverse w-full">
+        <div id='message-box' class="flex-1 p-4 flex flex-col-reverse w-full" use:clickOutside={() => selectedMessageHash = null}>
           <ul>
             {#each $processedMessages as message (message.hash)}
               {@const fromMe = message.authorKey === myPubKeyB64}
+              {@const isSelected = selectedMessageHash === message.hash}
               {#if message.header}
-                <li class='mt-auto mb-3'>
+                <li class='mt-auto mb-2'>
                   <div class="text-center text-xs text-secondary-400 dark:text-secondary-300">{message.header}</div>
                 </li>
               {/if}
-              <li class='mt-auto {!message.hideDetails && 'mt-3'} flex {fromMe ? 'justify-end' : 'justify-start'}'>
-                {#if !fromMe}
-                  {#if !message.hideDetails}
-                    <Avatar image={message.avatar} agentPubKey={message.authorKey} size='24' moreClasses='items-start mt-1'/>
-                  {:else}
-                    <span class='min-w-6 inline-block'></span>
+              <li class='mt-auto {!message.hideDetails && "mt-3"} relative {isSelected ? 'mb-20 mt-2 bg-secondary-500 rounded-t-xl' : ''}' data-message-selection={isSelected ? 'true' : undefined}>
+                <button
+                  class="w-full flex {fromMe ? 'justify-end' : 'justify-start'} {isSelected ? 'px-2.5 py-1.5 bg-secondary-500 rounded-t-xl rounded-b-none' : 'bg-transparent'} text-left bg-transparent border-0"
+                  use:press={{ timeframe: 300, triggerBeforeFinished: false }}
+                  on:press={(e) => handleMessagePress(message.hash)}
+                  on:click|preventDefault={() => handleMessageClick(message.hash)}
+                  aria-pressed={isSelected}
+                  aria-label={`Message from ${fromMe ? 'you' : message.author}`}
+                >
+                  {#if !fromMe}
+                    {#if !message.hideDetails}
+                      <Avatar image={message.avatar} agentPubKey={message.authorKey} size='24' moreClasses='items-start mt-1'/>
+                    {:else}
+                      <span class='min-w-6 inline-block'></span>
+                    {/if}
                   {/if}
-                {/if}
-                <div class='ml-3 w-2/3 {fromMe && 'items-end text-end'}'>
-                  {#if !message.hideDetails}
-                    <span class='flex items-baseline {fromMe && 'flex-row-reverse opacity-80'}'>
-                      <span class="font-bold">{fromMe ? "You" : message.author}</span>
-                      <span class="mx-2 text-xxs"><Time timestamp={message.timestamp} format="h:mma" /></span>
-                    </span>
-                  {/if}
-                  {#if message.images && message.images.length > 0}
+                  
+                  <div class='ml-3 w-2/3 {fromMe && "items-end text-end"}'>
+                    {#if !message.hideDetails}
+                      <span class='flex items-baseline {fromMe && "flex-row-reverse opacity-80"}'>
+                        <span class="font-bold">{fromMe ? "You" : message.author}</span>
+                        <span class="mx-2 text-xxs"><Time timestamp={message.timestamp} format="h:mma" /></span>
+                      </span>
+                    {/if}
+                    
+                    {#if message.images && message.images.length > 0}
                       {#each message.images as image}
-                        <div class='flex {fromMe ? 'justify-end' : 'justify-start'}'>
+                        <div class='flex {fromMe ? "justify-end" : "justify-start"}'>
                           {#if image.status === 'loaded'}
-                            <LightboxImage btnClass='inline max-w-2/3 mb-2' src={image.dataURL} alt={image.name} />
+                            <div class="flex justify-between items-start mb-2">
+                              <LightboxImage
+                                btnClass="inline max-w-2/3"
+                                src={image.dataURL}
+                                alt={image.name}
+                              />
+                            </div>
                           {:else if image.status === 'loading' || image.status === 'pending'}
                             <div class='w-20 h-20 bg-surface-800 mb-2 flex items-center justify-center'>
                               <SvgIcon icon='spinner' color={$modeCurrent ? '%232e2e2e' : 'white'} size='30' />
@@ -397,11 +469,22 @@
                           {/if}
                         </div>
                       {/each}
-                  {/if}
-                  <div class="message font-light break-words w-full {fromMe && 'text-end'}">
-                    {@html sanitizeHTML(linkify(message.content))}
+                    {/if}
+                    
+                    <div class="message font-light break-words w-full {fromMe && 'text-end'}">
+                      {@html sanitizeHTML(linkify(message.content))}
+                    </div>
                   </div>
+                </button>
+                
+                {#if isSelected}
+                <div data-message-actions>
+                  <MessageActions 
+                    message={message}
+                    unselectMessage={unselectMessage}
+                  />
                 </div>
+                {/if}
               </li>
             {/each}
           </ul>
