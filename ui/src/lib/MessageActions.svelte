@@ -7,6 +7,7 @@
   import { save } from '@tauri-apps/plugin-dialog';
   import { create, writeFile } from '@tauri-apps/plugin-fs';
   import { downloadDir } from '@tauri-apps/api/path';
+    import toast from 'svelte-french-toast';
 
   export let message: Message;
   export let unselectMessage: () => void;
@@ -37,17 +38,24 @@
       try {
         const imageBlob = convertDataURIToUint8Array(image.dataURL);
         await writeFile(savePath, imageBlob, {create: true});
+        toast.success($t("common.download_file_success"));
       } catch(e) {
         console.error("Saving file failed", e);
       }
-    } catch (err) {
-      console.error('Download failed', err);
+    } catch (e) {
+      console.error('Download failed', e);
+      toast.error(`${$t("common.download_file_error")}: ${e.message}`);
     }
   };
 
-  const copy = () => {
+  const copy = async() => {
     if (message?.content) {
-      copyToClipboard(message.content);
+      try {
+        await copyToClipboard(message.content);
+        toast.success($t("common.copy_success"));
+      } catch(e) {
+        toast.error(`${$t("common.copy_error")}: ${e.message}`);
+      }
     }
     unselectMessage();
   };
