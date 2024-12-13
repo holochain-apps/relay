@@ -9,11 +9,16 @@
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { RelayStore } from "$store/RelayStore";
   import ConversationSummary from "$lib/ConversationSummary.svelte";
+  import type { AllContactsStore } from "$store/AllContactsStore";
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext("relayStore");
   let relayStore = relayStoreContext.getStore();
 
+  const contactsStoreContext: { getStore: () => AllContactsStore } = getContext("contactsStore");
+  let contactsStore = contactsStoreContext.getStore();
+
   let search = "";
+  $: searchNormalized = search.trim().toLocaleLowerCase();
   $: hasArchive = false;
 
   $: conversations = derived(relayStore.conversations, ($value) => {
@@ -22,7 +27,7 @@
         if (c.archived) {
           hasArchive = true;
         }
-        return !c.archived && c.title.toLocaleLowerCase().includes(search.toLocaleLowerCase());
+        return !c.archived && c.title.toLocaleLowerCase().includes(searchNormalized);
       })
       .sort((a, b) => get(b.lastActivityAt) - get(a.lastActivityAt));
   });

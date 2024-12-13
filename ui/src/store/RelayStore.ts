@@ -1,6 +1,6 @@
 import { decode } from "@msgpack/msgpack";
 import { isEqual, camelCase, mapKeys } from "lodash-es";
-import { writable, get, type Writable } from "svelte/store";
+import { writable, get, type Writable, type Subscriber, type Unsubscriber } from "svelte/store";
 import {
   type AgentPubKey,
   type AgentPubKeyB64,
@@ -10,7 +10,6 @@ import {
   type Signal,
   SignalType,
 } from "@holochain/client";
-import { ContactStore } from "./ContactStore";
 import { ConversationStore } from "./ConversationStore";
 import { RelayClient } from "$store/RelayClient";
 import type {
@@ -24,18 +23,19 @@ import type {
 } from "../types";
 import { Privacy } from "../types";
 import { enqueueNotification, isMobile } from "$lib/utils";
+import { AllContactsStore } from "./AllContactsStore";
 
 export class RelayStore {
-  public contacts: Writable<ContactStore[]>;
+  public contacts: AllContactsStore;
   public conversations: Writable<ConversationStore[]>;
 
   constructor(public client: RelayClient) {
-    this.contacts = writable([]);
+    this.contacts = new AllContactsStore(client);
     this.conversations = writable([]);
   }
 
-  get contactData() {
-    return get(this.contacts);
+  subscribe(run: Subscriber<ConversationStore[]>): Unsubscriber {
+    return this.conversations.subscribe(run);
   }
 
   get conversationsData() {
@@ -43,13 +43,13 @@ export class RelayStore {
   }
 
   async initialize() {
+    await this.contacts.initialize();
+
     await this.client.initConversations();
 
     for (const conversation of Object.values(this.client.conversations)) {
-      await this._addConversation(conversation);
+      await this.addConversation(conversation);
     }
-
-    await this.fetchAllContacts();
 
     this.client.client.on("signal", async (signal: Signal) => {
       if (!(SignalType.App in signal)) return;
@@ -99,8 +99,11 @@ export class RelayStore {
     });
   }
 
-  async _addConversation(convoCellAndConfig: ConversationCellAndConfig) {
-    if (!this.client) return;
+  private async addConversation(
+    convoCellAndConfig: ConversationCellAndConfig,
+  ): Promise<ConversationStore> {
+    if (!this.client) throw Error("Client must be initialized");
+
     const properties: Properties = decode(
       convoCellAndConfig.cell.dna_modifiers.properties,
     ) as Properties;
@@ -124,7 +127,7 @@ export class RelayStore {
       });
     });
 
-    const unsub2 = newConversation.localDataStore.subscribe(() => {
+    const unsub2 = newConversation.status.subscribe(() => {
       // Trigger update to conversations store whenever localDataStore changes
       this.conversations.update((convs) => {
         return [...convs]; // Force reactivity by returning a new array reference
@@ -134,6 +137,7 @@ export class RelayStore {
     this.conversations.update((conversations) => [...conversations, newConversation]);
 
     await newConversation.initialize();
+
     return newConversation;
   }
 
@@ -141,34 +145,27 @@ export class RelayStore {
     title: string,
     image: string,
     privacy: Privacy,
-    initialContacts: Contact[] = [],
-  ) {
-    if (!this.client) return null;
+    initialContacts: AgentPubKeyB64[] = [],
+  ): Promise<ConversationStore> {
+    if (!this.client) throw Error("Client is not initialized");
     const convoCellAndConfig = await this.client.createConversation(title, image, privacy);
-    if (convoCellAndConfig) {
-      const conversationStore = await this._addConversation(convoCellAndConfig);
-      if (conversationStore) {
-        if (initialContacts.length > 0) {
-          conversationStore.addContacts(initialContacts);
-        }
-        return conversationStore;
-      }
+
+    const conversationStore = await this.addConversation(convoCellAndConfig);
+
+    if (initialContacts.length > 0) {
+      conversationStore.addContacts(initialContacts);
     }
-    return null;
+
+    return conversationStore;
   }
 
   async joinConversation(invitation: Invitation) {
     if (!this.client) return null;
     const convoCellAndConfig = await this.client.joinConversation(invitation);
     if (convoCellAndConfig) {
-      return await this._addConversation(convoCellAndConfig);
+      return await this.addConversation(convoCellAndConfig);
     }
     return null;
-  }
-
-  async inviteAgentToConversation(conversationId: string, agent: AgentPubKey, role: number = 0) {
-    if (!this.client) return;
-    return await this.client.inviteAgentToConversation(conversationId, agent, role);
   }
 
   getConversation(id: string): ConversationStore | undefined {
@@ -180,7 +177,7 @@ export class RelayStore {
     return foundConversation;
   }
 
-  getConversationByCellDnaHash(cellDnaHash: DnaHash): ConversationStore | undefined {
+  private getConversationByCellDnaHash(cellDnaHash: DnaHash): ConversationStore | undefined {
     let foundConversation;
     this.conversations.subscribe((conversations) => {
       foundConversation = conversations.find((conversation) =>
@@ -189,89 +186,5 @@ export class RelayStore {
     })();
 
     return foundConversation;
-  }
-
-  /***** Contacts ******/
-  async fetchAllContacts() {
-    const contactRecords = await this.client.getAllContacts();
-    this.contacts.set(
-      contactRecords.map((contactRecord: any) => {
-        const contact = contactRecord.contact;
-        return new ContactStore(
-          this,
-          contact.avatar,
-          contactRecord.signed_action.hashed.hash,
-          contact.first_name,
-          contact.last_name,
-          contactRecord.original_action,
-          encodeHashToBase64(contact.public_key),
-        );
-      }),
-    );
-  }
-
-  async createContact(contact: Contact) {
-    if (!this.client) return false;
-    const contactResult = await this.client.createContact(contact);
-    if (contactResult) {
-      // Immediately add a conversation with the new contact, unless you already have one with them
-      let conversation =
-        this.conversationsData.find(
-          (c) =>
-            c.privacy === Privacy.Private &&
-            c.allMembers.every((m) => m.publicKeyB64 === contact.publicKeyB64),
-        ) || null;
-      if (!conversation) {
-        conversation = await this.createConversation(
-          contact.firstName + " " + contact.lastName,
-          "",
-          Privacy.Private,
-          [contact],
-        );
-      }
-      const contactStore = new ContactStore(
-        this,
-        contact.avatar,
-        contactResult.signed_action.hashed.hash,
-        contact.firstName,
-        contact.lastName,
-        contactResult.signed_action.hashed.hash,
-        contact.publicKeyB64,
-        conversation?.id,
-      );
-      this.contacts.update((contacts) => [...contacts, contactStore]);
-      return contactStore;
-    }
-  }
-
-  async updateContact(contact: Contact) {
-    if (!this.client) return false;
-    const contactResult = await this.client.updateContact(contact);
-    if (contactResult) {
-      const contactStore = new ContactStore(
-        this,
-        contact.avatar,
-        contactResult.signed_action.hashed.hash,
-        contact.firstName,
-        contact.lastName,
-        contact.originalActionHash,
-        contact.publicKeyB64,
-      );
-      this.contacts.update((contacts) => [
-        ...contacts.filter((c) => c.publicKeyB64 !== contact.publicKeyB64),
-        contactStore,
-      ]);
-      return contactStore;
-    }
-    return false;
-  }
-
-  getContact(publicKey: AgentPubKeyB64): ContactStore | undefined {
-    let foundContact;
-    this.contacts.subscribe((contacts) => {
-      foundContact = contacts.find((contact) => contact.data.publicKeyB64 === publicKey);
-    })();
-
-    return foundContact;
   }
 }

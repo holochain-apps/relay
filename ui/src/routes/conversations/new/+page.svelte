@@ -7,9 +7,10 @@
   import Header from "$lib/Header.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$lib/translations";
-  import { handleFileChange, MIN_TITLE_LENGTH } from "$lib/utils";
+  import { MIN_TITLE_LENGTH } from "../../../config";
   import { RelayStore } from "$store/RelayStore";
   import { Privacy } from "../../../types";
+  import HiddenFileInput from "$lib/HiddenFileInput.svelte";
   import toast from "svelte-french-toast";
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext("relayStore");
@@ -17,20 +18,20 @@
 
   let title = "";
   let imageUrl = writable("");
-  let pendingCreate = false;
+  let creating = false;
 
-  async function createConversation(e: Event, privacy: Privacy) {
-    pendingCreate = true;
-    e.preventDefault();
+  async function createConversation(privacy: Privacy) {
+    creating = true;
+
     try {
       const conversation = await relayStore.createConversation(title, get(imageUrl), privacy);
-      if (conversation) {
-        goto(`/conversations/${conversation.data.id}`);
-        pendingCreate = false;
-      }
+      goto(`/conversations/${conversation.data.id}`);
     } catch (e) {
+      console.error("Failed to create conversation", e);
       toast.error(`${$t("common.create_conversation_error")}: ${e.message}`);
     }
+
+    creating = false;
   }
 
   $: valid = title.trim().length >= MIN_TITLE_LENGTH;
@@ -44,17 +45,14 @@
 </Header>
 
 <div class="my-10 flex flex-col items-center justify-center">
-  <!-- Hidden file input -->
-  <input
-    type="file"
-    id="avatarInput"
+  <HiddenFileInput
     accept="image/jpeg, image/png, image/gif"
-    class="hidden"
-    on:change={(event) => {
+    id="avatarInput"
+    on:change={(e) => {
       try {
-        handleFileChange(event, (imageData) => imageUrl.set(imageData));
-      } catch (e) {
-        toast.error(`${$t("common.upload_image_error")}: ${e.message}`);
+        imageUrl.set(e.detail);
+      } catch (err) {
+        toast.error(`${$t("common.upload_image_error")}: ${err.message}`);
       }
     }}
   />
@@ -88,12 +86,10 @@
 <footer>
   <Button
     moreClasses="w-72 justify-center variant-filled-tertiary"
-    onClick={(e) => {
-      createConversation(e, Privacy.Public);
-    }}
-    disabled={!valid || pendingCreate}
+    on:click={() => createConversation(Privacy.Public)}
+    disabled={!valid || creating}
   >
-    {#if pendingCreate}
+    {#if creating}
       <SvgIcon icon="spinner" size="18" color={$modeCurrent ? "%232e2e2e" : "white"} />
     {/if}
     <strong class="ml-2">{$t("conversations.create_group")}</strong>

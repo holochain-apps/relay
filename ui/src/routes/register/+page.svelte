@@ -6,8 +6,8 @@
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$lib/translations";
   import { ProfileCreateStore } from "$store/ProfileCreateStore";
+  import { MIN_FIRST_NAME_LENGTH } from "$lib/constants";
 
-  const MIN_FIRST_NAME_LENGTH = 3;
   let firstName = "";
   let lastName = "";
 

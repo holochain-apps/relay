@@ -17,6 +17,7 @@
   import { RelayStore } from "$store/RelayStore";
   import { Privacy, type Conversation, type Message, type Image } from "../../../types";
   import LightboxImage from "$lib/LightboxImage.svelte";
+  import type { AllContactsStore } from "$store/AllContactsStore";
   import MessageActions from "$lib/MessageActions.svelte";
   import { press } from "svelte-gestures";
   import toast from "svelte-french-toast";
@@ -28,6 +29,10 @@
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext("relayStore");
   let relayStore = relayStoreContext.getStore();
+
+  const contactsStoreContext: { getStore: () => AllContactsStore } = getContext("contactsStore");
+  let contactsStore = contactsStoreContext.getStore();
+
   let myPubKeyB64 = relayStore.client.myPubKeyB64;
 
   $: conversation = relayStore.getConversation(conversationId);
@@ -54,7 +59,7 @@
   const checkForAgents = async () => {
     if (!conversation) return;
 
-    const agentProfiles = await conversation.fetchAgents();
+    const agentProfiles = await conversation.loadAgents();
     if (Object.values(agentProfiles).length < 2) {
       agentTimeout = setTimeout(() => {
         checkForAgents();
@@ -76,20 +81,16 @@
   const checkForMessages = async () => {
     if (!conversation) return;
 
-    const [_, hashes] = await conversation.loadMessageSetFrom(conversation.currentBucket());
+    // Fetch the current page of messages
+    await conversation.loadMessagesCurrentPage();
+
     // If this we aren't getting anything back and there are no messages loaded at all
     // then keep trying as this is probably a no network, or a just joined situation
-    if (hashes.length == 0 && Object.keys(conversation.data.messages).length == 0) {
+    if (Object.keys(conversation.data.messages).length === 0) {
       messageTimeout = setTimeout(() => {
         checkForMessages();
       }, 2000);
     }
-  };
-
-  const checkForData = () => {
-    checkForAgents();
-    checkForConfig();
-    checkForMessages();
   };
 
   function handleResize() {
@@ -108,20 +109,18 @@
         // messages = c.messages;
         numMembers = Object.values(agentProfiles).length;
       });
-      checkForData();
+      checkForAgents();
+      checkForConfig();
+      checkForMessages();
       conversationContainer.addEventListener("scroll", handleScroll);
       window.addEventListener("resize", debouncedHandleResize);
       newMessageInput.focus();
-      conversation.setOpen(true);
-      conversation.setUnread(false);
+      conversation.markAsRead();
     }
   });
 
   // Cleanup
   onDestroy(() => {
-    if (conversation) {
-      conversation.setOpen(false);
-    }
     unsubscribe && unsubscribe();
     clearTimeout(agentTimeout);
     clearTimeout(configTimeout);
@@ -147,15 +146,15 @@
           return;
         }
 
-        const contact = $contacts.find((c) => c.publicKeyB64 === message.authorKey);
+        const contactExtended = $contacts[message.authorKey];
 
         const displayMessage = {
           ...message,
           author:
-            contact?.firstName ||
+            contactExtended?.contact.first_name ||
             ($value as Conversation).agentProfiles[message.authorKey].fields.firstName,
           avatar:
-            contact?.avatar ||
+            contactExtended?.contact.avatar ||
             ($value as Conversation).agentProfiles[message.authorKey].fields.avatar,
         };
 
@@ -196,7 +195,7 @@
   const handleScroll = debounce(() => {
     const atTop = conversationContainer.scrollTop < SCROLL_TOP_THRESHOLD;
     if (!scrollAtTop && atTop && conversation) {
-      conversation.loadMessagesSet();
+      conversation.loadMessagesLatestPage();
     }
     scrollAtTop = atTop;
     scrollAtBottom =
@@ -429,12 +428,11 @@
                 <div class="flex justify-center">
                   <Button
                     moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
-                    onClick={async () => {
+                    on:click={async () => {
                       try {
-                        const inviteCode = conversation.inviteCodeForAgent(
+                        await contactsStore.copyPrivateConversationInviteCode(
                           conversation.allMembers[0]?.publicKeyB64,
                         );
-                        await copyToClipboard(inviteCode);
                         toast.success(`${$t("common.copy_success")}`);
                       } catch (e) {
                         toast.error(`${$t("common.copy_error")}: ${e.message}`);
@@ -447,11 +445,10 @@
                   {#if isMobile()}
                     <Button
                       moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
-                      onClick={() => {
-                        shareText(
-                          conversation.inviteCodeForAgent(conversation.allMembers[0]?.publicKeyB64),
-                        );
-                      }}
+                      on:click={() =>
+                        contactsStore.sharePrivateConversationInviteCode(
+                          conversation.allMembers[0]?.publicKeyB64,
+                        )}
                     >
                       <SvgIcon icon="share" size="20" color="%23FD3524" moreClasses="mr-2" />
                       {$t("contacts.share_invite_code")}
@@ -464,7 +461,7 @@
                 {$t("conversations.share_personal_invitations")}
               </p>
               <Button
-                onClick={() => goto(`/conversations/${conversation.data.id}/details`)}
+                on:click={() => goto(`/conversations/${conversation.data.id}/details`)}
                 moreClasses="w-72 justify-center"
               >
                 <SvgIcon icon="ticket" size="24" color={$modeCurrent ? "white" : "%23FD3524"} />
@@ -478,7 +475,7 @@
             </p>
             <Button
               moreClasses="w-64 justify-center variant-filled-tertiary"
-              onClick={async () => {
+              on:click={async () => {
                 try {
                   await copyToClipboard(conversation.publicInviteCode);
                   toast.success(`${$t("common.copy_success")}`);
@@ -492,7 +489,7 @@
             </Button>
             {#if isMobile()}
               <Button
-                onClick={() => shareText(conversation.publicInviteCode)}
+                on:click={() => shareText(conversation.publicInviteCode)}
                 moreClasses="w-64 justify-center variant-filled-tertiary"
               >
                 <SvgIcon icon="share" size="18" color="%23FD3524" />

@@ -7,10 +7,12 @@
   import Header from "$lib/Header.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$lib/translations";
-  import { copyToClipboard, handleFileChange, isMobile, shareText } from "$lib/utils";
+  import { copyToClipboard, isMobile, shareText } from "$lib/utils";
   import { RelayClient } from "$store/RelayClient";
   import { ProfilesStore } from "@holochain-open-dev/profiles";
   import { get } from "svelte/store";
+  import HiddenFileInput from "$lib/HiddenFileInput.svelte";
+  import { MIN_FIRST_NAME_LENGTH } from "$lib/constants";
   import toast from "svelte-french-toast";
 
   const relayClientContext: { getClient: () => RelayClient } = getContext("relayClient");
@@ -22,8 +24,6 @@
   $: profileData = $prof?.status === "complete" ? $prof.value?.entry : undefined;
 
   const agentPublicKey64 = relayClient.myPubKeyB64;
-
-  const MIN_FIRST_NAME_LENGTH = 3;
 
   $: firstName = profileData?.fields.firstName || "";
   $: lastName = profileData?.fields.lastName || "";
@@ -66,22 +66,18 @@
 
 {#if $prof && $prof.status === "complete" && $prof.value}
   <div class="flex w-full grow flex-col items-center pt-10">
-    <!-- Hidden file input -->
-    <input
-      type="file"
-      id="avatarInput"
+    <HiddenFileInput
       accept="image/jpeg, image/png, image/gif"
-      class="hidden"
-      on:change={(event) => {
+      id="avatarInput"
+      on:change={async (event) => {
         try {
-          handleFileChange(event, (imageData) => {
-            relayClient.updateProfile(firstName, lastName, imageData);
-          });
+          await relayClient.updateProfile(firstName, lastName, e.detail);
         } catch (e) {
           toast.error(`${$t("common.upload_image_error")}: ${e.message}`);
         }
       }}
     />
+
     <div style="position:relative">
       <Avatar agentPubKey={relayClient.myPubKey} size="128" moreClasses="mb-4" />
       <label
@@ -121,14 +117,14 @@
         />
         <Button
           moreClasses="h-6 w-6 rounded-md py-0 !px-0 mb-0 mr-2 bg-primary-100 flex items-center justify-center"
-          onClick={() => saveName()}
+          on:click={() => saveName()}
           disabled={!isFirstNameValid}
         >
           <SvgIcon icon="checkMark" color="%23FD3524" size="12" />
         </Button>
         <Button
           moreClasses="h-6 w-6 !px-0 py-0 mb-0 rounded-md bg-surface-400 flex items-center justify-center"
-          onClick={() => cancelEditName()}
+          on:click={() => cancelEditName()}
         >
           <SvgIcon icon="x" color="gray" size="12" />
         </Button>
@@ -152,7 +148,7 @@
     </p>
 
     <Button
-      onClick={async () => {
+      on:click={async () => {
         try {
           await copyToClipboard(agentPublicKey64);
           toast.success(`${$t("common.copy_success")}`);
@@ -167,7 +163,7 @@
     </Button>
     {#if isMobile()}
       <Button
-        onClick={async () => {
+        on:click={async () => {
           try {
             await shareText(agentPublicKey64);
           } catch (e) {

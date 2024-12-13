@@ -9,7 +9,7 @@
   import { t } from "$lib/translations";
   import { RelayClient } from "$store/RelayClient";
   import { ProfileCreateStore } from "$store/ProfileCreateStore";
-  import { handleFileChange } from "$lib/utils";
+  import HiddenFileInput from "$lib/HiddenFileInput.svelte";
   import toast from "svelte-french-toast";
 
   const relayClientContext: { getClient: () => RelayClient } = getContext("relayClient");
@@ -45,18 +45,11 @@
 <div class="flex grow flex-col items-center justify-center">
   <h1 class="h1 mb-10">{$t("common.select_an_avatar")}</h1>
 
-  <!-- Hidden file input -->
-  <input
-    type="file"
+  <HiddenFileInput
     accept="image/*"
     id="avatarInput"
-    class="hidden"
-    on:change={(event) =>
-      handleFileChange(event, (imageData) => {
-        ProfileCreateStore.update((current) => {
-          return { firstName, lastName, avatar: imageData };
-        });
-      })}
+    on:change={(e) =>
+      ProfileCreateStore.update((current) => ({ firstName, lastName, avatar: e.detail }))}
   />
 
   <!-- Label styled as a big clickable icon -->
@@ -73,7 +66,7 @@
 </div>
 
 <div class="items-right flex w-full justify-end pr-4">
-  <Button onClick={createAccount}>
+  <Button on:click={() => createAccount()}>
     <SvgIcon icon="hand" size="20" color={$modeCurrent ? "white" : "%23FD3524"} />
     <strong class="ml-2">{$t("common.jump_in")}</strong>
   </Button>

@@ -6,12 +6,17 @@ import {
 } from "@tauri-apps/plugin-notification";
 import { shareText as sharesheetShareText } from "@buildyourwebapp/tauri-plugin-sharesheet";
 import { platform } from "@tauri-apps/plugin-os";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { setModeCurrent } from "@skeletonlabs/skeleton";
 import { open } from "@tauri-apps/plugin-shell";
 import linkifyStr from "linkify-string";
 
-export const MIN_TITLE_LENGTH = 3;
-
+/**
+ * Sanitize user-inputted HTML before we render it to prevent XSS attacks
+ *
+ * @param html
+ * @returns
+ */
 export function sanitizeHTML(html: string) {
   return DOMPurify.sanitize(html);
 }
@@ -31,136 +36,72 @@ export const linkify = (text: string): string =>
     target: "_blank",
   });
 
-export async function shareText(text: string | Promise<string>) {
-  if (typeof text === "string") {
-    if (text && text.trim().length > 0) {
-      return sharesheetShareText(text);
-    }
-  } else {
-    const t = await text;
-    return sharesheetShareText(t);
-  }
+/**
+ * Share text via sharesheet
+ *
+ * @param text
+ * @returns
+ */
+export function shareText(text: string): Promise<void> {
+  if (!isMobile()) throw Error("Sharesheet is only supported on mobile");
+
+  const normalized = text.trim();
+  if (normalized.length === 0) throw Error("Text is empty");
+
+  return sharesheetShareText(normalized);
 }
 
-export async function copyToClipboard(text: string | Promise<string>) {
-  if (typeof text === "string") {
-    if (text && text.trim().length > 0) {
-      console.log("Copying to clipboard", text);
-      return navigator.clipboard.writeText(text);
-    }
-  } else {
-    const t = await text;
-    console.log("Copying to clipboard", text);
+/**
+ * Copy text to clipboard
+ *
+ * @param text
+ * @returns
+ */
+export function copyToClipboard(text: string): Promise<void> {
+  const normalized = text.trim();
+  if (normalized.length === 0) throw Error("Text is empty");
 
-    if (typeof ClipboardItem && navigator.clipboard.write) {
-      const item = new ClipboardItem({
-        "text/plain": new Blob([t], { type: "text/plain" }),
-      });
-      return navigator.clipboard.write([item]);
-    } else {
-      return navigator.clipboard.writeText(t);
-    }
-  }
+  return writeText(text);
 }
 
-// Crop avatar image and return a base64 bytes string of its content
-export function resizeAndExportAvatar(img: HTMLImageElement) {
-  const MAX_WIDTH = 300;
-  const MAX_HEIGHT = 300;
-
-  let width = img.width;
-  let height = img.height;
-
-  // Change the resizing logic
-  if (width > height) {
-    if (width > MAX_WIDTH) {
-      height = height * (MAX_WIDTH / width);
-      width = MAX_WIDTH;
-    }
-  } else {
-    if (height > MAX_HEIGHT) {
-      width = width * (MAX_HEIGHT / height);
-      height = MAX_HEIGHT;
-    }
-  }
-
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-  ctx.drawImage(img, 0, 0, width, height);
-
-  // return the .toDataURL of the temp canvas
-  return canvas.toDataURL();
-}
-
-export function handleFileChange(event: Event, callback: (imageData: string) => void) {
-  const input = event.target as HTMLInputElement;
-  if (input.files && input.files.length > 0) {
-    const file = input.files[0];
-    const reader = new FileReader();
-
-    reader.onload = (e: ProgressEvent<FileReader>): void => {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        const imageData = resizeAndExportAvatar(img);
-        callback(imageData);
-      };
-      img.src = e.target?.result as string;
-    };
-
-    reader.onerror = (e): void => {
-      console.error("Error reading file:", e);
-      reader.abort();
-    };
-
-    reader.readAsDataURL(file);
-  }
-}
-
-async function checkPermission() {
-  if (!(await isPermissionGranted())) {
-    return (await requestPermission()) === "granted";
-  }
-  return true;
-}
-
+/**
+ * Send a system notification
+ * If permissions have not been granted for sending notifications, request them.
+ *
+ * @param title
+ * @param body
+ */
 export async function enqueueNotification(title: string, body: string) {
-  if (!(await checkPermission())) {
-    return;
+  try {
+    const hasPermission = await isPermissionGranted();
+    if (!hasPermission) {
+      const permission = await requestPermission();
+
+      if (permission !== "granted") throw new Error("Permission to create notifications denied");
+    }
+
+    sendNotification({ title, body });
+  } catch (e) {
+    console.error("Failed to enqueue notification");
   }
-  sendNotification({ title, body });
 }
 
-export function isLinux(): boolean {
-  return platform() === "linux";
-}
-
-export function isWindows(): boolean {
-  return platform() === "windows";
-}
-
-export function isMacOS(): boolean {
-  return platform() === "macos";
-}
-
-export function isDesktop(): boolean {
-  return isMacOS() || isLinux() || isWindows();
-}
-
-export function isAndroid(): boolean {
-  return platform() === "android";
-}
-
-export function isIOS(): boolean {
-  return platform() === "ios";
-}
-
+/**
+ * Is app running on mobile?
+ *
+ * @returns
+ */
 export function isMobile(): boolean {
-  return isAndroid() || isIOS();
+  const p = platform();
+  return p === "android" || p === "ios";
 }
 
+/**
+ * Convert file to data url
+ *
+ * @param file
+ * @returns
+ */
 export async function fileToDataUrl(file: File): Promise<string> {
   const reader = new FileReader();
   reader.readAsDataURL(file);

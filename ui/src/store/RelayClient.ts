@@ -1,7 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import {
   CellType,
-  decodeHashFromBase64,
   encodeHashToBase64,
   type AgentPubKey,
   type AppClient,
@@ -10,6 +9,9 @@ import {
   type MembraneProof,
   type AgentPubKeyB64,
   type ActionHash,
+  type Record,
+  type ClonedCell,
+  type AppInfo,
 } from "@holochain/client";
 import { decode } from "@msgpack/msgpack";
 import { EntryRecord } from "@holochain-open-dev/utils";
@@ -18,6 +20,7 @@ import { get } from "svelte/store";
 import type {
   Config,
   Contact,
+  ContactRecord,
   ConversationCellAndConfig,
   ImageStruct,
   Invitation,
@@ -25,6 +28,7 @@ import type {
   Message,
   MessageRecord,
   Privacy,
+  UpdateContactInput,
 } from "../types";
 
 export class RelayClient {
@@ -89,7 +93,7 @@ export class RelayClient {
         const cell = c[CellType.Cloned];
 
         try {
-          const configRecord = await this._getConfig(cell.cell_id);
+          const configRecord = await this.getConfig(cell.cell_id);
 
           const config = configRecord ? configRecord.entry : { title: cell.name, image: "" };
 
@@ -103,12 +107,37 @@ export class RelayClient {
     }
   }
 
+  async findClonedRelayCellInfoByName(
+    appInfo: AppInfo,
+    name: string,
+  ): Promise<ClonedCell | undefined> {
+    if (!appInfo) throw new Error("Failed to fetch app info");
+
+    const cellInfo = appInfo.cell_info[this.roleName].find(
+      /* @ts-ignore-next-line */
+      (c: CellInfo) => c[CellType.Cloned]?.name === name,
+    );
+
+    /* @ts-ignore-next-line */
+    return cellInfo ? cellInfo[CellType.Cloned] : undefined;
+  }
+
+  findCellIdByName(cellInfos: CellInfo[], name: string): CellId | undefined {
+    const cellInfo = cellInfos.find(
+      /* @ts-ignore-next-line */
+      (c: CellInfo) => c[CellType.Cloned]?.name === name,
+    );
+
+    /* @ts-ignore-next-line */
+    return cellInfo ? cellInfo[CellType.Cloned].cell_id : undefined;
+  }
+
   async createConversation(
     title: string,
     image: string,
     privacy: Privacy,
-  ): Promise<ConversationCellAndConfig | null> {
-    return this._cloneConversation(
+  ): Promise<ConversationCellAndConfig> {
+    return this.cloneConversation(
       new Date().getTime(),
       title,
       image,
@@ -117,9 +146,9 @@ export class RelayClient {
     );
   }
 
-  async joinConversation(invitation: Invitation): Promise<ConversationCellAndConfig | null> {
+  async joinConversation(invitation: Invitation): Promise<ConversationCellAndConfig> {
     // we don't have the image at join time, it get's loaded later
-    return this._cloneConversation(
+    return this.cloneConversation(
       invitation.created,
       invitation.title,
       "",
@@ -130,7 +159,7 @@ export class RelayClient {
     );
   }
 
-  async _cloneConversation(
+  private async cloneConversation(
     created: number,
     title: string,
     image: string,
@@ -138,52 +167,35 @@ export class RelayClient {
     progenitor: AgentPubKey,
     membrane_proof?: MembraneProof,
     networkSeed?: string,
-  ): Promise<ConversationCellAndConfig | null> {
+  ): Promise<ConversationCellAndConfig> {
     const conversationId = networkSeed || uuidv4();
 
-    try {
-      const cell = await this.client.createCloneCell({
-        role_name: this.roleName,
-        name: title,
-        membrane_proof,
-        modifiers: {
-          network_seed: conversationId,
-          properties: {
-            created,
-            privacy,
-            progenitor: encodeHashToBase64(progenitor),
-          },
+    const cell = await this.client.createCloneCell({
+      role_name: this.roleName,
+      name: title,
+      membrane_proof,
+      modifiers: {
+        network_seed: conversationId,
+        properties: {
+          created,
+          privacy,
+          progenitor: encodeHashToBase64(progenitor),
         },
-      });
-      const config: Config = { title, image };
-
-      if (!networkSeed) {
-        await this._setConfig(config, cell.cell_id);
-      }
-
-      await this._setMyProfileForConversation(cell.cell_id);
-      const convoCellAndConfig: ConversationCellAndConfig = { cell, config };
-      this.conversations[conversationId] = convoCellAndConfig;
-      return convoCellAndConfig;
-    } catch (e) {
-      console.error("Error creating conversation", e);
-      return null;
-    }
-  }
-
-  public async getAllMessages(
-    conversationId: string,
-    buckets: Array<number>,
-  ): Promise<Array<MessageRecord>> {
-    return this.client.callZome({
-      cell_id: this.conversations[conversationId].cell.cell_id,
-      zome_name: this.zomeName,
-      fn_name: "get_messages_for_buckets",
-      payload: buckets,
+      },
     });
+
+    if (!networkSeed) {
+      await this.setConfig({ title, image }, cell.cell_id);
+    }
+
+    await this.setMyProfileForConversation(cell.cell_id);
+    const convoCellAndConfig: ConversationCellAndConfig = { cell, config: { title, image } };
+    this.conversations[conversationId] = convoCellAndConfig;
+
+    return convoCellAndConfig;
   }
 
-  public async getMessageHashes(
+  async getMessageHashes(
     conversationId: string,
     bucket: number,
     count: number,
@@ -196,7 +208,7 @@ export class RelayClient {
     });
   }
 
-  public async getMessageEntries(
+  async getMessageEntries(
     conversationId: string,
     hashes: Array<ActionHash>,
   ): Promise<Array<MessageRecord>> {
@@ -208,7 +220,7 @@ export class RelayClient {
     });
   }
 
-  public async getAllAgents(conversationId: string): Promise<{ [key: AgentPubKeyB64]: Profile }> {
+  async getAllAgents(conversationId: string): Promise<{ [key: AgentPubKeyB64]: Profile }> {
     const cellId = this.conversations[conversationId].cell.cell_id;
 
     const agentsResponse = await this.client.callZome({
@@ -238,7 +250,7 @@ export class RelayClient {
     );
   }
 
-  async _setConfig(config: Config, cellId: CellId): Promise<null> {
+  async setConfig(config: Config, cellId: CellId): Promise<null> {
     return this.client.callZome({
       cell_id: cellId,
       zome_name: this.zomeName,
@@ -247,7 +259,7 @@ export class RelayClient {
     });
   }
 
-  async _getConfig(id: CellId | string): Promise<EntryRecord<Config> | undefined> {
+  async getConfig(id: CellId | string): Promise<EntryRecord<Config> | undefined> {
     const cellId = typeof id === "string" ? this.conversations[id].cell.cell_id : id;
 
     const config = await this.client.callZome({
@@ -259,7 +271,7 @@ export class RelayClient {
     return config ? new EntryRecord(config) : undefined;
   }
 
-  public async sendMessage(
+  async sendMessage(
     conversationId: string,
     content: string,
     bucket: number,
@@ -278,7 +290,7 @@ export class RelayClient {
     return new EntryRecord(message);
   }
 
-  async _setMyProfileForConversation(cellId: CellId): Promise<null> {
+  private async setMyProfileForConversation(cellId: CellId): Promise<null> {
     const myProfile = get(this.profilesStore.myProfile);
     const myProfileValue =
       myProfile && myProfile.status === "complete" && (myProfile.value as EntryRecord<Profile>);
@@ -292,36 +304,28 @@ export class RelayClient {
     });
   }
 
-  public async inviteAgentToConversation(
-    conversationId: string,
+  async generateMembraneProofForAgent(
+    cellInfo: ClonedCell,
     forAgent: AgentPubKey,
     role: number = 0,
-  ): Promise<MembraneProof | undefined> {
-    try {
-      const conversation = this.conversations[conversationId];
-
-      const data: MembraneProofData = {
-        conversation_id: conversation.cell.dna_modifiers.network_seed,
+  ): Promise<MembraneProof> {
+    const membraneProof = await this.client.callZome({
+      cell_id: cellInfo.cell_id,
+      zome_name: this.zomeName,
+      fn_name: "generate_membrane_proof",
+      payload: {
+        conversation_id: cellInfo.dna_modifiers.network_seed,
         for_agent: forAgent,
         as_role: role,
-      };
+      } as MembraneProofData,
+    });
 
-      const r = await this.client.callZome({
-        cell_id: conversation.cell.cell_id,
-        zome_name: this.zomeName,
-        fn_name: "generate_membrane_proof",
-        payload: data,
-      });
-      return r;
-    } catch (e) {
-      console.error("Error generating membrane proof", e);
-    }
-    return undefined;
+    return membraneProof;
   }
 
   /********* Contacts **********/
 
-  public async getAllContacts() {
+  public getAllContacts(): Promise<ContactRecord[]> {
     return this.client.callZome({
       role_name: this.roleName,
       zome_name: this.zomeName,
@@ -330,35 +334,21 @@ export class RelayClient {
     });
   }
 
-  public async createContact(contact: Contact) {
+  public async createContact(payload: Contact): Promise<Record> {
     return this.client.callZome({
       role_name: this.roleName,
       zome_name: this.zomeName,
       fn_name: "create_contact",
-      payload: {
-        avatar: contact.avatar,
-        first_name: contact.firstName,
-        last_name: contact.lastName,
-        public_key: decodeHashFromBase64(contact.publicKeyB64),
-      },
+      payload,
     });
   }
 
-  public async updateContact(contact: Contact) {
+  public async updateContact(payload: UpdateContactInput): Promise<Record> {
     return this.client.callZome({
       role_name: this.roleName,
       zome_name: this.zomeName,
       fn_name: "update_contact",
-      payload: {
-        original_contact_hash: contact.originalActionHash,
-        previous_contact_hash: contact.currentActionHash,
-        updated_contact: {
-          avatar: contact.avatar,
-          first_name: contact.firstName,
-          last_name: contact.lastName,
-          public_key: decodeHashFromBase64(contact.publicKeyB64),
-        },
-      },
+      payload,
     });
   }
 }

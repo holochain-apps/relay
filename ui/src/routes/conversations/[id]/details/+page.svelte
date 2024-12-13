@@ -7,16 +7,13 @@
   import Header from "$lib/Header.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$lib/translations";
-  import {
-    copyToClipboard,
-    handleFileChange,
-    isMobile,
-    MIN_TITLE_LENGTH,
-    shareText,
-  } from "$lib/utils";
+  import { copyToClipboard, isMobile, shareText } from "$lib/utils";
   import type { RelayStore } from "$store/RelayStore";
   import { Privacy, type Config } from "../../../../types";
   import Button from "$lib/Button.svelte";
+  import { MIN_TITLE_LENGTH } from "../../../../config";
+  import HiddenFileInput from "$lib/HiddenFileInput.svelte";
+  import type { AllContactsStore } from "$store/AllContactsStore";
   import toast from "svelte-french-toast";
   import { goto } from "$app/navigation";
 
@@ -26,6 +23,10 @@
   $: conversationId = $page.params.id;
   const relayStoreContext: { getStore: () => RelayStore } = getContext("relayStore");
   let relayStore = relayStoreContext.getStore();
+
+  const contactsStoreContext: { getStore: () => AllContactsStore } = getContext("contactsStore");
+  let contactsStore = contactsStoreContext.getStore();
+
   const myPublicKey64 = relayStore.client.myPubKeyB64;
   $: conversation = relayStore.getConversation(conversationId);
 
@@ -111,17 +112,13 @@
         {/if}
       </div>
     {:else}
-      <!-- Hidden file input -->
-      <input
-        type="file"
-        id="avatarInput"
+      <HiddenFileInput
         accept="image/jpeg, image/png, image/gif"
-        class="hidden"
-        on:change={(event) =>
-          handleFileChange(event, (imageData) => {
-            updateConfig({ image: imageData, title: title || conversation.data?.config.title });
-          })}
+        id="avatarInput"
+        on:change={(e) =>
+          updateConfig({ image: e.detail, title: title || conversation.data?.config.title })}
       />
+
       {#if image}
         <div style="position:relative">
           <img src={image} alt="Group" class="mb-5 h-32 min-h-32 w-32 rounded-full object-cover" />
@@ -160,13 +157,13 @@
         <div class="flex flex-none items-center justify-center">
           <Button
             moreClasses="h-6 w-6 rounded-md py-0 !px-0 mb-0 mr-2 bg-primary-100 flex items-center justify-center"
-            onClick={() => saveTitle()}
+            on:click={() => saveTitle()}
           >
             <SvgIcon icon="checkMark" color="%23FD3524" size="12" />
           </Button>
           <Button
             moreClasses="h-6 w-6 !px-0 py-0 mb-0 rounded-md bg-surface-400 flex items-center justify-center"
-            onClick={() => cancelEditTitle()}
+            on:click={() => cancelEditTitle()}
           >
             <SvgIcon icon="x" color="gray" size="12" />
           </Button>
@@ -238,9 +235,11 @@
               <span class="ml-4 flex-1 text-sm">{contact.firstName + " " + contact.lastName}</span>
               <button
                 class="variant-filled-tertiary flex items-center justify-center rounded-2xl p-2 px-3 text-sm font-bold"
+                on:click={() =>
+                  contactsStore.copyPrivateConversationInviteCode(contact.publicKeyB64)}
                 on:click={async () => {
                   try {
-                    await copyToClipboard(conversation.inviteCodeForAgent(contact.publicKeyB64));
+                    await contactsStore.copyPrivateConversationInviteCode(contact.publicKeyB64);
                     toast.success(`${$t("common.copy_success")}`);
                   } catch (e) {
                     toast.error(`${$t("common.copy_error")}: ${e.message}`);
@@ -253,7 +252,8 @@
               {#if isMobile()}
                 <button
                   class="variant-filled-tertiary flex items-center justify-center rounded-2xl p-2 px-3 text-sm font-bold"
-                  on:click={() => shareText(conversation.inviteCodeForAgent(contact.publicKeyB64))}
+                  on:click={() =>
+                    contactsStore.sharePrivateConversationInviteCode(contact.publicKeyB64)}
                 >
                   <SvgIcon icon="share" size="18" color="%23FD3524" moreClasses="mr-2" />
                 </button>
