@@ -19,13 +19,15 @@
     });
   }
 
+  $: isFirstNameValid = firstName.trim().length >= MIN_FIRST_NAME_LENGTH;
+
   function saveName() {
     firstName = firstName.trim();
     lastName = lastName.trim();
     ProfileCreateStore.update((current) => {
       return { ...current, firstName, lastName };
     });
-    if (firstName.length >= MIN_FIRST_NAME_LENGTH) {
+    if (isFirstNameValid) {
       goto("/register/avatar");
     }
   }
@@ -40,7 +42,7 @@
     <h1 class="h1">{$t("common.what_is_your_name")}</h1>
     <input
       autofocus
-      class="mt-2 border-none bg-surface-500 pl-0.5 outline-none focus:outline-none focus:ring-0 dark:bg-surface-900"
+      class="bg-surface-500 dark:bg-surface-900 mt-2 border-none pl-0.5 outline-none focus:outline-none focus:ring-0"
       type="text"
       placeholder={$t("common.first_name") + " *"}
       name="firstName"
@@ -48,7 +50,7 @@
       minlength={MIN_FIRST_NAME_LENGTH}
     />
     <input
-      class="mt-2 border-none bg-surface-500 pl-0.5 outline-none focus:outline-none focus:ring-0 dark:bg-surface-900"
+      class="bg-surface-500 dark:bg-surface-900 mt-2 border-none pl-0.5 outline-none focus:outline-none focus:ring-0"
       type="text"
       placeholder={$t("common.last_name")}
       name="lastName"
@@ -57,7 +59,7 @@
   </div>
 
   <div class="items-right flex w-full justify-end pr-4">
-    <Button on:click={saveName} disabled={firstName.trim().length < MIN_FIRST_NAME_LENGTH}>
+    <Button on:click={saveName} disabled={!isFirstNameValid}>
       {@html $t("common.next_avatar")}
       <SvgIcon icon="arrowRight" size="42" color={$modeCurrent ? "white" : "%23FD3524"} />
     </Button>

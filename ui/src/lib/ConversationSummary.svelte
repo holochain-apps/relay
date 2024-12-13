@@ -10,6 +10,7 @@
   import { isMobile, sanitizeHTML } from "$lib/utils";
   import type { ConversationStore } from "$store/ConversationStore";
   import { Privacy } from "../types";
+  import { goto } from "$app/navigation";
 
   export let store: ConversationStore;
   $: conversation = store.conversation;
@@ -103,6 +104,8 @@
     if (isDragging) {
       e.preventDefault();
       e.stopPropagation();
+    } else {
+      goto(`/conversations/${$conversation.id}`);
     }
   }
 
@@ -138,9 +141,8 @@
     transition:slide={{ axis: "x", duration: 300, easing: quintOut }}
     on:outroend={archiveConversation}
   >
-    <a
-      href="/conversations/{$conversation.id}"
-      class={`bg-surface-100 hover:bg-tertiary-400 dark:bg-surface-900 dark:hover:bg-secondary-500 z-10 flex w-full min-w-0 flex-row items-center rounded-lg px-2 py-3 transition-transform duration-300 ease-in-out ${isHovering && "bg-tertiary-400 dark:!bg-secondary-500"}`}
+    <button
+      class={`bg-surface-100 hover:bg-tertiary-400 dark:bg-surface-900 dark:hover:bg-secondary-500 z-10 flex w-full min-w-0 flex-row items-center rounded-lg px-2 py-3 text-left transition-transform duration-300 ease-in-out ${isHovering && "bg-tertiary-400 dark:!bg-secondary-500"}`}
       style="transform: translateX({-$x}px)"
       use:pan={{ delay: 10 }}
       on:pan={handlePan}
@@ -247,7 +249,7 @@
           />
         </button>
       {/if}
-    </a>
+    </button>
 
     <div class="absolute left-0 top-0 flex h-full w-full flex-row rounded-lg px-[1px] py-[1px]">
       <!-- <div class="flex flex-1 items-center justify-start ml-1  rounded-lg bg-secondary-500">Mark as Unread</div> -->

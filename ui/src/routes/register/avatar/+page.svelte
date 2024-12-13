@@ -10,6 +10,7 @@
   import { RelayClient } from "$store/RelayClient";
   import { ProfileCreateStore } from "$store/ProfileCreateStore";
   import HiddenFileInput from "$lib/HiddenFileInput.svelte";
+  import toast from "svelte-french-toast";
 
   const relayClientContext: { getClient: () => RelayClient } = getContext("relayClient");
   let relayClient = relayClientContext.getClient();
@@ -27,10 +28,13 @@
     });
   }
 
-  function createAccount() {
-    relayClient.createProfile(firstName, lastName, $avatarDataUrl).then(() => {
+  async function createAccount() {
+    try {
+      await relayClient.createProfile(firstName, lastName, $avatarDataUrl);
       goto("/welcome");
-    });
+    } catch (e) {
+      toast.error(`${$t("common.create_account_error")}: ${e.message}`);
+    }
   }
 </script>
 

@@ -29,10 +29,10 @@ import {
 import { ConversationHistoryStore } from "./ConversationHistoryStore";
 import pRetry from "p-retry";
 import { persisted, type Persisted } from "@square/svelte-store";
-import toast from "svelte-french-toast";
 import { page } from "$app/stores";
 import { BUCKET_RANGE_MS, TARGET_MESSAGES_COUNT } from "../config";
 import { fileToDataUrl } from "$lib/utils";
+import toast from "svelte-french-toast";
 
 export const MINUTES_IN_BUCKET = 60 * 24 * 1; // 1 day for now
 export const MIN_MESSAGES_LOAD = 20;

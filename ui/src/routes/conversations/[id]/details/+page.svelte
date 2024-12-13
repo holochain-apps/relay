@@ -14,6 +14,8 @@
   import { MIN_TITLE_LENGTH } from "../../../../config";
   import HiddenFileInput from "$lib/HiddenFileInput.svelte";
   import type { AllContactsStore } from "$store/AllContactsStore";
+  import toast from "svelte-french-toast";
+  import { goto } from "$app/navigation";
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
   const tAny = t as any;
@@ -60,9 +62,12 @@
 </script>
 
 <Header>
-  <a class="absolute z-10 pr-5" href={`/conversations/${conversationId}`}
-    ><SvgIcon icon="caretLeft" color={$modeCurrent ? "%232e2e2e" : "white"} size="10" /></a
+  <button
+    class="absolute z-10 pr-5 text-left"
+    on:click={() => goto(`/conversations/${conversationId}`)}
   >
+    <SvgIcon icon="caretLeft" color={$modeCurrent ? "%232e2e2e" : "white"} size="10" />
+  </button>
   {#if conversation}
     <h1 class="flex-1 grow text-center">
       {#if conversation.data.privacy === Privacy.Public}{$t(
@@ -70,9 +75,12 @@
         )}{:else}{conversation.title}{/if}
     </h1>
     {#if conversation.data.privacy === Privacy.Private && encodeHashToBase64(conversation.data.progenitor) === relayStore.client.myPubKeyB64}
-      <a class="absolute right-5" href="/conversations/{conversation.data.id}/invite"
-        ><SvgIcon icon="addPerson" color="white" /></a
+      <button
+        class="absolute right-5"
+        on:click={() => goto("/conversations/{conversation.data.id}/invite")}
       >
+        <SvgIcon icon="addPerson" color="white" />
+      </button>
     {/if}
   {/if}
 </Header>
@@ -190,7 +198,14 @@
             <span class="ml-4 flex-1 text-sm font-bold">{$t("conversations.add_members")}</span>
             <button
               class="bg-surface-500 text-secondary-500 mr-1 flex items-center justify-center rounded-full px-2 py-2 text-xs font-bold"
-              on:click={() => copyToClipboard(conversation.publicInviteCode)}
+              on:click={async () => {
+                try {
+                  await copyToClipboard(conversation.publicInviteCode);
+                  toast.success(`${$t("common.copy_success")}`);
+                } catch (e) {
+                  toast.error(`${$t("common.copy_error")}: ${e.message}`);
+                }
+              }}
             >
               <SvgIcon icon="copy" size="14" color="%23FD3524" moreClasses="mr-2" />
               {$t("conversations.copy_invite")}
@@ -222,6 +237,14 @@
                 class="variant-filled-tertiary flex items-center justify-center rounded-2xl p-2 px-3 text-sm font-bold"
                 on:click={() =>
                   contactsStore.copyPrivateConversationInviteCode(contact.publicKeyB64)}
+                on:click={async () => {
+                  try {
+                    await contactsStore.copyPrivateConversationInviteCode(contact.publicKeyB64);
+                    toast.success(`${$t("common.copy_success")}`);
+                  } catch (e) {
+                    toast.error(`${$t("common.copy_error")}: ${e.message}`);
+                  }
+                }}
               >
                 <SvgIcon icon="copy" size="18" color="%23FD3524" moreClasses="mr-2" />
                 {$t("conversations.copy_invite")}

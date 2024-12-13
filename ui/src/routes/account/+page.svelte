@@ -13,6 +13,7 @@
   import { get } from "svelte/store";
   import HiddenFileInput from "$lib/HiddenFileInput.svelte";
   import { MIN_FIRST_NAME_LENGTH } from "$lib/constants";
+  import toast from "svelte-french-toast";
 
   const relayClientContext: { getClient: () => RelayClient } = getContext("relayClient");
   let relayClient = relayClientContext.getClient();
@@ -26,6 +27,7 @@
 
   $: firstName = profileData?.fields.firstName || "";
   $: lastName = profileData?.fields.lastName || "";
+  $: isFirstNameValid = firstName.trim().length >= MIN_FIRST_NAME_LENGTH;
 
   let editingName = false;
   let firstNameElem: HTMLInputElement;
@@ -33,10 +35,14 @@
 
   $: saveName = async () => {
     if (profileData && firstNameElem.value?.length >= MIN_FIRST_NAME_LENGTH) {
-      firstName = firstNameElem.value;
-      lastName = lastNameElem.value;
-      await relayClient.updateProfile(firstName, lastName, profileData.fields.avatar);
-      editingName = false;
+      try {
+        const firstName = firstNameElem.value;
+        const lastName = lastNameElem.value;
+        await relayClient.updateProfile(firstName, lastName, profileData.fields.avatar);
+        editingName = false;
+      } catch (e) {
+        toast.error(`${$t("common.update_profile_error")}: ${e.message}`);
+      }
     }
   };
 
@@ -63,7 +69,13 @@
     <HiddenFileInput
       accept="image/jpeg, image/png, image/gif"
       id="avatarInput"
-      on:change={(e) => relayClient.updateProfile(firstName, lastName, e.detail)}
+      on:change={async (event) => {
+        try {
+          await relayClient.updateProfile(firstName, lastName, e.detail);
+        } catch (e) {
+          toast.error(`${$t("common.upload_image_error")}: ${e.message}`);
+        }
+      }}
     />
 
     <div style="position:relative">
@@ -106,6 +118,7 @@
         <Button
           moreClasses="h-6 w-6 rounded-md py-0 !px-0 mb-0 mr-2 bg-primary-100 flex items-center justify-center"
           on:click={() => saveName()}
+          disabled={!isFirstNameValid}
         >
           <SvgIcon icon="checkMark" color="%23FD3524" size="12" />
         </Button>
@@ -135,7 +148,14 @@
     </p>
 
     <Button
-      on:click={() => copyToClipboard(agentPublicKey64)}
+      on:click={async () => {
+        try {
+          await copyToClipboard(agentPublicKey64);
+          toast.success(`${$t("common.copy_success")}`);
+        } catch (e) {
+          toast.error(`${$t("common.copy_error")}: ${e.message}`);
+        }
+      }}
       moreClasses="w-64 text-sm variant-filled-tertiary dark:!bg-tertiary-200"
     >
       <SvgIcon icon="copy" size="22" color="%23FD3524" moreClasses="mr-3" />
@@ -143,7 +163,13 @@
     </Button>
     {#if isMobile()}
       <Button
-        on:click={() => shareText(agentPublicKey64)}
+        on:click={async () => {
+          try {
+            await shareText(agentPublicKey64);
+          } catch (e) {
+            toast.error(`${$t("common.share_code_error")}: ${e.message}`);
+          }
+        }}
         moreClasses="w-64 text-sm variant-filled-tertiary dark:!bg-tertiary-200"
       >
         <SvgIcon icon="share" size="22" color="%23FD3524" moreClasses="mr-3" />

@@ -28,7 +28,7 @@
       goto(`/conversations/${conversation.data.id}`);
     } catch (e) {
       console.error("Failed to create conversation", e);
-      toast.error("Failed to create conversation");
+      toast.error(`${$t("common.create_conversation_error")}: ${e.message}`);
     }
 
     creating = false;
@@ -48,7 +48,13 @@
   <HiddenFileInput
     accept="image/jpeg, image/png, image/gif"
     id="avatarInput"
-    on:change={(e) => imageUrl.set(e.detail)}
+    on:change={(e) => {
+      try {
+        imageUrl.set(e.detail);
+      } catch (err) {
+        toast.error(`${$t("common.upload_image_error")}: ${err.message}`);
+      }
+    }}
   />
 
   <!-- Label styled as a big clickable icon -->

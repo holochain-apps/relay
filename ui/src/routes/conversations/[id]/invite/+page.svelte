@@ -1,7 +1,6 @@
 <script lang="ts">
   import { modeCurrent } from "@skeletonlabs/skeleton";
   import { getContext } from "svelte";
-  import { derived, writable } from "svelte/store";
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import Avatar from "$lib/Avatar.svelte";
@@ -14,6 +13,7 @@
   import { type ContactExtended, Privacy } from "../../../../types";
   import type { AllContactsStore } from "$store/AllContactsStore";
   import type { AgentPubKeyB64 } from "@holochain/client";
+  import toast from "svelte-french-toast";
 
   const tAny = t as any;
 
@@ -51,9 +51,13 @@
   }
 
   async function addContactsToConversation() {
-    if (conversation) {
+    if (!conversation) return;
+
+    try {
       conversation.addContacts(selectedContacts);
       goto(`/conversations/${conversation.id}/details`);
+    } catch (e) {
+      toast.error(`${$t("common.add_contact_to_conversation_error")}: ${e.message}`);
     }
   }
 </script>
@@ -78,7 +82,17 @@
     </div>
 
     <footer>
-      <Button on:click={() => copyToClipboard(conversation.publicInviteCode)} moreClasses="w-64">
+      <Button
+        moreClasses="w-64"
+        on:click={async () => {
+          try {
+            await copyToClipboard(conversation.publicInviteCode);
+            toast.success(`${$t("common.copy_success")}`);
+          } catch (e) {
+            toast.error(`${$t("common.copy_error")}: ${e.message}`);
+          }
+        }}
+      >
         <p class="w-64 overflow-hidden text-ellipsis text-nowrap">
           {conversation.publicInviteCode}
         </p>
@@ -183,7 +197,9 @@
               {selectedContacts.length}
             </span>
             <div class="nowrap overflow-hidden text-ellipsis">
-              <div class="text-md text-start">{$t("conversations.add_to_conversation")}</div>
+              <div class="text-md text-start">
+                {$t("conversations.add_contact_to_conversation_error")}
+              </div>
               <div class="pb-1 text-start text-xs font-light">
                 with {selectedContacts.map((c) => $contactsStore[c].contact.first_name).join(", ")}
               </div>

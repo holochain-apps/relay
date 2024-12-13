@@ -50,13 +50,13 @@
       <p class="text-2xl">{$t("common.profile_error")}: {$prof.error}</p>
     </div>
   {:else}
-    <a
-      class="variant-filled-tertiary mb-8 flex items-center rounded-full px-6 py-3 dark:variant-filled-tertiary"
-      href="/register"
+    <button
+      class="variant-filled-tertiary dark:variant-filled-tertiary mb-8 flex items-center rounded-full px-6 py-3 text-left"
+      on:click={() => goto("/register")}
     >
       <SvgIcon icon="lock" size="24" color="%23fd3524" />
       <span class="ml-2">{$t("common.create_an_account")}</span>
-    </a>
+    </button>
   {/if}
   <div class="flex flex-col items-center justify-center pb-10">
     <p class="mb-2 text-xs">{$t("common.secured_by")}</p>

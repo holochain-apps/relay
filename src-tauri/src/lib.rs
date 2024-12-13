@@ -1,8 +1,7 @@
 use holochain_types::prelude::AppBundle;
 use lair_keystore::dependencies::sodoken::{BufRead, BufWrite};
 use std::path::PathBuf;
-use std::time::UNIX_EPOCH;
-use std::{collections::HashMap, time::SystemTime};
+use std::time::{UNIX_EPOCH, SystemTime};
 use tauri::{AppHandle, Listener};
 #[cfg(desktop)]
 use tauri::Manager;
@@ -30,6 +29,8 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_os::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
         .plugin(
             tauri_plugin_log::Builder::default()
                 .level(log::LevelFilter::Warn)

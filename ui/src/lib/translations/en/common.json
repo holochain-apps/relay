@@ -28,5 +28,18 @@
   "what_is_your_name": "What is your name?",
   "need_camera_permission": "Camera permission is required to scan codes.",
   "open_app_settings": "Open App Settings",
-  "holochain_connect_error": "Error connecting to Holochain"
+  "holochain_connect_error": "Error connecting to Holochain",
+  "profile_update_error": "Failed to update profile",
+  "copy_success": "Copied to clipboard",
+  "copy_error": "Failed to copy to clipboard",
+  "create_account_error": "Failed to create account",
+  "share_code_error": "Failed to share code",
+  "permission_error": "Failed to request camera permissions. Please try again or grant permissions manually in settings.",
+  "scan_error": "Failed to scan the QR code.",
+  "update_profile_error": "Failed to update the profile",
+  "upload_image_error": "Failed to upload image",
+  "create_conversation_error": "Failed to create conversation",
+  "add_contact_to_conversation_error": "Failed to add contact to conversation",
+  "download_file_error": "Failed to download file",
+  "download_file_success": "File downloaded successfully"
 }

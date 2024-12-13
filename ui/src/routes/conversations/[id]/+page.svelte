@@ -18,6 +18,9 @@
   import { Privacy, type Conversation, type Message, type Image } from "../../../types";
   import LightboxImage from "$lib/LightboxImage.svelte";
   import type { AllContactsStore } from "$store/AllContactsStore";
+  import MessageActions from "$lib/MessageActions.svelte";
+  import { press } from "svelte-gestures";
+  import toast from "svelte-french-toast";
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
   const tAny = t as any;
@@ -255,22 +258,76 @@
       });
 
       // When all files are read, update the images store
-      Promise.all(readers).then((newImages: Image[]) => {
-        newMessageImages.update((currentImages) => [...currentImages, ...newImages]);
-      });
+      const newImages: Image[] = await Promise.all(readers);
+      newMessageImages.update((currentImages) => [...currentImages, ...newImages]);
+    }
+  }
+
+  let selectedMessageHash: string | null = null;
+
+  function unselectMessage() {
+    selectedMessageHash = null;
+  }
+
+  function clickOutside(node: HTMLElement, callback: () => void) {
+    const handleClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (
+        node &&
+        !node.contains(target) &&
+        !target.closest("[data-message-actions]") &&
+        !target.closest("[data-message-selection]")
+      ) {
+        callback();
+      }
+    };
+
+    document.addEventListener("click", handleClick, true);
+
+    return {
+      destroy() {
+        document.removeEventListener("click", handleClick, true);
+      },
+    };
+  }
+
+  function handleMessageClick(messageHash: string) {
+    if (!isMobile()) {
+      if (selectedMessageHash === messageHash) {
+        selectedMessageHash = null;
+      } else if (selectedMessageHash !== null) {
+        selectedMessageHash = null;
+      } else {
+        selectedMessageHash = messageHash;
+      }
+    }
+  }
+
+  function handleMessagePress(messageHash: string) {
+    if (isMobile()) {
+      if (selectedMessageHash === messageHash) {
+        selectedMessageHash = null;
+      } else if (selectedMessageHash !== null) {
+        selectedMessageHash = null;
+      } else {
+        selectedMessageHash = messageHash;
+      }
     }
   }
 </script>
 
 <Header>
-  <a class="flex-none pr-5" href={`/conversations${conversation?.archived ? "/archive" : ""}`}
-    ><SvgIcon icon="caretLeft" color={$modeCurrent ? "%232e2e2e" : "white"} size="10" /></a
+  <button
+    class="flex-none pr-5"
+    on:click={() => goto(`/conversations${conversation?.archived ? "/archive" : ""}`)}
   >
+    <SvgIcon icon="caretLeft" color={$modeCurrent ? "%232e2e2e" : "white"} size="10" />
+  </button>
   {#if conversation}
     <h1 class="block grow self-center overflow-hidden text-ellipsis whitespace-nowrap text-center">
-      <a href={`/conversations/${conversationId}/details`} class="w-full">
+      <button on:click={() => goto(`/conversations/${conversationId}/details`)} class="w-full">
         {conversation.title}
-      </a>
+      </button>
     </h1>
     <button
       class="self-center pl-2"
@@ -279,12 +336,15 @@
       <SvgIcon icon="gear" size="18" color={$modeCurrent ? "%232e2e2e" : "white"} />
     </button>
     {#if conversation.data.privacy === Privacy.Public || encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64}
-      <a
+      <button
         class="flex-none pl-5"
-        href={`/conversations/${conversation.data.id}/${conversation.data.privacy === Privacy.Public ? "details" : "invite"}`}
+        on:click={() =>
+          goto(
+            `/conversations/${conversation.data.id}/${conversation.data.privacy === Privacy.Public ? "details" : "invite"}`,
+          )}
       >
         <SvgIcon icon="addPerson" size="24" color={$modeCurrent ? "%232e2e2e" : "white"} />
-      </a>
+      </button>
     {:else}
       <span class="flex-none pl-8">&nbsp;</span>
     {/if}
@@ -338,9 +398,12 @@
       {/if}
       <h1 class="b-1 break-all text-3xl">{conversation.title}</h1>
       <!-- if joining a conversation created by someone else, say still syncing here until there are at least 2 members -->
-      <a href={`/conversations/${conversationId}/details`} class="text-sm">
+      <button
+        on:click={() => goto(`/conversations/${conversationId}/details`)}
+        class="text-left text-sm"
+      >
         {$tAny("conversations.num_members", { count: numMembers })}
-      </a>
+      </button>
       {#if $processedMessages.length === 0 && encodeHashToBase64(conversation.data.progenitor) === myPubKeyB64 && numMembers === 1}
         <!-- No messages yet, no one has joined, and this is a conversation I created. Display a helpful message to invite others -->
         <div class="flex h-full w-full flex-col items-center justify-center">
@@ -365,10 +428,16 @@
                 <div class="flex justify-center">
                   <Button
                     moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
-                    on:click={() =>
-                      contactsStore.copyPrivateConversationInviteCode(
-                        conversation.allMembers[0]?.publicKeyB64,
-                      )}
+                    on:click={async () => {
+                      try {
+                        await contactsStore.copyPrivateConversationInviteCode(
+                          conversation.allMembers[0]?.publicKeyB64,
+                        );
+                        toast.success(`${$t("common.copy_success")}`);
+                      } catch (e) {
+                        toast.error(`${$t("common.copy_error")}: ${e.message}`);
+                      }
+                    }}
                   >
                     <SvgIcon icon="copy" size="20" color="%23FD3524" moreClasses="mr-2" />
                     {$t("contacts.copy_invite_code")}
@@ -405,8 +474,15 @@
               {$t("conversations.share_invitation_code_msg")}
             </p>
             <Button
-              on:click={() => copyToClipboard(conversation.publicInviteCode)}
               moreClasses="w-64 justify-center variant-filled-tertiary"
+              on:click={async () => {
+                try {
+                  await copyToClipboard(conversation.publicInviteCode);
+                  toast.success(`${$t("common.copy_success")}`);
+                } catch (e) {
+                  toast.error(`${$t("common.copy_error")}: ${e.message}`);
+                }
+              }}
             >
               <SvgIcon icon="copy" size="18" color="%23FD3524" />
               <strong class="ml-2 text-sm">{$t("conversations.copy_invite_code")}</strong>
@@ -423,80 +499,108 @@
           {/if}
         </div>
       {:else}
-        <div id="message-box" class="flex w-full flex-1 flex-col-reverse p-4">
+        <div
+          id="message-box"
+          class="flex w-full flex-1 flex-col-reverse p-4"
+          use:clickOutside={() => (selectedMessageHash = null)}
+        >
           <ul>
             {#each $processedMessages as message (message.hash)}
               {@const fromMe = message.authorKey === myPubKeyB64}
+              {@const isSelected = selectedMessageHash === message.hash}
               {#if message.header}
-                <li class="mb-3 mt-auto">
+                <li class="mb-2 mt-auto">
                   <div class="text-secondary-400 dark:text-secondary-300 text-center text-xs">
                     {message.header}
                   </div>
                 </li>
               {/if}
               <li
-                class="mt-auto {!message.hideDetails && 'mt-3'} flex {fromMe
-                  ? 'justify-end'
-                  : 'justify-start'}"
+                class="mt-auto {!message.hideDetails && 'mt-3'} relative {isSelected
+                  ? 'bg-secondary-500 mb-20 mt-2 rounded-t-xl'
+                  : ''}"
+                data-message-selection={isSelected ? "true" : undefined}
               >
-                {#if !fromMe}
-                  {#if !message.hideDetails}
-                    <Avatar
-                      image={message.avatar}
-                      agentPubKey={message.authorKey}
-                      size="24"
-                      moreClasses="items-start mt-1"
-                    />
-                  {:else}
-                    <span class="inline-block min-w-6"></span>
+                <button
+                  class="flex w-full {fromMe ? 'justify-end' : 'justify-start'} {isSelected
+                    ? 'bg-secondary-500 rounded-b-none rounded-t-xl px-2.5 py-1.5'
+                    : 'bg-transparent'} border-0 bg-transparent text-left"
+                  use:press={{ timeframe: 300, triggerBeforeFinished: false }}
+                  on:press={(e) => handleMessagePress(message.hash)}
+                  on:click|preventDefault={() => handleMessageClick(message.hash)}
+                  aria-pressed={isSelected}
+                  aria-label={`Message from ${fromMe ? "you" : message.author}`}
+                >
+                  {#if !fromMe}
+                    {#if !message.hideDetails}
+                      <Avatar
+                        image={message.avatar}
+                        agentPubKey={message.authorKey}
+                        size="24"
+                        moreClasses="items-start mt-1"
+                      />
+                    {:else}
+                      <span class="inline-block min-w-6"></span>
+                    {/if}
                   {/if}
-                {/if}
-                <div class="ml-3 w-2/3 {fromMe && 'items-end text-end'}">
-                  {#if !message.hideDetails}
-                    <span class="flex items-baseline {fromMe && 'flex-row-reverse opacity-80'}">
-                      <span class="font-bold">{fromMe ? "You" : message.author}</span>
-                      <span class="text-xxs mx-2"
-                        ><Time timestamp={message.timestamp} format="h:mma" /></span
-                      >
-                    </span>
-                  {/if}
-                  {#if message.images && message.images.length > 0}
-                    {#each message.images as image}
-                      <div class="flex {fromMe ? 'justify-end' : 'justify-start'}">
-                        {#if image.status === "loaded"}
-                          <LightboxImage
-                            btnClass="inline max-w-2/3 mb-2"
-                            src={image.dataURL}
-                            alt={image.name}
-                          />
-                        {:else if image.status === "loading" || image.status === "pending"}
-                          <div
-                            class="bg-surface-800 mb-2 flex h-20 w-20 items-center justify-center"
-                          >
-                            <SvgIcon
-                              icon="spinner"
-                              color={$modeCurrent ? "%232e2e2e" : "white"}
-                              size="30"
-                            />
-                          </div>
-                        {:else}
-                          <div
-                            class="bg-surface-800 mb-2 flex h-20 w-20 items-center justify-center"
-                          >
-                            <SvgIcon
-                              icon="x"
-                              color={$modeCurrent ? "%232e2e2e" : "white"}
-                              size="30"
-                            />
-                          </div>
-                        {/if}
-                      </div>
-                    {/each}
-                  {/if}
-                  <div class="message w-full break-words font-light {fromMe && 'text-end'}">
-                    {@html sanitizeHTML(linkify(message.content))}
+
+                  <div class="ml-3 w-2/3 {fromMe && 'items-end text-end'}">
+                    {#if !message.hideDetails}
+                      <span class="flex items-baseline {fromMe && 'flex-row-reverse opacity-80'}">
+                        <span class="font-bold">{fromMe ? "You" : message.author}</span>
+                        <span class="text-xxs mx-2"
+                          ><Time timestamp={message.timestamp} format="h:mma" /></span
+                        >
+                      </span>
+                    {/if}
+
+                    {#if message.images && message.images.length > 0}
+                      {#each message.images as image}
+                        <div class="flex {fromMe ? 'justify-end' : 'justify-start'}">
+                          {#if image.status === "loaded"}
+                            <div class="mb-2 flex items-start justify-between">
+                              <LightboxImage
+                                btnClass="inline max-w-2/3"
+                                src={image.dataURL}
+                                alt={image.name}
+                              />
+                            </div>
+                          {:else if image.status === "loading" || image.status === "pending"}
+                            <div
+                              class="bg-surface-800 mb-2 flex h-20 w-20 items-center justify-center"
+                            >
+                              <SvgIcon
+                                icon="spinner"
+                                color={$modeCurrent ? "%232e2e2e" : "white"}
+                                size="30"
+                              />
+                            </div>
+                          {:else}
+                            <div
+                              class="bg-surface-800 mb-2 flex h-20 w-20 items-center justify-center"
+                            >
+                              <SvgIcon
+                                icon="x"
+                                color={$modeCurrent ? "%232e2e2e" : "white"}
+                                size="30"
+                              />
+                            </div>
+                          {/if}
+                        </div>
+                      {/each}
+                    {/if}
+
+                    <div class="message w-full break-words font-light {fromMe && 'text-end'}">
+                      {@html sanitizeHTML(linkify(message.content))}
+                    </div>
                   </div>
-                </div>
+                </button>
+
+                {#if isSelected}
+                  <div data-message-actions>
+                    <MessageActions {message} {unselectMessage} />
+                  </div>
+                {/if}
               </li>
             {/each}
           </ul>

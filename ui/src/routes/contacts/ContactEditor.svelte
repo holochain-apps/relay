@@ -19,6 +19,7 @@
   import type { Contact } from "../../types";
   import type { AllContactsStore } from "$store/AllContactsStore";
   import { MIN_FIRST_NAME_LENGTH } from "$lib/constants";
+  import toast from "svelte-french-toast";
 
   // Silly thing to get around typescript issues with sveltekit-i18n
   const tAny = t as any;
@@ -179,7 +180,7 @@
       <h3 class="h3">{$t("common.first_name")} *</h3>
       <input
         autofocus
-        class="bg-surface-900 w-full border-none pl-0.5 outline-none focus:outline-none focus:ring-0"
+        class="bg-surface-900 border-none pl-0.5 outline-none focus:outline-none focus:ring-0"
         type="text"
         placeholder={$t("contacts.enter_first_name")}
         name="name"
@@ -189,7 +190,7 @@
 
       <h3 class="h3 mt-4">{$t("common.last_name")}</h3>
       <input
-        class="bg-surface-900 w-full border-none pl-0.5 outline-none focus:outline-none focus:ring-0"
+        class="bg-surface-900 border-none pl-0.5 outline-none focus:outline-none focus:ring-0"
         type="text"
         placeholder={$t("contacts.enter_last_name")}
         name="name"
@@ -198,7 +199,7 @@
 
       <h3 class="h3 mt-4">{$t("contacts.contact_code")} *</h3>
       <input
-        class="bg-surface-900 w-full w-full border-none pl-0.5 outline-none focus:outline-none focus:ring-0"
+        class="bg-surface-900 border-none pl-0.5 outline-none focus:outline-none focus:ring-0"
         type="text"
         placeholder={$t("contacts.enter_contact_code")}
         name="publicKey"
@@ -251,9 +252,16 @@
           {existingContactExtended?.agentPubKeyB64}
         </span>
         <button
-          on:click={() =>
-            existingContactExtended?.agentPubKeyB64 &&
-            copyToClipboard(existingContactExtended?.agentPubKeyB64)}
+          on:click={async () => {
+            try {
+              if (existingContactExtended?.agentPubKeyB64) {
+                await copyToClipboard(existingContactExtended.agentPubKeyB64);
+                toast.success(`${$t("common.copy_success")}`);
+              }
+            } catch (e) {
+              toast.error(`${$t("common.copy_error")}: ${e.message}`);
+            }
+          }}
         >
           <SvgIcon icon="copy" size="20" color="%23999" />
         </button>

@@ -8,6 +8,7 @@
   "archive": "Archive",
   "copy_invite_code": "Copy invite code",
   "copy_invite": "Copy Invite",
+  "copy_text": "Copy Text",
   "create_group": "Create group",
   "created": "Created: {{date:date;}}",
   "enter_invite_code": "Enter invite code",
@@ -31,5 +32,6 @@
   "unable_to_create_code": "Unable to create invite code",
   "unconfirmed_invitations": "Unconfirmed Invitations",
   "unconfirmed": "Not confirmed",
-  "you": "You"
+  "you": "You",
+  "download": "Download"
 }
