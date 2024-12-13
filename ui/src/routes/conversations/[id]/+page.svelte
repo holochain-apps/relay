@@ -51,39 +51,39 @@
   const SCROLL_BOTTOM_THRESHOLD = 100; // How close to the bottom must the user be to consider it "at the bottom"
   const SCROLL_TOP_THRESHOLD = 300; // How close to the top must the user be to consider it "at the top"
 
-  const checkForAgents = () => {
-    conversation &&
-      conversation.fetchAgents().then((agentProfiles) => {
-        if (Object.values(agentProfiles).length < 2) {
-          agentTimeout = setTimeout(() => {
-            checkForAgents();
-          }, 2000);
-        }
-      });
+  const checkForAgents = async () => {
+    if (!conversation) return;
+
+    const agentProfiles = await conversation.fetchAgents();
+    if (Object.values(agentProfiles).length < 2) {
+      agentTimeout = setTimeout(() => {
+        checkForAgents();
+      }, 2000);
+    }
   };
 
-  const checkForConfig = () => {
-    conversation &&
-      conversation.getConfig().then((config) => {
-        if (!config?.title) {
-          configTimeout = setTimeout(() => {
-            checkForConfig();
-          }, 2000);
-        }
-      });
+  const checkForConfig = async () => {
+    if (!conversation) return;
+
+    const config = await conversation.getConfig();
+    if (!config?.title) {
+      configTimeout = setTimeout(() => {
+        checkForConfig();
+      }, 2000);
+    }
   };
 
-  const checkForMessages = () => {
-    conversation &&
-      conversation.loadMessageSetFrom(conversation.currentBucket()).then(([_, hashes]) => {
-        // If this we aren't getting anything back and there are no messages loaded at all
-        // then keep trying as this is probably a no network, or a just joined situation
-        if (hashes.length == 0 && Object.keys(conversation.data.messages).length == 0) {
-          messageTimeout = setTimeout(() => {
-            checkForMessages();
-          }, 2000);
-        }
-      });
+  const checkForMessages = async () => {
+    if (!conversation) return;
+
+    const [_, hashes] = await conversation.loadMessageSetFrom(conversation.currentBucket());
+    // If this we aren't getting anything back and there are no messages loaded at all
+    // then keep trying as this is probably a no network, or a just joined situation
+    if (hashes.length == 0 && Object.keys(conversation.data.messages).length == 0) {
+      messageTimeout = setTimeout(() => {
+        checkForMessages();
+      }, 2000);
+    }
   };
 
   const checkForData = () => {
@@ -259,9 +259,8 @@
       });
 
       // When all files are read, update the images store
-      Promise.all(readers).then((newImages: Image[]) => {
-        newMessageImages.update((currentImages) => [...currentImages, ...newImages]);
-      });
+      const newImages: Image[] = await Promise.all(readers);
+      newMessageImages.update((currentImages) => [...currentImages, ...newImages]);
     }
   }
 
