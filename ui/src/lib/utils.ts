@@ -31,34 +31,34 @@ export const linkify = (text: string): string =>
     target: "_blank",
   });
 
-export function shareText(text: string | Promise<string>) {
+export async function shareText(text: string | Promise<string>) {
   if (typeof text === "string") {
     if (text && text.trim().length > 0) {
       return sharesheetShareText(text);
     }
   } else {
-    return text.then((t) => sharesheetShareText(t));
+    const t = await text;
+    return sharesheetShareText(t);
   }
 }
 
-export function copyToClipboard(text: string | Promise<string>) {
+export async function copyToClipboard(text: string | Promise<string>) {
   if (typeof text === "string") {
     if (text && text.trim().length > 0) {
       console.log("Copying to clipboard", text);
       return navigator.clipboard.writeText(text);
     }
   } else {
+    const t = await text;
+    console.log("Copying to clipboard", text);
+
     if (typeof ClipboardItem && navigator.clipboard.write) {
       const item = new ClipboardItem({
-        "text/plain": text.then((t) => {
-          console.log("Copying to clipboard", t);
-          return new Blob([t], { type: "text/plain" });
-        }),
+        "text/plain": new Blob([t], { type: "text/plain" }),
       });
       return navigator.clipboard.write([item]);
     } else {
-      console.log("Copying to clipboard", text);
-      return text.then((t) => navigator.clipboard.writeText(t));
+      return navigator.clipboard.writeText(t);
     }
   }
 }

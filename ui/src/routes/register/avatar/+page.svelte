@@ -30,9 +30,8 @@
 
   async function createAccount() {
     try {
-      await relayClient.createProfile(firstName, lastName, $avatarDataUrl).then(() => {
-        goto("/welcome");
-      });
+      await relayClient.createProfile(firstName, lastName, $avatarDataUrl);
+      goto("/welcome");
     } catch (e) {
       toast.error(`${$t("common.create_account_error")}: ${e.message}`);
     }
