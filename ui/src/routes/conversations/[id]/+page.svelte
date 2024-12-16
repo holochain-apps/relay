@@ -367,7 +367,6 @@
   //To get the icon name based on the file type
   function formatFileIcon(file: FileMetadata): string {
     //Extension based fallback
-    console.log(file);
     const extensionIcons: { [key: string]: string } = {
       xlsx: "xlsx",
       xls: "xlsx",
@@ -397,7 +396,6 @@
     };
     if (file.name) {
       const extension = file.name.split(".").pop()?.toLowerCase();
-      console.log(extension);
       if (extension && extensionIcons[extension]) {
         console.log(extensionIcons[extension]);
         return extensionIcons[extension];
