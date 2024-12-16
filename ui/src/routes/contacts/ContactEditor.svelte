@@ -8,7 +8,7 @@
   import Button from "$lib/Button.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$lib/translations";
-  import { copyToClipboard, handleFileChange, isMobile, shareText } from "$lib/utils";
+  import { copyToClipboard, handleImageChange, isMobile, shareText } from "$lib/utils";
   import { RelayStore } from "$store/RelayStore";
   import toast from "svelte-french-toast";
 
@@ -108,7 +108,7 @@
       class="hidden"
       on:change={(event) => {
         editing = true;
-        handleFileChange(event, (imageData) => imageUrl.set(imageData));
+        handleImageChange(event, (imageData) => imageUrl.set(imageData));
       }}
     />
 

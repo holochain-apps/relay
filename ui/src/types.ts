@@ -115,7 +115,7 @@ export interface Invitation {
 }
 
 // Holochain Type
-export interface ImageStruct {
+export interface FileStruct {
   last_modified: number;
   name: string;
   size: number;
@@ -123,10 +123,11 @@ export interface ImageStruct {
   file_type: string;
 }
 
-export interface Image {
+export interface FileMetadata {
+  id: string;
   dataURL?: string;
   fileType: string;
-  file?: File;
+  fileObject?: File;
   name: string;
   lastModified: number;
   size: number;
@@ -141,7 +142,7 @@ export interface Message {
   avatar?: string; // Used in the UI to display the author's avatar
   content: string;
   header?: string; // an optional header to display above this message in the conversation UI
-  images: Image[];
+  files: FileMetadata[];
   hideDetails?: boolean; // Used in the UI to toggle the display of the message details
   status?: "pending" | "confirmed" | "delivered" | "read"; // status of the message
   timestamp: Date;

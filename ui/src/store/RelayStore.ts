@@ -15,7 +15,7 @@ import { ConversationStore } from "./ConversationStore";
 import { RelayClient } from "$store/RelayClient";
 import type {
   Contact,
-  Image,
+  FileMetadata,
   ConversationCellAndConfig,
   Invitation,
   Message,
@@ -67,9 +67,12 @@ export class RelayStore {
           authorKey: encodeHashToBase64(from),
           content: payload.message.content,
           bucket: payload.message.bucket,
-          images: payload.message.images.map(
+          files: payload.message.files.map(
             (i: any) =>
-              ({ ...(mapKeys(i, (v, k) => camelCase(k)) as Image), status: "loading" }) as Image,
+              ({
+                ...(mapKeys(i, (v, k) => camelCase(k)) as FileMetadata),
+                status: "loading",
+              }) as FileMetadata,
           ), // convert snake_case to camelCase
           status: "confirmed",
           timestamp: new Date(payload.action.hashed.content.timestamp / 1000),
@@ -92,7 +95,7 @@ export class RelayStore {
                 message.content,
               );
             }
-            conversation.loadImagesForMessage(message); // async load images
+            conversation.loadFilesForMessage(message); // async load files
           }
         }
       }

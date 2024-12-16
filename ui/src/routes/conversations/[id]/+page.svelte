@@ -15,14 +15,16 @@
   import { t } from "$lib/translations";
   import { copyToClipboard, isMobile, linkify, sanitizeHTML, shareText } from "$lib/utils";
   import { RelayStore } from "$store/RelayStore";
-  import { Privacy, type Conversation, type Message, type Image } from "../../../types";
+  import { Privacy, type Conversation, type Message, type FileMetadata } from "../../../types";
   import LightboxImage from "$lib/LightboxImage.svelte";
   import MessageActions from "$lib/MessageActions.svelte";
   import { press } from "svelte-gestures";
   import toast from "svelte-french-toast";
+  import PdfThumbnail from "$lib/PDFThumbnail.svelte";
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
   const tAny = t as any;
+  const MAX_FILE_SIZE = 15 * 1024 * 1024; //15MB
 
   $: conversationId = $page.params.id;
 
@@ -43,7 +45,7 @@
 
   let newMessageInput: HTMLInputElement;
   let newMessageText = "";
-  const newMessageImages: Writable<Image[]> = writable([]);
+  const newMessageFiles: Writable<FileMetadata[]> = writable([]);
   let conversationContainer: HTMLElement;
   let scrollAtBottom = true;
   let scrollAtTop = false;
@@ -212,31 +214,40 @@
   }
 
   async function sendMessage(e: SubmitEvent) {
-    if (conversation && (newMessageText.trim() || $newMessageImages.length > 0)) {
-      conversation.sendMessage(myPubKeyB64, newMessageText, $newMessageImages);
+    if (conversation && (newMessageText.trim() || $newMessageFiles.length > 0)) {
+      conversation.sendMessage(myPubKeyB64, newMessageText, $newMessageFiles);
       newMessageText = ""; // Clear input after sending
-      newMessageImages.set([]);
+      newMessageFiles.set([]);
       setTimeout(scrollToBottom, 100);
       newMessageInput.focus();
     }
     e.preventDefault();
   }
 
-  async function handleImagesSelected(event: Event) {
+  async function handleFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const files = Array.from(input.files);
-      const readers: Promise<Image>[] = files.map((file) => {
+      const validFiles = files.filter((file) => {
+        if (file.size > MAX_FILE_SIZE) {
+          toast.error(`${$t("common.large_file_error", { maxSize: "15MB" } as any)}`);
+          return false;
+        }
+        return true;
+      });
+
+      const readers: Promise<FileMetadata>[] = validFiles.map((file) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
-        return new Promise<Image>((resolve) => {
+        return new Promise<FileMetadata>((resolve) => {
           reader.onload = async () => {
             if (typeof reader.result === "string") {
               resolve({
+                id: crypto.randomUUID(),
                 dataURL: reader.result,
                 lastModified: file.lastModified,
                 fileType: file.type,
-                file,
+                fileObject: file,
                 name: file.name,
                 size: file.size,
                 status: "pending",
@@ -246,10 +257,11 @@
           reader.onerror = () => {
             console.error("Error reading file");
             resolve({
+              id: crypto.randomUUID(),
               dataURL: "",
               lastModified: file.lastModified,
               fileType: file.type,
-              file,
+              fileObject: file,
               name: file.name,
               size: file.size,
               status: "error",
@@ -258,11 +270,15 @@
         });
       });
 
-      // When all files are read, update the images store
-      Promise.all(readers).then((newImages: Image[]) => {
-        newMessageImages.update((currentImages) => [...currentImages, ...newImages]);
+      // When all files are read, update the file store
+      Promise.all(readers).then((newFiles: FileMetadata[]) => {
+        newMessageFiles.update((currentFile) => [...currentFile, ...newFiles]);
       });
     }
+  }
+
+  function cancelUpload(id: string) {
+    newMessageFiles.update((files) => files.filter((file) => file.id !== id));
   }
 
   let selectedMessageHash: string | null = null;
@@ -315,6 +331,80 @@
         selectedMessageHash = messageHash;
       }
     }
+  }
+
+  function formatFileSize(size: number): string {
+    const units = ["B", "KB", "MB", "GB", "TB", "PB"];
+    let unitIndex = 0;
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024;
+      unitIndex++;
+    }
+    return `${size.toFixed(2)} ${units[unitIndex]}`;
+  }
+
+  function formatFileName(file: FileMetadata, maxCharacters: number = 10): string {
+    const fileName = file.name.trim();
+    const lastDotIndex = fileName.lastIndexOf(".");
+    const baseName = lastDotIndex > -1 ? fileName.slice(0, lastDotIndex) : fileName;
+    const extension = lastDotIndex > -1 ? fileName.slice(lastDotIndex) : "";
+    if (baseName.length > maxCharacters) {
+      const separators = ["_", "-", "."];
+      for (const separator of separators) {
+        const parts = baseName.split(separator);
+        if (parts.length > 1) {
+          if (parts[0].length <= maxCharacters) {
+            return parts[0] + "..." + extension;
+          }
+          return parts[0].slice(0, maxCharacters) + "..." + extension;
+        }
+      }
+      return baseName.slice(0, maxCharacters) + "..." + extension;
+    }
+    return fileName;
+  }
+
+  //To get the icon name based on the file type
+  function formatFileIcon(file: FileMetadata): string {
+    //Extension based fallback
+    console.log(file);
+    const extensionIcons: { [key: string]: string } = {
+      xlsx: "xlsx",
+      xls: "xlsx",
+      doc: "docx",
+      docx: "docx",
+      ppt: "pptx",
+      pptx: "pptx",
+      zip: "zip",
+      rar: "rar",
+      "7z": "7z",
+      gz: "gz",
+      tar: "tar",
+      txt: "txt",
+      csv: "csv",
+      html: "html",
+      css: "css",
+      js: "js",
+      json: "json",
+      xml: "xml",
+      py: "py",
+      java: "java",
+      ts: "ts",
+      rtf: "rtf",
+      mp3: "audio",
+      mp4: "video",
+      mkv: "mkv",
+    };
+    if (file.name) {
+      const extension = file.name.split(".").pop()?.toLowerCase();
+      console.log(extension);
+      if (extension && extensionIcons[extension]) {
+        console.log(extensionIcons[extension]);
+        return extensionIcons[extension];
+      }
+    }
+    //Final fallback
+    return "file";
   }
 </script>
 
@@ -521,13 +611,13 @@
               {/if}
               <li
                 class="mt-auto {!message.hideDetails && 'mt-3'} relative {isSelected
-                  ? 'bg-secondary-500 mb-20 mt-2 rounded-t-xl'
-                  : ''}"
+                  ? 'bg-tertiary-500 dark:bg-secondary-500 mb-20 mt-2 rounded-t-xl'
+                  : ''} "
                 data-message-selection={isSelected ? "true" : undefined}
               >
                 <button
                   class="flex w-full {fromMe ? 'justify-end' : 'justify-start'} {isSelected
-                    ? 'bg-secondary-500 rounded-b-none rounded-t-xl px-2.5 py-1.5'
+                    ? 'bg-tertiary-500 dark:bg-secondary-500 rounded-b-none rounded-t-xl px-2.5 py-1.5'
                     : 'bg-transparent'} border-0 bg-transparent text-left"
                   use:press={{ timeframe: 300, triggerBeforeFinished: false }}
                   on:press={(e) => handleMessagePress(message.hash)}
@@ -548,7 +638,7 @@
                     {/if}
                   {/if}
 
-                  <div class="ml-3 w-2/3 {fromMe && 'items-end text-end'}">
+                  <div class="max-w-3/4 ml-3 w-auto {fromMe && 'items-end text-end'}">
                     {#if !message.hideDetails}
                       <span class="flex items-baseline {fromMe && 'flex-row-reverse opacity-80'}">
                         <span class="font-bold">{fromMe ? "You" : message.author}</span>
@@ -557,21 +647,71 @@
                         >
                       </span>
                     {/if}
-
-                    {#if message.images && message.images.length > 0}
-                      {#each message.images as image}
-                        <div class="flex {fromMe ? 'justify-end' : 'justify-start'}">
-                          {#if image.status === "loaded"}
-                            <div class="mb-2 flex items-start justify-between">
-                              <LightboxImage
-                                btnClass="inline max-w-2/3"
-                                src={image.dataURL}
-                                alt={image.name}
-                              />
+                    <!-- if message contains files -->
+                    {#if message.files && message.files.length > 0}
+                      {#each message.files as file}
+                        <div class="flex {fromMe ? 'justify-end' : 'justify-start'} w-full p-2">
+                          <!-- if file is loaded -->
+                          {#if file.status === "loaded"}
+                            <div class="mb-2 flex w-full max-w-full items-start justify-between">
+                              <!-- Display image thumbnail -->
+                              {#if file.fileType.startsWith("image/")}
+                                <div class="w-full">
+                                  <LightboxImage
+                                    btnClass="inline w-full sm:max-w-md lg:max-w-lg transition-all duration-200"
+                                    src={file.dataURL}
+                                    alt={file.name}
+                                  />
+                                </div>
+                                <!-- Display pdf thumbnail -->
+                              {:else if file.fileType === "application/pdf"}
+                                <div
+                                  class="bg-surface-800/10 flex w-auto flex-row items-start gap-3 rounded-xl p-3"
+                                >
+                                  <div class="min-w-0 flex-grow">
+                                    <div class="break-all text-sm sm:text-base">
+                                      {isMobile()
+                                        ? formatFileName(file, 20)
+                                        : formatFileName(file, 50)}
+                                    </div>
+                                    <div class="mt-1 text-xs font-bold text-yellow-400 sm:text-sm">
+                                      {formatFileSize(file.size)}
+                                    </div>
+                                  </div>
+                                  <div class="flex-shrink-0">
+                                    <PdfThumbnail
+                                      pdfDataUrl={file.dataURL ?? ""}
+                                      width={70}
+                                      height={90}
+                                      fallbackIcon="pdf"
+                                    />
+                                  </div>
+                                </div>
+                                <!-- Display icons for other file types -->
+                              {:else}
+                                <div
+                                  class="bg-surface-800/10 flex w-full flex-row items-start gap-3 rounded-xl p-3"
+                                >
+                                  <div class="min-w-0 flex-grow">
+                                    <div class="break-all text-sm sm:text-base">{file.name}</div>
+                                    <div class="mt-1 text-xs font-bold text-yellow-400 sm:text-sm">
+                                      {formatFileSize(file.size)}
+                                    </div>
+                                  </div>
+                                  <div class="flex flex-shrink-0 items-center justify-center">
+                                    <SvgIcon
+                                      icon={formatFileIcon(file)}
+                                      color={$modeCurrent ? "black" : "white"}
+                                      size="50"
+                                    />
+                                  </div>
+                                </div>
+                              {/if}
                             </div>
-                          {:else if image.status === "loading" || image.status === "pending"}
+                            <!-- if file is loading -->
+                          {:else if file.status === "loading" || file.status === "pending"}
                             <div
-                              class="bg-surface-800 mb-2 flex h-20 w-20 items-center justify-center"
+                              class="bg-surface-800/60 mb-2 flex h-20 w-20 items-center justify-center rounded-lg"
                             >
                               <SvgIcon
                                 icon="spinner"
@@ -581,7 +721,7 @@
                             </div>
                           {:else}
                             <div
-                              class="bg-surface-800 mb-2 flex h-20 w-20 items-center justify-center"
+                              class="bg-surface-800/60 mb-2 flex h-20 w-20 items-center justify-center rounded-lg"
                             >
                               <SvgIcon
                                 icon="x"
@@ -614,17 +754,10 @@
   </div>
   <div class="bg-tertiary-500 dark:bg-secondary-500 w-full flex-shrink-0 p-2">
     <form class="flex" method="POST" on:submit={sendMessage}>
-      <input
-        type="file"
-        accept="image/jpeg, image/png, image/gif"
-        multiple
-        id="images"
-        class="hidden"
-        on:change={handleImagesSelected}
-      />
-      <label for="images" class="flex cursor-pointer">
+      <input type="file" multiple id="files" class="hidden" on:change={handleFileSelected} />
+      <label for="files" class="flex cursor-pointer">
         <SvgIcon
-          icon="image"
+          icon="fileClip"
           color={$modeCurrent ? "%232e2e2e" : "white"}
           size="26"
           moreClasses="ml-3"
@@ -640,21 +773,104 @@
           class="bg-tertiary-500 w-full border-0 placeholder:text-sm placeholder:text-gray-400 focus:border-gray-500 focus:ring-0"
           placeholder={$t("conversations.message_placeholder")}
         />
-        <div class="flex flex-row px-4">
-          {#each $newMessageImages as image, i}
-            {#if image.status === "loading"}
-              <div class="bg-tertiary-500 mr-2 flex h-10 w-10 items-center justify-center">
-                <SvgIcon icon="spinner" color="white" size="10" />
+        <div class="flex flex-row flex-wrap px-4">
+          {#each $newMessageFiles as file (file.id)}
+            {#if file.status === "loading"}
+              <div
+                class="bg-primary-500 relative mr-3 flex items-start justify-between rounded-xl p-2"
+              >
+                <button
+                  class="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-white p-1 text-white"
+                  on:click={() => cancelUpload(file.id)}
+                  aria-label="Cancel Upload"
+                >
+                  <SvgIcon icon="x" size="8" />
+                </button>
+                <div class="flex flex-col">
+                  {formatFileName(file)}
+                  <div class="file-size text-sm font-bold text-yellow-400">
+                    {formatFileSize(file.size)}
+                  </div>
+                </div>
+                <div class="justify-cente relative ml-4 flex items-center">
+                  <SvgIcon icon="spinner" color={$modeCurrent ? "%232e2e2e" : "white"} size="20" />
+                </div>
+              </div>
+            {:else if file.dataURL && file.fileType.startsWith("image/")}
+              <!-- Display image thumbnail -->
+              <div class="relative mr-3 h-16 w-16">
+                <img src={file.dataURL} class="h-16 w-16 rounded-lg object-cover" alt="thumbnail" />
+                <button
+                  class="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-white p-1 text-white"
+                  on:click={() => cancelUpload(file.id)}
+                  aria-label="Cancel Upload"
+                >
+                  <SvgIcon icon="x" size="8" />
+                </button>
+              </div>
+            {:else if file.dataURL && file.fileType.startsWith("application/pdf")}
+              <!-- Display pdf thumbnail -->
+              <div
+                class="bg-surface-800/10 relative mb-2 mr-2 flex flex-row items-start justify-between gap-1.5 rounded-xl p-2"
+              >
+                <button
+                  class="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-white p-1 text-white"
+                  on:click={() => cancelUpload(file.id)}
+                  aria-label="Cancel Upload"
+                >
+                  <SvgIcon icon="x" size="8" />
+                </button>
+                <div class="flex flex-col break-all text-sm sm:text-base">
+                  <div>
+                    {formatFileName(file, 10)}
+                  </div>
+                  <div class="mt-1 text-xs font-bold text-yellow-400 sm:text-sm">
+                    {formatFileSize(file.size)}
+                  </div>
+                </div>
+                <div class="flex items-center justify-center">
+                  <PdfThumbnail
+                    pdfDataUrl={file.dataURL ?? ""}
+                    width={30}
+                    height={43}
+                    fallbackIcon="pdf"
+                  />
+                </div>
               </div>
             {:else}
-              <!-- svelte-ignore a11y-missing-attribute -->
-              <img src={image.dataURL} class="mr-2 h-10 w-10 object-cover" />
+              <!-- Display pdf thumbnail -->
+              <div
+                class="bg-surface-800/10 relative mb-2 mr-2 flex flex-row items-start justify-between gap-1.5 rounded-xl p-2"
+              >
+                <button
+                  class="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-white p-1 text-white"
+                  on:click={() => cancelUpload(file.id)}
+                  aria-label="Cancel Upload"
+                >
+                  <SvgIcon icon="x" size="8" />
+                </button>
+                <div class="flex flex-col break-all text-sm sm:text-base">
+                  <div>
+                    {formatFileName(file, 10)}
+                  </div>
+                  <div class="mt-1 text-xs font-bold text-yellow-400 sm:text-sm">
+                    {formatFileSize(file.size)}
+                  </div>
+                </div>
+                <div class="flex items-center justify-center">
+                  <SvgIcon
+                    icon={formatFileIcon(file)}
+                    color={$modeCurrent ? "black" : "white"}
+                    size="30"
+                  />
+                </div>
+              </div>
             {/if}
           {/each}
         </div>
       </div>
       <button
-        disabled={newMessageText.trim() === "" && $newMessageImages.length === 0}
+        disabled={newMessageText.trim() === "" && $newMessageFiles.length === 0}
         class="pr-2 disabled:opacity-50"
       >
         <SvgIcon icon="caretRight" color={$modeCurrent ? "#2e2e2e" : "white"} size="10" />

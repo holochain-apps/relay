@@ -7,7 +7,7 @@
   import Header from "$lib/Header.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$lib/translations";
-  import { handleFileChange, MIN_TITLE_LENGTH } from "$lib/utils";
+  import { handleImageChange, MIN_TITLE_LENGTH } from "$lib/utils";
   import { RelayStore } from "$store/RelayStore";
   import { Privacy } from "../../../types";
   import toast from "svelte-french-toast";
@@ -52,7 +52,7 @@
     class="hidden"
     on:change={(event) => {
       try {
-        handleFileChange(event, (imageData) => imageUrl.set(imageData));
+        handleImageChange(event, (imageData) => imageUrl.set(imageData));
       } catch (e) {
         toast.error(`${$t("common.upload_image_error")}: ${e.message}`);
       }

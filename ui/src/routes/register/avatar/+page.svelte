@@ -9,7 +9,7 @@
   import { t } from "$lib/translations";
   import { RelayClient } from "$store/RelayClient";
   import { ProfileCreateStore } from "$store/ProfileCreateStore";
-  import { handleFileChange } from "$lib/utils";
+  import { handleImageChange } from "$lib/utils";
   import toast from "svelte-french-toast";
 
   const relayClientContext: { getClient: () => RelayClient } = getContext("relayClient");
@@ -53,7 +53,7 @@
     id="avatarInput"
     class="hidden"
     on:change={(event) =>
-      handleFileChange(event, (imageData) => {
+      handleImageChange(event, (imageData) => {
         ProfileCreateStore.update((current) => {
           return { firstName, lastName, avatar: imageData };
         });

@@ -231,9 +231,9 @@
           {:else if $lastMessage}
             {lastMessageAuthor || ""}:&nbsp;
             {@html sanitizeHTML($lastMessage.content || "")}
-            {#if $lastMessage.images.length > 0}
+            {#if $lastMessage.files.length > 0}
               &nbsp;<span class="text-secondary-400 italic"
-                >({$tAny("conversations.images", { count: $lastMessage.images.length })})</span
+                >({$tAny("conversations.files", { count: $lastMessage.files.length })})</span
               >
             {/if}
           {/if}

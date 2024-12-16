@@ -9,7 +9,7 @@
   import { t } from "$lib/translations";
   import {
     copyToClipboard,
-    handleFileChange,
+    handleImageChange,
     isMobile,
     MIN_TITLE_LENGTH,
     shareText,
@@ -118,7 +118,7 @@
         accept="image/jpeg, image/png, image/gif"
         class="hidden"
         on:change={(event) =>
-          handleFileChange(event, (imageData) => {
+          handleImageChange(event, (imageData) => {
             updateConfig({ image: imageData, title: title || conversation.data?.config.title });
           })}
       />

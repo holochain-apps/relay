@@ -19,7 +19,7 @@ import {
   type Config,
   type Contact,
   type Conversation,
-  type Image,
+  type FileMetadata,
   type Invitation,
   type LocalConversationData,
   type Message,
@@ -336,7 +336,8 @@ export class ConversationStore {
               message.authorKey = encodeHashToBase64(
                 messageRecord.signed_action.hashed.content.author,
               );
-              message.images = ((message.images as any[]) || []).map((i) => ({
+              message.files = ((message.files as any[]) || []).map((i) => ({
+                id: i.id,
                 fileType: i.file_type,
                 lastModified: i.last_modified,
                 name: i.name,
@@ -346,8 +347,8 @@ export class ConversationStore {
               }));
               message.status = "confirmed";
 
-              // Async load the images
-              this.loadImagesForMessage(message);
+              // Async load the files
+              this.loadFilesForMessage(message);
 
               if (!newMessages[message.hash]) {
                 const matchesPending = Object.values(this.data.messages).find(
@@ -401,7 +402,7 @@ export class ConversationStore {
 
   /***** Setters & actions ******/
 
-  async sendMessage(authorKey: string, content: string, images: Image[]) {
+  async sendMessage(authorKey: string, content: string, files: FileMetadata[]) {
     // Use temporary uuid as the hash until we get the real one back from the network
     const now = new Date();
     const bucket = this.bucketFromDate(now);
@@ -413,20 +414,20 @@ export class ConversationStore {
       status: "pending",
       timestamp: now,
       bucket,
-      images,
+      files,
     };
     this.addMessage(oldMessage);
-    const imageStructs = await Promise.all(
-      images
-        .filter((i) => !!i.file)
-        .map(async (image) => {
-          const hash = await this.fileStorageClient.uploadFile(image.file!);
+    const fileStructs = await Promise.all(
+      files
+        .filter((i) => !!i.fileObject)
+        .map(async (file) => {
+          const hash = await this.fileStorageClient.uploadFile(file.fileObject!);
           return {
-            last_modified: image.file!.lastModified,
-            name: image.file!.name,
-            size: image.file!.size,
+            last_modified: file.fileObject!.lastModified,
+            name: file.fileObject!.name,
+            size: file.fileObject!.size,
             storage_entry_hash: hash,
-            file_type: image.file!.type,
+            file_type: file.fileObject!.type,
           };
         }),
     );
@@ -434,21 +435,21 @@ export class ConversationStore {
       this.data.id,
       content,
       bucket,
-      imageStructs,
+      fileStructs,
       Object.keys(this.data.agentProfiles).map((k) => decodeHashFromBase64(k)),
     );
     const newMessage: Message = {
       ...oldMessage,
       hash: encodeHashToBase64(newMessageEntry.actionHash),
       status: "confirmed",
-      images: images.map((i) => ({ ...i, status: "loaded" })),
+      files: files.map((i) => ({ ...i, status: "loaded" })),
     };
     this.updateMessage(oldMessage, newMessage);
   }
 
   addMessage(message: Message): void {
     this.conversation.update((conversation) => {
-      message.images = message.images || [];
+      message.files = message.files || [];
       const lastMessage = get(this.lastMessage);
       if (!lastMessage || message.timestamp > lastMessage.timestamp) {
         this.lastMessage.set(message);
@@ -474,44 +475,44 @@ export class ConversationStore {
     this.history.add(newMessage);
   }
 
-  async loadImagesForMessage(message: Message) {
-    if (message.images?.length === 0) return;
+  async loadFilesForMessage(message: Message) {
+    if (message.files?.length === 0) return;
 
-    const images = await Promise.all(message.images.map((image) => this.loadImage(image)));
+    const files = await Promise.all(message.files.map((file) => this.loadFile(file)));
     this.conversation.update((conversation) => {
-      conversation.messages[message.hash].images = images;
+      conversation.messages[message.hash].files = files;
       return conversation;
     });
   }
 
-  async loadImage(image: Image): Promise<Image> {
+  async loadFile(file: FileMetadata): Promise<FileMetadata> {
     try {
-      if (image.status === "loaded") return image;
-      if (image.storageEntryHash === undefined) return image;
+      if (file.status === "loaded") return file;
+      if (file.storageEntryHash === undefined) return file;
 
-      // Download image file, retrying up to 10 times if download fails
-      const file = await pRetry(
-        () => this.fileStorageClient.downloadFile(image.storageEntryHash as Uint8Array),
+      // Download file file, retrying up to 10 times if download fails
+      const downloadedFile = await pRetry(
+        () => this.fileStorageClient.downloadFile(file.storageEntryHash as Uint8Array),
         {
           retries: 10,
           minTimeout: 1000,
           factor: 2,
           onFailedAttempt: (e) => {
             console.error(
-              `Failed to download file from hash ${encodeHashToBase64(image.storageEntryHash as Uint8Array)}`,
+              `Failed to download file from hash ${encodeHashToBase64(file.storageEntryHash as Uint8Array)}`,
               e,
             );
           },
         },
       );
 
-      // Convert image blob to data url
-      const dataURL = await fileToDataUrl(file);
+      // Convert file blob to data url
+      const dataURL = await fileToDataUrl(downloadedFile);
 
-      return { ...image, status: "loaded", dataURL } as Image;
+      return { ...file, status: "loaded", dataURL } as FileMetadata;
     } catch (e) {
-      console.error("Error loading image after 10 retries:", e);
-      return { ...image, status: "error", dataURL: "" } as Image;
+      console.error("Error loading file after 10 retries:", e);
+      return { ...file, status: "error", dataURL: "" } as FileMetadata;
     }
   }
 

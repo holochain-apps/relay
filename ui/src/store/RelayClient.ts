@@ -19,7 +19,7 @@ import type {
   Config,
   Contact,
   ConversationCellAndConfig,
-  ImageStruct,
+  FileStruct,
   Invitation,
   MembraneProofData,
   Message,
@@ -263,7 +263,7 @@ export class RelayClient {
     conversationId: string,
     content: string,
     bucket: number,
-    images: ImageStruct[],
+    files: FileStruct[],
     agents: AgentPubKey[],
   ): Promise<EntryRecord<Message>> {
     const message = await this.client.callZome({
@@ -271,7 +271,7 @@ export class RelayClient {
       zome_name: this.zomeName,
       fn_name: "create_message",
       payload: {
-        message: { content, bucket, images },
+        message: { content, bucket, files },
         agents,
       },
     });

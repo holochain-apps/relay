@@ -7,7 +7,7 @@
   import Header from "$lib/Header.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$lib/translations";
-  import { copyToClipboard, handleFileChange, isMobile, shareText } from "$lib/utils";
+  import { copyToClipboard, handleImageChange, isMobile, shareText } from "$lib/utils";
   import { RelayClient } from "$store/RelayClient";
   import { ProfilesStore } from "@holochain-open-dev/profiles";
   import { get } from "svelte/store";
@@ -74,7 +74,7 @@
       class="hidden"
       on:change={(event) => {
         try {
-          handleFileChange(event, (imageData) => {
+          handleImageChange(event, (imageData) => {
             relayClient.updateProfile(firstName, lastName, imageData);
           });
         } catch (e) {
