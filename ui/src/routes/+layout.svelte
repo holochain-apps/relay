@@ -4,7 +4,7 @@
   import { modeCurrent } from "@skeletonlabs/skeleton";
   import { onMount, setContext } from "svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
-  import { t } from "$lib/translations";
+  import { t } from "$translations";
   import { RelayClient } from "$store/RelayClient";
   import { RelayStore } from "$store/RelayStore";
   import toast, { Toaster } from "svelte-french-toast";
