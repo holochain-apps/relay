@@ -8,9 +8,10 @@
   import Button from "$lib/Button.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$lib/translations";
-  import { copyToClipboard, handleFileChange, isMobile, shareText } from "$lib/utils";
+  import { copyToClipboard, isMobile, shareText } from "$lib/utils";
   import { RelayStore } from "$store/RelayStore";
   import toast from "svelte-french-toast";
+  import HiddenFileInput from "$lib/HiddenFileInput.svelte";
 
   // Silly thing to get around typescript issues with sveltekit-i18n
   const tAny = t as any;
@@ -98,15 +99,12 @@
 
 <div class="flex flex-1 flex-col items-center p-4">
   <div class="mb-5 mt-6 flex flex-col items-center justify-center">
-    <!-- Hidden file input -->
-    <input
-      type="file"
+    <HiddenFileInput
       id="avatarInput"
       accept="image/jpeg, image/png, image/gif"
-      class="hidden"
       on:change={(event) => {
         editing = true;
-        handleFileChange(event, (imageData) => imageUrl.set(imageData));
+        imageUrl.set(event.detail);
       }}
     />
 
