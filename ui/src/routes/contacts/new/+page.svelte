@@ -3,7 +3,7 @@
   import { goto } from "$app/navigation";
   import Header from "$lib/Header.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
-  import { t } from "$lib/translations";
+  import { t } from "$translations";
   import ContactEditor from "../ContactEditor.svelte";
   import { scanStore } from "$store/ScanStore";
   import { isMobile } from "$lib/utils";
