@@ -13,6 +13,7 @@
   import { get } from "svelte/store";
   import toast from "svelte-french-toast";
   import HiddenFileInput from "$lib/HiddenFileInput.svelte";
+  import { MIN_FIRST_NAME_LENGTH } from "$config";
 
   const relayClientContext: { getClient: () => RelayClient } = getContext("relayClient");
   let relayClient = relayClientContext.getClient();
@@ -23,8 +24,6 @@
   $: profileData = $prof?.status === "complete" ? $prof.value?.entry : undefined;
 
   const agentPublicKey64 = relayClient.myPubKeyB64;
-
-  const MIN_FIRST_NAME_LENGTH = 3;
 
   $: firstName = profileData?.fields.firstName || "";
   $: lastName = profileData?.fields.lastName || "";

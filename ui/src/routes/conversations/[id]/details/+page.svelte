@@ -7,13 +7,14 @@
   import Header from "$lib/Header.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$lib/translations";
-  import { copyToClipboard, isMobile, MIN_TITLE_LENGTH, shareText } from "$lib/utils";
+  import { copyToClipboard, isMobile, shareText } from "$lib/utils";
   import type { RelayStore } from "$store/RelayStore";
   import { Privacy, type Config } from "../../../../types";
   import Button from "$lib/Button.svelte";
   import toast from "svelte-french-toast";
   import { goto } from "$app/navigation";
   import HiddenFileInput from "$lib/HiddenFileInput.svelte";
+  import { MIN_TITLE_LENGTH } from "$config";
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
   const tAny = t as any;
