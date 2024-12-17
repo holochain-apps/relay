@@ -10,7 +10,6 @@
   import Button from "$lib/Button.svelte";
   import { t } from "$lib/translations";
   import { scanStore } from "$store/ScanStore";
-  import { setBackgroundColor } from "$lib/background";
   import { onDestroy } from "svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
 
@@ -61,6 +60,17 @@
   }
 
   load();
+
+  function setBackgroundColor(backgroundColor: string): () => void {
+    // Save current bg color
+    const current = document.body.style["background-color" as any];
+    const reset = () => (document.body.style["background-color" as any] = current);
+
+    // Update bg color
+    document.body.style["background-color" as any] = backgroundColor;
+
+    return reset;
+  }
 
   // tauri-plugin-barcode-scanner is launched in its own View BEHIND the current webview
   // Thus we must set the body background color to transparent for this page only,
