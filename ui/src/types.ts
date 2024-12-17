@@ -95,7 +95,6 @@ export interface Conversation {
 export interface LocalConversationData {
   archived?: boolean;
   invitedContactKeys: string[];
-  open?: boolean;
   unread?: boolean;
 }
 
