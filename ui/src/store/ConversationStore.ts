@@ -530,8 +530,8 @@ export class ConversationStore {
     }));
   }
 
-  setArchived(archived = true) {
-    this.localDataStore.update((data) => ({ ...data, archived }));
+  toggleArchived() {
+    this.localDataStore.update((data) => ({ ...data, archived: !data.archived }));
   }
 
   setUnread(unread: boolean) {

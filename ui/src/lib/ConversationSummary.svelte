@@ -127,11 +127,7 @@
   }
 
   function archiveConversation() {
-    if (store.archived) {
-      store.setArchived(false);
-    } else {
-      store.setArchived(true);
-    }
+    store.toggleArchived();
     isVisible = true;
     x.set(0);
   }
