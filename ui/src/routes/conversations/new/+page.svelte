@@ -88,7 +88,7 @@
 <footer>
   <Button
     moreClasses="w-72 justify-center variant-filled-tertiary"
-    onClick={(e) => {
+    on:click={(e) => {
       createConversation(e, Privacy.Public);
     }}
     disabled={!valid || pendingCreate}

@@ -177,7 +177,7 @@
     <footer class="flex justify-center">
       <Button
         moreClasses="w-36 justify-center !variant-filled-tertiary dark:!variant-filled-secondary"
-        onClick={(e) => {
+        on:click={(e) => {
           cancel(e);
         }}
       >
@@ -185,7 +185,7 @@
       </Button>
       <Button
         moreClasses="w-48 ml-4 justify-center !variant-filled-secondary dark:!variant-filled-tertiary disabled:border disabled:!border-tertiary-700 disabled:!bg-surface-500 disabled:!text-tertiary-700 disabled:!opacity-100 dark:disabled:!bg-secondary-900 dark:disabled:!text-tertiary-700"
-        onClick={(e) => {
+        on:click={(e) => {
           saveContact(e);
         }}
         disabled={!valid || pendingSave}
@@ -246,7 +246,7 @@
         <div class="flex justify-center">
           <Button
             moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
-            onClick={() =>
+            on:click={() =>
               copyToClipboard(
                 contact?.privateConversation?.inviteCodeForAgent(contact?.publicKeyB64) || "",
               )}
@@ -257,7 +257,7 @@
           {#if isMobile()}
             <Button
               moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
-              onClick={() =>
+              on:click={() =>
                 shareText(
                   contact?.privateConversation?.inviteCodeForAgent(contact?.publicKeyB64) || "",
                 )}
@@ -271,7 +271,7 @@
     {:else}
       <Button
         moreClasses="variant-filled-tertiary text-sm font-bold w-auto"
-        onClick={() => goto(`/conversations/${contact?.privateConversation?.id}`)}
+        on:click={() => goto(`/conversations/${contact?.privateConversation?.id}`)}
       >
         <SvgIcon icon="speechBubble" size="20" color="%23FD3524" moreClasses="mr-2" />
         {$t("contacts.send_message")}

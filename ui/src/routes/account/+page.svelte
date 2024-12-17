@@ -121,14 +121,14 @@
         />
         <Button
           moreClasses="h-6 w-6 rounded-md py-0 !px-0 mb-0 mr-2 bg-primary-100 flex items-center justify-center"
-          onClick={() => saveName()}
+          on:click={() => saveName()}
           disabled={!isFirstNameValid}
         >
           <SvgIcon icon="checkMark" color="%23FD3524" size="12" />
         </Button>
         <Button
           moreClasses="h-6 w-6 !px-0 py-0 mb-0 rounded-md bg-surface-400 flex items-center justify-center"
-          onClick={() => cancelEditName()}
+          on:click={() => cancelEditName()}
         >
           <SvgIcon icon="x" color="gray" size="12" />
         </Button>
@@ -152,7 +152,7 @@
     </p>
 
     <Button
-      onClick={async () => {
+      on:click={async () => {
         try {
           await copyToClipboard(agentPublicKey64);
           toast.success(`${$t("common.copy_success")}`);
@@ -167,7 +167,7 @@
     </Button>
     {#if isMobile()}
       <Button
-        onClick={async () => {
+        on:click={async () => {
           try {
             await shareText(agentPublicKey64);
           } catch (e) {

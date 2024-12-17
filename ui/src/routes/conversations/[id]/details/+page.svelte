@@ -160,13 +160,13 @@
         <div class="flex flex-none items-center justify-center">
           <Button
             moreClasses="h-6 w-6 rounded-md py-0 !px-0 mb-0 mr-2 bg-primary-100 flex items-center justify-center"
-            onClick={() => saveTitle()}
+            on:click={() => saveTitle()}
           >
             <SvgIcon icon="checkMark" color="%23FD3524" size="12" />
           </Button>
           <Button
             moreClasses="h-6 w-6 !px-0 py-0 mb-0 rounded-md bg-surface-400 flex items-center justify-center"
-            onClick={() => cancelEditTitle()}
+            on:click={() => cancelEditTitle()}
           >
             <SvgIcon icon="x" color="gray" size="12" />
           </Button>

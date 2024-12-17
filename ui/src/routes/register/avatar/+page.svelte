@@ -73,7 +73,7 @@
 </div>
 
 <div class="items-right flex w-full justify-end pr-4">
-  <Button onClick={createAccount}>
+  <Button on:click={createAccount}>
     <SvgIcon icon="hand" size="20" color={$modeCurrent ? "white" : "%23FD3524"} />
     <strong class="ml-2">{$t("common.jump_in")}</strong>
   </Button>
