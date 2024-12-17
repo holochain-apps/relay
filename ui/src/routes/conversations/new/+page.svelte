@@ -7,7 +7,7 @@
   import Header from "$lib/Header.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$lib/translations";
-  import { MIN_TITLE_LENGTH } from "$lib/utils";
+  import { MIN_TITLE_LENGTH } from "$config";
   import { RelayStore } from "$store/RelayStore";
   import { Privacy } from "../../../types";
   import toast from "svelte-french-toast";
