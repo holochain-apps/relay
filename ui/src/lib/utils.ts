@@ -10,8 +10,6 @@ import { setModeCurrent } from "@skeletonlabs/skeleton";
 import { open } from "@tauri-apps/plugin-shell";
 import linkifyStr from "linkify-string";
 
-export const MIN_TITLE_LENGTH = 3;
-
 export function sanitizeHTML(html: string) {
   return DOMPurify.sanitize(html);
 }

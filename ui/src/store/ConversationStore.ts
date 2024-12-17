@@ -31,9 +31,7 @@ import { MessageHistoryStore } from "./MessageHistoryStore";
 import pRetry from "p-retry";
 import { fileToDataUrl } from "$lib/utils";
 import toast from "svelte-french-toast";
-
-export const MINUTES_IN_BUCKET = 60 * 24 * 1; // 1 day for now
-export const MIN_MESSAGES_LOAD = 20;
+import { BUCKET_RANGE_MS, TARGET_MESSAGES_COUNT } from "$config";
 
 export class ConversationStore {
   public conversation: Writable<Conversation>;
@@ -88,7 +86,7 @@ export class ConversationStore {
 
   // 1. looks in the history, starting at a current bucket, for hashes, and retrieves all
   // the actual messages in that bucket as well as any earlier buckets necessary
-  // such that at least MIN_MESSAGES_LOAD messages.
+  // such that at least TARGET_MESSAGES_COUNT messages.
   // 2. then updates the "lateBucketLoaded" state variable so the next time earlier buckets
   // will be loaded.
   async loadMessagesSet(): Promise<Array<ActionHashB64>> {
@@ -106,9 +104,9 @@ export class ConversationStore {
 
   // looks in the history starting at a bucket number for hashes, and retrieves all
   // the actual messages in that bucket as well as any earlier buckets necessary
-  // such that at least MIN_MESSAGES_LOAD messages.
+  // such that at least TARGET_MESSAGES_COUNT messages.
   async loadMessageSetFrom(bucket: number): Promise<[number, ActionHashB64[]]> {
-    const buckets = this.history.bucketsForSet(MIN_MESSAGES_LOAD, bucket);
+    const buckets = this.history.bucketsForSet(TARGET_MESSAGES_COUNT, bucket);
     const messageHashes: ActionHashB64[] = [];
     for (const b of buckets) {
       messageHashes.push(...(await this.getMessagesForBucket(b)));
@@ -404,7 +402,7 @@ export class ConversationStore {
 
   bucketFromTimestamp(timestamp: number): number {
     const diff = timestamp - this.created;
-    return Math.round(diff / (MINUTES_IN_BUCKET * 60 * 1000));
+    return Math.round(diff / BUCKET_RANGE_MS);
   }
 
   bucketFromDate(date: Date): number {
