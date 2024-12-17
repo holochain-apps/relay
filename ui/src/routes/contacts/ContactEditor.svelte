@@ -59,9 +59,8 @@
     }
   }
 
-  async function saveContact(e: Event) {
+  async function saveContact() {
     pendingSave = true;
-    e.preventDefault();
     try {
       const newContactData = { avatar: get(imageUrl), firstName, lastName, publicKeyB64 };
       const newContact = contact
@@ -88,8 +87,7 @@
     }
   }
 
-  function cancel(e: Event) {
-    e.preventDefault();
+  function cancel() {
     if (!editContactId || creating) {
       history.back();
     } else {
@@ -177,16 +175,16 @@
     <footer class="flex justify-center">
       <Button
         moreClasses="w-36 justify-center !variant-filled-tertiary dark:!variant-filled-secondary"
-        on:click={(e) => {
-          cancel(e);
+        on:click={() => {
+          cancel();
         }}
       >
         <strong class="">{$t("common.cancel")}</strong>
       </Button>
       <Button
         moreClasses="w-48 ml-4 justify-center !variant-filled-secondary dark:!variant-filled-tertiary disabled:border disabled:!border-tertiary-700 disabled:!bg-surface-500 disabled:!text-tertiary-700 disabled:!opacity-100 dark:disabled:!bg-secondary-900 dark:disabled:!text-tertiary-700"
-        on:click={(e) => {
-          saveContact(e);
+        on:click={() => {
+          saveContact();
         }}
         disabled={!valid || pendingSave}
       >
