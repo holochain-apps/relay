@@ -73,27 +73,27 @@
   };
 </script>
 
-<div class="absolute z-50 w-full left-0 flex justify-center items-center">
+<div class="absolute left-0 z-50 flex w-full items-center justify-center">
   <div
-    class="w-full flex flex-wrap justify-center gap-1 sm:gap-2 md:gap-4 bg-tertiary-500 dark:bg-secondary-500 rounded-b-xl shadow-lg"
+    class="bg-tertiary-500 dark:bg-secondary-500 flex w-full flex-wrap justify-center gap-1 rounded-b-xl shadow-lg sm:gap-2 md:gap-4"
   >
     {#if hasText}
       <Button
-        onClick={copy}
+        on:click={copy}
         moreClasses="flex items-center gap-1 px-2 sm:px-3 md:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm variant-filled-tertiary dark:!bg-tertiary-200"
       >
         <SvgIcon icon="copy" size="15" color="%23FD3524" moreClasses="w-3 h-3 sm:w-4 sm:h-4" />
-        <span class="text-xs sm:text-sm text-black">{$t("conversations.copy_text")}</span>
+        <span class="text-xs text-black sm:text-sm">{$t("conversations.copy_text")}</span>
       </Button>
     {/if}
 
     {#if hasImages}
       <Button
-        onClick={download}
+        on:click={download}
         moreClasses="flex items-center gap-1 px-2 sm:px-3 md:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm variant-filled-tertiary dark:!bg-tertiary-200"
       >
         <SvgIcon icon="download" size="15" color="%23FD3524" moreClasses="w-3 h-3 sm:w-4 sm:h-4" />
-        <span class="text-xs sm:text-sm text-black">{$t("conversations.download")}</span>
+        <span class="text-xs text-black sm:text-sm">{$t("conversations.download")}</span>
       </Button>
     {/if}
   </div>

@@ -88,7 +88,7 @@
     <footer>
       <Button
         moreClasses="w-64"
-        onClick={async () => {
+        on:click={async () => {
           try {
             await copyToClipboard(conversation.publicInviteCode);
             toast.success(`${$t("common.copy_success")}`);
@@ -105,7 +105,7 @@
         >
       </Button>
       {#if isMobile()}
-        <Button onClick={() => shareText(conversation.publicInviteCode)} moreClasses="w-64">
+        <Button on:click={() => shareText(conversation.publicInviteCode)} moreClasses="w-64">
           <p class="w-64 overflow-hidden text-ellipsis text-nowrap">
             {conversation.publicInviteCode}
           </p>
@@ -116,7 +116,7 @@
       {/if}
       <Button
         moreClasses="bg-surface-400 text-secondary-50 w-64 justify-center"
-        onClick={() => goto(`/conversations/${conversationId}`)}>{$t("common.done")}</Button
+        on:click={() => goto(`/conversations/${conversationId}`)}>{$t("common.done")}</Button
       >
     </footer>
   {:else}

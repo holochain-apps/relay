@@ -93,7 +93,7 @@
       <div class="my-8 flex items-center justify-center space-x-4">
         <Button
           moreClasses="w-36 justify-center !variant-filled-tertiary dark:!variant-filled-secondary"
-          onClick={() => scanCancel()}
+          on:click={() => scanCancel()}
         >
           <strong>{$t("common.cancel")}</strong>
         </Button>
@@ -101,7 +101,7 @@
         {#if needsPermission}
           <Button
             moreClasses="w-36 justify-center !variant-filled-tertiary dark:!variant-filled-secondary"
-            onClick={() => {
+            on:click={() => {
               scanCancel();
               openAppSettings();
             }}

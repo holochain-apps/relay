@@ -211,7 +211,7 @@
     }
   }
 
-  async function sendMessage(e: SubmitEvent) {
+  async function sendMessage() {
     if (conversation && (newMessageText.trim() || $newMessageImages.length > 0)) {
       conversation.sendMessage(myPubKeyB64, newMessageText, $newMessageImages);
       newMessageText = ""; // Clear input after sending
@@ -219,7 +219,6 @@
       setTimeout(scrollToBottom, 100);
       newMessageInput.focus();
     }
-    e.preventDefault();
   }
 
   async function handleImagesSelected(event: Event) {
@@ -429,7 +428,7 @@
                 <div class="flex justify-center">
                   <Button
                     moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
-                    onClick={async () => {
+                    on:click={async () => {
                       try {
                         const inviteCode = conversation.inviteCodeForAgent(
                           conversation.allMembers[0]?.publicKeyB64,
@@ -447,7 +446,7 @@
                   {#if isMobile()}
                     <Button
                       moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
-                      onClick={() => {
+                      on:click={() => {
                         shareText(
                           conversation.inviteCodeForAgent(conversation.allMembers[0]?.publicKeyB64),
                         );
@@ -464,7 +463,7 @@
                 {$t("conversations.share_personal_invitations")}
               </p>
               <Button
-                onClick={() => goto(`/conversations/${conversation.data.id}/details`)}
+                on:click={() => goto(`/conversations/${conversation.data.id}/details`)}
                 moreClasses="w-72 justify-center"
               >
                 <SvgIcon icon="ticket" size="24" color={$modeCurrent ? "white" : "%23FD3524"} />
@@ -478,7 +477,7 @@
             </p>
             <Button
               moreClasses="w-64 justify-center variant-filled-tertiary"
-              onClick={async () => {
+              on:click={async () => {
                 try {
                   await copyToClipboard(conversation.publicInviteCode);
                   toast.success(`${$t("common.copy_success")}`);
@@ -492,7 +491,7 @@
             </Button>
             {#if isMobile()}
               <Button
-                onClick={() => shareText(conversation.publicInviteCode)}
+                on:click={() => shareText(conversation.publicInviteCode)}
                 moreClasses="w-64 justify-center variant-filled-tertiary"
               >
                 <SvgIcon icon="share" size="18" color="%23FD3524" />
@@ -612,7 +611,7 @@
     </div>
   </div>
   <div class="bg-tertiary-500 dark:bg-secondary-500 w-full flex-shrink-0 p-2">
-    <form class="flex" method="POST" on:submit={sendMessage}>
+    <form class="flex" method="POST" on:submit|preventDefault={sendMessage}>
       <input
         type="file"
         accept="image/jpeg, image/png, image/gif"
