@@ -32,6 +32,7 @@ import pRetry from "p-retry";
 import { fileToDataUrl } from "$lib/utils";
 import toast from "svelte-french-toast";
 import { BUCKET_RANGE_MS, TARGET_MESSAGES_COUNT } from "$config";
+import { page } from "$app/stores";
 
 export class ConversationStore {
   public conversation: Writable<Conversation>;
@@ -67,7 +68,11 @@ export class ConversationStore {
     });
     this.localDataStore = LocalStorageStore<LocalConversationData>(
       `conversation_${this.data.id}`,
-      { archived: false, invitedContactKeys: [], open: false, unread: false }
+      {
+        archived: false,
+        invitedContactKeys: [],
+        unread: false,
+      }
     );
     this.lastMessage = writable(null);
     this.client = relayStore.client;
@@ -202,8 +207,9 @@ export class ConversationStore {
     return get(this.localDataStore).archived;
   }
 
-  get open() {
-    return get(this.localDataStore).open;
+  private get open() {
+    const { route, params } = get(page);
+    return route.id === "/conversations/[id]" && params.id === this.data.id;
   }
 
   get unread() {
@@ -565,10 +571,6 @@ export class ConversationStore {
 
   setArchived(archived = true) {
     this.localDataStore.update((data) => ({ ...data, archived }));
-  }
-
-  setOpen(open: boolean) {
-    this.localDataStore.update((data) => ({ ...data, open }));
   }
 
   setUnread(unread: boolean) {
