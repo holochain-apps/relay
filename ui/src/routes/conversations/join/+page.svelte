@@ -22,8 +22,7 @@
   let joining = false;
   let error = false;
 
-  async function joinConversation(e: SubmitEvent) {
-    e.preventDefault();
+  async function joinConversation() {
     joining = true;
     try {
       const msgpack = Base64.toUint8Array(inviteCode);
@@ -52,7 +51,7 @@
   <h1 class="flex-1 text-center">{$t("conversations.join_conversation")}</h1>
 </Header>
 
-<form on:submit={joinConversation} class="contents">
+<form on:submit|preventDefault={() => joinConversation()} class="contents">
   <div class="container mx-auto flex grow flex-col items-start justify-center px-10">
     <h1 class="h1">{$t("conversations.enter_invite_code")}</h1>
     <input

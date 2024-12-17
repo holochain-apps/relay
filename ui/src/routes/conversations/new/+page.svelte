@@ -19,9 +19,8 @@
   let imageUrl = writable("");
   let pendingCreate = false;
 
-  async function createConversation(e: Event, privacy: Privacy) {
+  async function createConversation(privacy: Privacy) {
     pendingCreate = true;
-    e.preventDefault();
     try {
       const conversation = await relayStore.createConversation(title, get(imageUrl), privacy);
       if (conversation) {
@@ -88,9 +87,7 @@
 <footer>
   <Button
     moreClasses="w-72 justify-center variant-filled-tertiary"
-    onClick={(e) => {
-      createConversation(e, Privacy.Public);
-    }}
+    on:click={() => createConversation(Privacy.Public)}
     disabled={!valid || pendingCreate}
   >
     {#if pendingCreate}

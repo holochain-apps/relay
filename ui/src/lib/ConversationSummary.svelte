@@ -118,8 +118,6 @@
   }
 
   function toggleMenu(e: MouseEvent) {
-    e.preventDefault();
-    e.stopPropagation();
     menuOpen = menuOpen === 0 ? (e.currentTarget as HTMLElement).getBoundingClientRect().y : 0;
   }
 
@@ -152,7 +150,7 @@
       on:pan={handlePan}
       on:pandown={handlePanStart}
       on:panup={handlePanEnd}
-      on:dragstart={(e) => e.preventDefault()}
+      on:dragstart|preventDefault
       on:click={handleClick}
       on:mouseover={handleHover}
       on:focus={handleHover}
@@ -244,7 +242,7 @@
         <span class="ml-1">{Object.values($conversation.agentProfiles).length}</span>
       </span>
       {#if !isMobile() && isHovering && $x === 0}
-        <button class="z-10" on:click={toggleMenu}>
+        <button class="z-10" on:click|preventDefault|stopPropagation={toggleMenu}>
           <SvgIcon
             icon="caretDown"
             size="24"
