@@ -7,11 +7,12 @@
   import Header from "$lib/Header.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$lib/translations";
-  import { copyToClipboard, handleFileChange, isMobile, shareText } from "$lib/utils";
+  import { copyToClipboard, isMobile, shareText } from "$lib/utils";
   import { RelayClient } from "$store/RelayClient";
   import { ProfilesStore } from "@holochain-open-dev/profiles";
   import { get } from "svelte/store";
   import toast from "svelte-french-toast";
+  import HiddenFileInput from "$lib/HiddenFileInput.svelte";
 
   const relayClientContext: { getClient: () => RelayClient } = getContext("relayClient");
   let relayClient = relayClientContext.getClient();
@@ -66,22 +67,18 @@
 
 {#if $prof && $prof.status === "complete" && $prof.value}
   <div class="flex w-full grow flex-col items-center pt-10">
-    <!-- Hidden file input -->
-    <input
-      type="file"
+    <HiddenFileInput
       id="avatarInput"
       accept="image/jpeg, image/png, image/gif"
-      class="hidden"
       on:change={(event) => {
         try {
-          handleFileChange(event, (imageData) => {
-            relayClient.updateProfile(firstName, lastName, imageData);
-          });
+          relayClient.updateProfile(firstName, lastName, event.detail);
         } catch (e) {
           toast.error(`${$t("common.upload_image_error")}: ${e.message}`);
         }
       }}
     />
+
     <div style="position:relative">
       <Avatar agentPubKey={relayClient.myPubKey} size="128" moreClasses="mb-4" />
       <label
