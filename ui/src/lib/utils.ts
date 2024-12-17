@@ -77,32 +77,9 @@ export async function enqueueNotification(title: string, body: string) {
   sendNotification({ title, body });
 }
 
-export function isLinux(): boolean {
-  return platform() === "linux";
-}
-
-export function isWindows(): boolean {
-  return platform() === "windows";
-}
-
-export function isMacOS(): boolean {
-  return platform() === "macos";
-}
-
-export function isDesktop(): boolean {
-  return isMacOS() || isLinux() || isWindows();
-}
-
-export function isAndroid(): boolean {
-  return platform() === "android";
-}
-
-export function isIOS(): boolean {
-  return platform() === "ios";
-}
-
 export function isMobile(): boolean {
-  return isAndroid() || isIOS();
+  const val = platform();
+  return val === "android" || val === "ios";
 }
 
 export async function fileToDataUrl(file: File): Promise<string> {
