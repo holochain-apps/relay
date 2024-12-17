@@ -2,7 +2,7 @@
   import type { Message, Image } from "../types";
   import Button from "$lib/Button.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
-  import { t } from "$lib/translations";
+  import { t } from "$translations";
   import { convertDataURIToUint8Array, copyToClipboard } from "$lib/utils";
   import { save } from "@tauri-apps/plugin-dialog";
   import { create, writeFile } from "@tauri-apps/plugin-fs";

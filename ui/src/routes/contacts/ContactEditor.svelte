@@ -7,7 +7,7 @@
   import { goto } from "$app/navigation";
   import Button from "$lib/Button.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
-  import { t } from "$lib/translations";
+  import { t } from "$translations";
   import { copyToClipboard, isMobile, shareText } from "$lib/utils";
   import { RelayStore } from "$store/RelayStore";
   import toast from "svelte-french-toast";

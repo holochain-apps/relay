@@ -6,7 +6,7 @@
   import { writable } from "svelte/store";
   import Avatar from "./Avatar.svelte";
   import SvgIcon from "./SvgIcon.svelte";
-  import { t } from "$lib/translations";
+  import { t } from "$translations";
   import { isMobile, sanitizeHTML } from "$lib/utils";
   import type { ConversationStore } from "$store/ConversationStore";
   import { Privacy } from "../types";
@@ -127,11 +127,7 @@
   }
 
   function archiveConversation() {
-    if (store.archived) {
-      store.setArchived(false);
-    } else {
-      store.setArchived(true);
-    }
+    store.toggleArchived();
     isVisible = true;
     x.set(0);
   }
