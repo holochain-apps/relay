@@ -8,7 +8,7 @@
     Format,
   } from "@tauri-apps/plugin-barcode-scanner";
   import Button from "$lib/Button.svelte";
-  import { t } from "$lib/translations";
+  import { t } from "$translations";
   import { scanStore } from "$store/ScanStore";
   import { onDestroy } from "svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";

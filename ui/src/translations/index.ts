@@ -8,25 +8,25 @@ function makeLoaders(locales: string[]) {
     {
       locale,
       key: "common",
-      loader: async () => (await import(`./translations/${locale}/common.json`)).default,
+      loader: async () => (await import(`./${locale}/common.json`)).default,
     },
     {
       locale,
       key: "contacts",
       routes: [/\/contacts(.*)/, /^\/conversations(.*)/],
-      loader: async () => (await import(`./translations/${locale}/contacts.json`)).default,
+      loader: async () => (await import(`./${locale}/contacts.json`)).default,
     },
     {
       locale,
       key: "conversations",
       routes: [/^\/conversations(.*)/, "/create"],
-      loader: async () => (await import(`./translations/${locale}/conversations.json`)).default,
+      loader: async () => (await import(`./${locale}/conversations.json`)).default,
     },
     {
       locale,
       key: "create",
       routes: ["/create", /(.*)\/invite/],
-      loader: async () => (await import(`./translations/${locale}/create.json`)).default,
+      loader: async () => (await import(`./${locale}/create.json`)).default,
     },
   ]);
 
