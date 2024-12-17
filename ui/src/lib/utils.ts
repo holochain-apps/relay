@@ -9,6 +9,7 @@ import { platform } from "@tauri-apps/plugin-os";
 import { setModeCurrent } from "@skeletonlabs/skeleton";
 import { open } from "@tauri-apps/plugin-shell";
 import linkifyStr from "linkify-string";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 
 export function sanitizeHTML(html: string) {
   return DOMPurify.sanitize(html);
@@ -40,25 +41,11 @@ export async function shareText(text: string | Promise<string>) {
   }
 }
 
-export async function copyToClipboard(text: string | Promise<string>) {
-  if (typeof text === "string") {
-    if (text && text.trim().length > 0) {
-      console.log("Copying to clipboard", text);
-      return navigator.clipboard.writeText(text);
-    }
-  } else {
-    const t = await text;
-    console.log("Copying to clipboard", text);
+export async function copyToClipboard(text: string) {
+  const normalized = text.trim();
+  if (normalized.length === 0) throw Error("Text is empty");
 
-    if (typeof ClipboardItem && navigator.clipboard.write) {
-      const item = new ClipboardItem({
-        "text/plain": new Blob([t], { type: "text/plain" }),
-      });
-      return navigator.clipboard.write([item]);
-    } else {
-      return navigator.clipboard.writeText(t);
-    }
-  }
+  return writeText(text);
 }
 
 export async function enqueueNotification(title: string, body: string) {

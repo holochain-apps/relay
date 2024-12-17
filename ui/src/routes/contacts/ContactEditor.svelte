@@ -209,10 +209,9 @@
         <button
           on:click={async () => {
             try {
-              if (contact?.publicKeyB64) {
-                await copyToClipboard(contact.publicKeyB64);
-                toast.success(`${$t("common.copy_success")}`);
-              }
+              if (!contact?.publicKeyB64) throw new Error("Contact Public Key not found");
+              await copyToClipboard(contact.publicKeyB64);
+              toast.success(`${$t("common.copy_success")}`);
             } catch (e) {
               toast.error(`${$t("common.copy_error")}: ${e.message}`);
             }
@@ -242,10 +241,18 @@
         <div class="flex justify-center">
           <Button
             moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
-            on:click={() =>
-              copyToClipboard(
-                contact?.privateConversation?.inviteCodeForAgent(contact?.publicKeyB64) || "",
-              )}
+            on:click={async () => {
+              try {
+                const inviteCode = await contact?.privateConversation?.inviteCodeForAgent(
+                  contact?.publicKeyB64,
+                );
+                if (!inviteCode) throw new Error("Failed to generate invite code");
+                await copyToClipboard(inviteCode);
+                toast.success(`${$t("common.copy_success")}`);
+              } catch (e) {
+                toast.error(`${$t("common.copy_error")}: ${e.message}`);
+              }
+            }}
           >
             <SvgIcon icon="copy" size="20" color="%23FD3524" moreClasses="mr-2" />
             {$t("contacts.copy_invite_code")}

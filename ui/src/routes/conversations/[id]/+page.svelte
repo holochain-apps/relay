@@ -426,9 +426,10 @@
                     moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
                     on:click={async () => {
                       try {
-                        const inviteCode = conversation.inviteCodeForAgent(
+                        const inviteCode = await conversation.inviteCodeForAgent(
                           conversation.allMembers[0]?.publicKeyB64,
                         );
+                        if (!inviteCode) throw new Error("Failed to generate invite code");
                         await copyToClipboard(inviteCode);
                         toast.success(`${$t("common.copy_success")}`);
                       } catch (e) {

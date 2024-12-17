@@ -232,7 +232,8 @@
                 class="variant-filled-tertiary flex items-center justify-center rounded-2xl p-2 px-3 text-sm font-bold"
                 on:click={async () => {
                   try {
-                    await copyToClipboard(conversation.inviteCodeForAgent(contact.publicKeyB64));
+                    const inviteCode = await conversation.inviteCodeForAgent(contact.publicKeyB64);
+                    await copyToClipboard(inviteCode);
                     toast.success(`${$t("common.copy_success")}`);
                   } catch (e) {
                     toast.error(`${$t("common.copy_error")}: ${e.message}`);
