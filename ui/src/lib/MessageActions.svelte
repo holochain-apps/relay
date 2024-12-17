@@ -79,7 +79,7 @@
   >
     {#if hasText}
       <Button
-        onClick={copy}
+        on:click={copy}
         moreClasses="flex items-center gap-1 px-2 sm:px-3 md:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm variant-filled-tertiary dark:!bg-tertiary-200"
       >
         <SvgIcon icon="copy" size="15" color="%23FD3524" moreClasses="w-3 h-3 sm:w-4 sm:h-4" />
@@ -89,7 +89,7 @@
 
     {#if hasImages}
       <Button
-        onClick={download}
+        on:click={download}
         moreClasses="flex items-center gap-1 px-2 sm:px-3 md:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm variant-filled-tertiary dark:!bg-tertiary-200"
       >
         <SvgIcon icon="download" size="15" color="%23FD3524" moreClasses="w-3 h-3 sm:w-4 sm:h-4" />
