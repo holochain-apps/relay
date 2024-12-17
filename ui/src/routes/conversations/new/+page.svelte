@@ -7,10 +7,11 @@
   import Header from "$lib/Header.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$lib/translations";
-  import { handleFileChange, MIN_TITLE_LENGTH } from "$lib/utils";
+  import { MIN_TITLE_LENGTH } from "$lib/utils";
   import { RelayStore } from "$store/RelayStore";
   import { Privacy } from "../../../types";
   import toast from "svelte-french-toast";
+  import HiddenFileInput from "$lib/HiddenFileInput.svelte";
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext("relayStore");
   let relayStore = relayStoreContext.getStore();
@@ -43,15 +44,12 @@
 </Header>
 
 <div class="my-10 flex flex-col items-center justify-center">
-  <!-- Hidden file input -->
-  <input
-    type="file"
+  <HiddenFileInput
     id="avatarInput"
     accept="image/jpeg, image/png, image/gif"
-    class="hidden"
     on:change={(event) => {
       try {
-        handleFileChange(event, (imageData) => imageUrl.set(imageData));
+        imageUrl.set(event.detail);
       } catch (e) {
         toast.error(`${$t("common.upload_image_error")}: ${e.message}`);
       }

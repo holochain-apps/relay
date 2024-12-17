@@ -7,18 +7,13 @@
   import Header from "$lib/Header.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$lib/translations";
-  import {
-    copyToClipboard,
-    handleFileChange,
-    isMobile,
-    MIN_TITLE_LENGTH,
-    shareText,
-  } from "$lib/utils";
+  import { copyToClipboard, isMobile, MIN_TITLE_LENGTH, shareText } from "$lib/utils";
   import type { RelayStore } from "$store/RelayStore";
   import { Privacy, type Config } from "../../../../types";
   import Button from "$lib/Button.svelte";
   import toast from "svelte-french-toast";
   import { goto } from "$app/navigation";
+  import HiddenFileInput from "$lib/HiddenFileInput.svelte";
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
   const tAny = t as any;
@@ -111,17 +106,13 @@
         {/if}
       </div>
     {:else}
-      <!-- Hidden file input -->
-      <input
-        type="file"
+      <HiddenFileInput
         id="avatarInput"
         accept="image/jpeg, image/png, image/gif"
-        class="hidden"
         on:change={(event) =>
-          handleFileChange(event, (imageData) => {
-            updateConfig({ image: imageData, title: title || conversation.data?.config.title });
-          })}
+          updateConfig({ image: event.detail, title: title || conversation.data?.config.title })}
       />
+
       {#if image}
         <div style="position:relative">
           <img src={image} alt="Group" class="mb-5 h-32 min-h-32 w-32 rounded-full object-cover" />
