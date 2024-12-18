@@ -612,7 +612,7 @@
                         <div class="flex {fromMe ? 'justify-end' : 'justify-start'} w-full p-2">
                           <!-- if file is loaded -->
                           {#if file.status === "loaded"}
-                            <div class="mb-2 flex w-full max-w-full items-start justify-between">
+                            <div class="mb-2 flex w-auto max-w-full items-start justify-between">
                               <!-- Display image thumbnail -->
                               {#if file.fileType.startsWith("image/")}
                                 <div class="w-full">
@@ -649,7 +649,7 @@
                                 <!-- Display icons for other file types -->
                               {:else}
                                 <div
-                                  class="bg-surface-800/10 flex w-full flex-row items-start gap-3 rounded-xl p-3"
+                                  class="bg-surface-800/10 flex w-auto flex-row items-start gap-3 rounded-xl p-3"
                                 >
                                   <div class="min-w-0 flex-grow">
                                     <div class="break-all text-sm sm:text-base">{file.name}</div>
