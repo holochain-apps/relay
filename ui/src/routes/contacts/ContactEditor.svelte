@@ -220,7 +220,16 @@
           <SvgIcon icon="copy" size="20" color="%23999" />
         </button>
         {#if isMobile()}
-          <button on:click={() => contact?.publicKeyB64 && shareText(contact.publicKeyB64)}>
+          <button
+            on:click={async () => {
+              try {
+                if (!contact?.publicKeyB64) throw new Error("Contact Pub Key not found");
+                await shareText(contact.publicKeyB64);
+              } catch (e) {
+                toast.error(`${$t("common.share_code_error")}: ${e.message}`);
+              }
+            }}
+          >
             <SvgIcon icon="share" size="20" color="%23999" />
           </button>
         {/if}
@@ -260,10 +269,17 @@
           {#if isMobile()}
             <Button
               moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
-              on:click={() =>
-                shareText(
-                  contact?.privateConversation?.inviteCodeForAgent(contact?.publicKeyB64) || "",
-                )}
+              on:click={async () => {
+                try {
+                  const inviteCode = await contact?.privateConversation?.inviteCodeForAgent(
+                    contact?.publicKeyB64,
+                  );
+                  if (!inviteCode) throw new Error("Failed to generate invite code");
+                  await shareText(inviteCode);
+                } catch (e) {
+                  toast.error(`${$t("common.share_code_error")}: ${e.message}`);
+                }
+              }}
             >
               <SvgIcon icon="copy" size="20" color="%23FD3524" moreClasses="mr-2" />
               <strong>{$t("contacts.share_invite_code")}</strong>

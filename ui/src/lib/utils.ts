@@ -30,15 +30,13 @@ export const linkify = (text: string): string =>
     target: "_blank",
   });
 
-export async function shareText(text: string | Promise<string>) {
-  if (typeof text === "string") {
-    if (text && text.trim().length > 0) {
-      return sharesheetShareText(text);
-    }
-  } else {
-    const t = await text;
-    return sharesheetShareText(t);
-  }
+export function shareText(text: string): Promise<void> {
+  if (!isMobile()) throw Error("Sharesheet is only supported on mobile");
+
+  const normalized = text.trim();
+  if (normalized.length === 0) throw Error("Text is empty");
+
+  return sharesheetShareText(normalized);
 }
 
 export async function copyToClipboard(text: string) {

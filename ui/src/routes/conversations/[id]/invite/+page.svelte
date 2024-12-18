@@ -105,7 +105,16 @@
         >
       </Button>
       {#if isMobile()}
-        <Button on:click={() => shareText(conversation.publicInviteCode)} moreClasses="w-64">
+        <Button
+          on:click={async () => {
+            try {
+              await shareText(conversation.publicInviteCode);
+            } catch (e) {
+              toast.error(`${$t("common.share_code_error")}: ${e.message}`);
+            }
+          }}
+          moreClasses="w-64"
+        >
           <p class="w-64 overflow-hidden text-ellipsis text-nowrap">
             {conversation.publicInviteCode}
           </p>

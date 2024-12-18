@@ -443,10 +443,16 @@
                   {#if isMobile()}
                     <Button
                       moreClasses="bg-surface-100 text-sm text-secondary-500 dark:text-tertiary-100 font-bold dark:bg-secondary-900"
-                      on:click={() => {
-                        shareText(
-                          conversation.inviteCodeForAgent(conversation.allMembers[0]?.publicKeyB64),
-                        );
+                      on:click={async () => {
+                        try {
+                          const inviteCode = await conversation.inviteCodeForAgent(
+                            conversation.allMembers[0]?.publicKeyB64,
+                          );
+                          if (!inviteCode) throw new Error("Failed to generate invite code");
+                          await shareText(inviteCode);
+                        } catch (e) {
+                          toast.error(`${$t("common.share_code_error")}: ${e.message}`);
+                        }
                       }}
                     >
                       <SvgIcon icon="share" size="20" color="%23FD3524" moreClasses="mr-2" />
@@ -488,7 +494,13 @@
             </Button>
             {#if isMobile()}
               <Button
-                on:click={() => shareText(conversation.publicInviteCode)}
+                on:click={async () => {
+                  try {
+                    await shareText(conversation.publicInviteCode);
+                  } catch (e) {
+                    toast.error(`${$t("common.share_code_error")}: ${e.message}`);
+                  }
+                }}
                 moreClasses="w-64 justify-center variant-filled-tertiary"
               >
                 <SvgIcon icon="share" size="18" color="%23FD3524" />
