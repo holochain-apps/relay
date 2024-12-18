@@ -275,6 +275,9 @@
       Promise.all(readers).then((newFiles: FileMetadata[]) => {
         newMessageFiles.update((currentFile) => [...currentFile, ...newFiles]);
       });
+
+      // Resetting the file input, so user can upload the same file again
+      input.value = "";
     }
   }
 
