@@ -9,7 +9,14 @@ import { platform } from "@tauri-apps/plugin-os";
 import { setModeCurrent } from "@skeletonlabs/skeleton";
 import { open } from "@tauri-apps/plugin-shell";
 import linkifyStr from "linkify-string";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 
+/**
+ * Sanitize user-inputted HTML before we render it to prevent XSS attacks
+ *
+ * @param html
+ * @returns
+ */
 export function sanitizeHTML(html: string) {
   return DOMPurify.sanitize(html);
 }
@@ -29,38 +36,41 @@ export const linkify = (text: string): string =>
     target: "_blank",
   });
 
-export async function shareText(text: string | Promise<string>) {
-  if (typeof text === "string") {
-    if (text && text.trim().length > 0) {
-      return sharesheetShareText(text);
-    }
-  } else {
-    const t = await text;
-    return sharesheetShareText(t);
-  }
+/**
+ * Share text via sharesheet
+ *
+ * @param text
+ * @returns
+ */
+export function shareText(text: string): Promise<void> {
+  if (!isMobile()) throw Error("Sharesheet is only supported on mobile");
+
+  const normalized = text.trim();
+  if (normalized.length === 0) throw Error("Text is empty");
+
+  return sharesheetShareText(normalized);
 }
 
-export async function copyToClipboard(text: string | Promise<string>) {
-  if (typeof text === "string") {
-    if (text && text.trim().length > 0) {
-      console.log("Copying to clipboard", text);
-      return navigator.clipboard.writeText(text);
-    }
-  } else {
-    const t = await text;
-    console.log("Copying to clipboard", text);
+/**
+ * Copy text to clipboard
+ *
+ * @param text
+ * @returns
+ */
+export function copyToClipboard(text: string): Promise<void> {
+  const normalized = text.trim();
+  if (normalized.length === 0) throw Error("Text is empty");
 
-    if (typeof ClipboardItem && navigator.clipboard.write) {
-      const item = new ClipboardItem({
-        "text/plain": new Blob([t], { type: "text/plain" }),
-      });
-      return navigator.clipboard.write([item]);
-    } else {
-      return navigator.clipboard.writeText(t);
-    }
-  }
+  return writeText(text);
 }
 
+/**
+ * Send a system notification
+ * If permissions have not been granted for sending notifications, request them.
+ *
+ * @param title
+ * @param body
+ */
 export async function enqueueNotification(title: string, body: string) {
   try {
     const hasPermission = await isPermissionGranted();
@@ -75,11 +85,22 @@ export async function enqueueNotification(title: string, body: string) {
   }
 }
 
+/**
+ * Is app running on mobile?
+ *
+ * @returns
+ */
 export function isMobile(): boolean {
   const val = platform();
   return val === "android" || val === "ios";
 }
 
+/**
+ * Convert file to data url
+ *
+ * @param file
+ * @returns
+ */
 export async function fileToDataUrl(file: File): Promise<string> {
   const reader = new FileReader();
   reader.readAsDataURL(file);
@@ -98,8 +119,6 @@ export async function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
-// To change from light mode to dark mode based on system settings
-// XXX: not using the built in skeleton autoModeWatcher() because it doesn't set modeCurrent in JS which we use
 function setLightDarkMode(value: boolean) {
   const elemHtmlClasses = document.documentElement.classList;
   const classDark = `dark`;
@@ -108,6 +127,12 @@ function setLightDarkMode(value: boolean) {
     : elemHtmlClasses.add(classDark);
   setModeCurrent(value);
 }
+
+/**
+ * Toggle dark mode to mirror system settings.
+ * We are not using skeleton's autoModeWatcher() because it doesn't update modeCurrent.
+ * @param value
+ */
 
 export function initLightDarkModeSwitcher() {
   const mql = window.matchMedia("(prefers-color-scheme: light)");
@@ -137,6 +162,12 @@ export function handleLinkClick(e: MouseEvent) {
   open(anchor.getAttribute("href") as string);
 }
 
+/**
+ * Convert a base64 encoded data URI to a Uint8Array of the decoded bytes.
+ *
+ * @param dataURI
+ * @returns
+ */
 export function convertDataURIToUint8Array(dataURI: string): Uint8Array {
   const BASE64_MARKER = ";base64,";
   const base64Index = dataURI.indexOf(BASE64_MARKER) + BASE64_MARKER.length;
