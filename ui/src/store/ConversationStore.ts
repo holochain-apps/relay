@@ -336,7 +336,7 @@ export class ConversationStore {
               message.authorKey = encodeHashToBase64(
                 messageRecord.signed_action.hashed.content.author,
               );
-              message.files = ((message.files as any[]) || []).map((i) => ({
+              message.images = ((message.images as any[]) || []).map((i) => ({
                 id: i.id,
                 fileType: i.file_type,
                 lastModified: i.last_modified,
@@ -402,7 +402,7 @@ export class ConversationStore {
 
   /***** Setters & actions ******/
 
-  async sendMessage(authorKey: string, content: string, files: FileMetadata[]) {
+  async sendMessage(authorKey: string, content: string, images: FileMetadata[]) {
     // Use temporary uuid as the hash until we get the real one back from the network
     const now = new Date();
     const bucket = this.bucketFromDate(now);
@@ -414,11 +414,11 @@ export class ConversationStore {
       status: "pending",
       timestamp: now,
       bucket,
-      files,
+      images,
     };
     this.addMessage(oldMessage);
     const fileStructs = await Promise.all(
-      files
+      images
         .filter((i) => !!i.fileObject)
         .map(async (file) => {
           const hash = await this.fileStorageClient.uploadFile(file.fileObject!);
@@ -442,14 +442,14 @@ export class ConversationStore {
       ...oldMessage,
       hash: encodeHashToBase64(newMessageEntry.actionHash),
       status: "confirmed",
-      files: files.map((i) => ({ ...i, status: "loaded" })),
+      images: images.map((i) => ({ ...i, status: "loaded" })),
     };
     this.updateMessage(oldMessage, newMessage);
   }
 
   addMessage(message: Message): void {
     this.conversation.update((conversation) => {
-      message.files = message.files || [];
+      message.images = message.images || [];
       const lastMessage = get(this.lastMessage);
       if (!lastMessage || message.timestamp > lastMessage.timestamp) {
         this.lastMessage.set(message);
@@ -476,11 +476,11 @@ export class ConversationStore {
   }
 
   async loadFilesForMessage(message: Message) {
-    if (message.files?.length === 0) return;
+    if (message.images?.length === 0) return;
 
-    const files = await Promise.all(message.files.map((file) => this.loadFile(file)));
+    const images = await Promise.all(message.images.map((file) => this.loadFile(file)));
     this.conversation.update((conversation) => {
-      conversation.messages[message.hash].files = files;
+      conversation.messages[message.hash].images = images;
       return conversation;
     });
   }

@@ -142,7 +142,7 @@ export interface Message {
   avatar?: string; // Used in the UI to display the author's avatar
   content: string;
   header?: string; // an optional header to display above this message in the conversation UI
-  files: FileMetadata[];
+  images: FileMetadata[];
   hideDetails?: boolean; // Used in the UI to toggle the display of the message details
   status?: "pending" | "confirmed" | "delivered" | "read"; // status of the message
   timestamp: Date;

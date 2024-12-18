@@ -13,7 +13,7 @@
   export let unselectMessage: () => void;
 
   $: hasText = !!message?.content && message.content.trim() !== "";
-  $: hasFiles = message?.files ? message.files.some((file) => file.status === "loaded") : false;
+  $: hasFiles = message?.images ? message.images.some((file) => file.status === "loaded") : false;
 
   const downloadFile = async (file: FileMetadata) => {
     if (!file || file.status !== "loaded" || !file.dataURL) {
@@ -55,8 +55,8 @@
   };
 
   const download = async () => {
-    if (message?.files) {
-      for (const file of message.files) {
+    if (message?.images) {
+      for (const file of message.images) {
         if (file.status === "loaded") {
           //Downloads only the loaded files sequentially
           await downloadFile(file);

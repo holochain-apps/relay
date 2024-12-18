@@ -364,9 +364,9 @@
     return fileName;
   }
 
-  //To get the icon name based on the file type
+  // To get the icon name based on the file type
   function formatFileIcon(file: FileMetadata): string {
-    //Extension based fallback
+    // Extension based fallback
     const extensionIcons: { [key: string]: string } = {
       xlsx: "xlsx",
       xls: "xlsx",
@@ -401,7 +401,7 @@
         return extensionIcons[extension];
       }
     }
-    //Final fallback
+    // Final fallback
     return "file";
   }
 </script>
@@ -610,7 +610,7 @@
               <li
                 class="mt-auto {!message.hideDetails && 'mt-3'} relative {isSelected
                   ? 'bg-tertiary-500 dark:bg-secondary-500 mb-20 mt-2 rounded-t-xl'
-                  : ''} "
+                  : ''}"
                 data-message-selection={isSelected ? "true" : undefined}
               >
                 <button
@@ -646,8 +646,8 @@
                       </span>
                     {/if}
                     <!-- if message contains files -->
-                    {#if message.files && message.files.length > 0}
-                      {#each message.files as file}
+                    {#if message.images && message.images.length > 0}
+                      {#each message.images as file}
                         <div class="flex {fromMe ? 'justify-end' : 'justify-start'} w-full p-2">
                           <!-- if file is loaded -->
                           {#if file.status === "loaded"}

@@ -67,7 +67,7 @@ export class RelayStore {
           authorKey: encodeHashToBase64(from),
           content: payload.message.content,
           bucket: payload.message.bucket,
-          files: payload.message.files.map(
+          images: payload.message.images.map(
             (i: any) =>
               ({
                 ...(mapKeys(i, (v, k) => camelCase(k)) as FileMetadata),
