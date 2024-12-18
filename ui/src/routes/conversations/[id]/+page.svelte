@@ -21,6 +21,7 @@
   import { press } from "svelte-gestures";
   import toast from "svelte-french-toast";
   import PdfThumbnail from "$lib/PDFThumbnail.svelte";
+  import prettyBytes from "pretty-bytes";
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
   const tAny = t as any;
@@ -333,72 +334,32 @@
     }
   }
 
-  function formatFileSize(size: number): string {
-    const units = ["B", "KB", "MB", "GB", "TB", "PB"];
-    let unitIndex = 0;
-    while (size >= 1024 && unitIndex < units.length - 1) {
-      size /= 1024;
-      unitIndex++;
-    }
-    return `${size.toFixed(2)} ${units[unitIndex]}`;
-  }
-
-  function formatFileName(file: FileMetadata, maxCharacters: number = 10): string {
+  function formatFileName(file: FileMetadata, maxLength: number = 10): string {
     const fileName = file.name.trim();
-    const lastDotIndex = fileName.lastIndexOf(".");
-    const baseName = lastDotIndex > -1 ? fileName.slice(0, lastDotIndex) : fileName;
-    const extension = lastDotIndex > -1 ? fileName.slice(lastDotIndex) : "";
-    if (baseName.length > maxCharacters) {
-      const separators = ["_", "-", "."];
-      for (const separator of separators) {
-        const parts = baseName.split(separator);
-        if (parts.length > 1) {
-          if (parts[0].length <= maxCharacters) {
-            return parts[0] + "..." + extension;
-          }
-          return parts[0].slice(0, maxCharacters) + "..." + extension;
-        }
-      }
-      return baseName.slice(0, maxCharacters) + "..." + extension;
+    if (fileName.length <= maxLength) {
+      return fileName;
     }
-    return fileName;
+    return fileName.slice(0, maxLength) + "...";
   }
 
   // To get the icon name based on the file type
   function formatFileIcon(file: FileMetadata): string {
-    // Extension based fallback
-    const extensionIcons: { [key: string]: string } = {
-      xlsx: "xlsx",
-      xls: "xlsx",
-      doc: "docx",
-      docx: "docx",
-      ppt: "pptx",
-      pptx: "pptx",
-      zip: "zip",
-      rar: "rar",
-      "7z": "7z",
-      gz: "gz",
-      tar: "tar",
-      txt: "txt",
-      csv: "csv",
-      html: "html",
-      css: "css",
-      js: "js",
-      json: "json",
-      xml: "xml",
-      py: "py",
-      java: "java",
-      ts: "ts",
-      rtf: "rtf",
-      mp3: "audio",
-      mp4: "video",
-      mkv: "mkv",
+    const commonFileTypes: { [key: string]: string[] } = {
+      document: ["doc", "docx", "rtf", "txt", "odt"],
+      spreadsheet: ["xls", "xlsx", "csv", "ods"],
+      presentation: ["ppt", "pptx", "odp"],
+      audio: ["mp3", "wav", "ogg", "flac"],
+      video: ["mp4", "avi", "mkv", "mov"],
+      archivefile: ["zip", "rar", "7z", "tar", "gz"],
     };
     if (file.name) {
       const extension = file.name.split(".").pop()?.toLowerCase();
-      if (extension && extensionIcons[extension]) {
-        console.log(extensionIcons[extension]);
-        return extensionIcons[extension];
+      if (extension) {
+        for (const [type, extensions] of Object.entries(commonFileTypes)) {
+          if (extensions.includes(extension)) {
+            return type;
+          }
+        }
       }
     }
     // Final fallback
@@ -673,7 +634,7 @@
                                         : formatFileName(file, 50)}
                                     </div>
                                     <div class="mt-1 text-xs font-bold text-yellow-400 sm:text-sm">
-                                      {formatFileSize(file.size)}
+                                      {prettyBytes(file.size)}
                                     </div>
                                   </div>
                                   <div class="flex-shrink-0">
@@ -693,7 +654,7 @@
                                   <div class="min-w-0 flex-grow">
                                     <div class="break-all text-sm sm:text-base">{file.name}</div>
                                     <div class="mt-1 text-xs font-bold text-yellow-400 sm:text-sm">
-                                      {formatFileSize(file.size)}
+                                      {prettyBytes(file.size)}
                                     </div>
                                   </div>
                                   <div class="flex flex-shrink-0 items-center justify-center">
@@ -787,7 +748,7 @@
                 <div class="flex flex-col">
                   {formatFileName(file)}
                   <div class="file-size text-sm font-bold text-yellow-400">
-                    {formatFileSize(file.size)}
+                    {prettyBytes(file.size)}
                   </div>
                 </div>
                 <div class="justify-cente relative ml-4 flex items-center">
@@ -823,7 +784,7 @@
                     {formatFileName(file, 10)}
                   </div>
                   <div class="mt-1 text-xs font-bold text-yellow-400 sm:text-sm">
-                    {formatFileSize(file.size)}
+                    {prettyBytes(file.size)}
                   </div>
                 </div>
                 <div class="flex items-center justify-center">
@@ -852,7 +813,7 @@
                     {formatFileName(file, 10)}
                   </div>
                   <div class="mt-1 text-xs font-bold text-yellow-400 sm:text-sm">
-                    {formatFileSize(file.size)}
+                    {prettyBytes(file.size)}
                   </div>
                 </div>
                 <div class="flex items-center justify-center">
