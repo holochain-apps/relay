@@ -208,7 +208,13 @@
             {#if isMobile()}
               <button
                 class="bg-surface-500 text-secondary-500 mr-1 flex items-center justify-center rounded-full px-2 py-2 text-xs font-bold"
-                on:click={() => shareText(conversation.publicInviteCode)}
+                on:click={async () => {
+                  try {
+                    await shareText(conversation.publicInviteCode);
+                  } catch (e) {
+                    toast.error(`${$t("common.share_code_error")}: ${e.message}`);
+                  }
+                }}
               >
                 <SvgIcon icon="share" size="14" color="%23FD3524" moreClasses="mr-1" />
               </button>
@@ -232,7 +238,8 @@
                 class="variant-filled-tertiary flex items-center justify-center rounded-2xl p-2 px-3 text-sm font-bold"
                 on:click={async () => {
                   try {
-                    await copyToClipboard(conversation.inviteCodeForAgent(contact.publicKeyB64));
+                    const inviteCode = await conversation.inviteCodeForAgent(contact.publicKeyB64);
+                    await copyToClipboard(inviteCode);
                     toast.success(`${$t("common.copy_success")}`);
                   } catch (e) {
                     toast.error(`${$t("common.copy_error")}: ${e.message}`);
@@ -245,7 +252,17 @@
               {#if isMobile()}
                 <button
                   class="variant-filled-tertiary flex items-center justify-center rounded-2xl p-2 px-3 text-sm font-bold"
-                  on:click={() => shareText(conversation.inviteCodeForAgent(contact.publicKeyB64))}
+                  on:click={async () => {
+                    try {
+                      const inviteCode = await conversation.inviteCodeForAgent(
+                        contact.publicKeyB64,
+                      );
+                      if (!inviteCode) throw new Error("Failed to generate invite code");
+                      await shareText(inviteCode);
+                    } catch (e) {
+                      toast.error(`${$t("common.share_code_error")}: ${e.message}`);
+                    }
+                  }}
                 >
                   <SvgIcon icon="share" size="18" color="%23FD3524" moreClasses="mr-2" />
                 </button>
