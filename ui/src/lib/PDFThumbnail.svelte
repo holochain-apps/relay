@@ -6,15 +6,17 @@
   export let width: number;
   export let height: number;
   export let fallbackIcon: string = "file";
+  import * as pdfjs from "pdfjs-dist";
+  pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+    "pdfjs-dist/build/pdf.worker.min.mjs",
+    import.meta.url,
+  ).toString();
 
   let thumbnailUrl: string | null = null;
 
   onMount(async () => {
     try {
-      const pdfjsLib = await import("pdfjs-dist");
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.worker.min.mjs`;
-      const loadingTask = pdfjsLib.getDocument(pdfDataUrl);
-      const pdf = await loadingTask.promise;
+      const pdf = await pdfjs.getDocument(pdfDataUrl).promise;
       const page = await pdf.getPage(1);
       const canvas = document.createElement("canvas");
       const context = canvas.getContext("2d");
