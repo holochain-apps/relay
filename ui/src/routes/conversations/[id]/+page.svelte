@@ -734,6 +734,15 @@
           bind:value={newMessageText}
           class="bg-tertiary-500 w-full border-0 placeholder:text-sm placeholder:text-gray-400 focus:border-gray-500 focus:ring-0"
           placeholder={$t("conversations.message_placeholder")}
+          on:keydown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              if (newMessageText.trim() || $newMessageFiles.length > 0) {
+                const submitEvent = new SubmitEvent("submit");
+                e.currentTarget.form?.dispatchEvent(submitEvent);
+              }
+            }
+          }}
         />
         <div class="flex flex-row flex-wrap px-4">
           {#each $newMessageFiles as file (file.id)}

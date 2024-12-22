@@ -49,5 +49,5 @@
     style="width: {width}px; height: {height}px;"
   />
 {:else}
-  <SvgIcon icon={fallbackIcon} color={$modeCurrent ? "black" : "white"} size={width.toString()} />
+  <SvgIcon icon={fallbackIcon} color={$modeCurrent ? "black" : "white"} size="50" />
 {/if}
