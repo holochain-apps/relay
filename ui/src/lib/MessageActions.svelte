@@ -5,7 +5,7 @@
   import { t } from "$translations";
   import { convertDataURIToUint8Array, copyToClipboard } from "$lib/utils";
   import { save } from "@tauri-apps/plugin-dialog";
-  import { create, writeFile } from "@tauri-apps/plugin-fs";
+  import { writeFile } from "@tauri-apps/plugin-fs";
   import { downloadDir } from "@tauri-apps/api/path";
   import toast from "svelte-french-toast";
 
