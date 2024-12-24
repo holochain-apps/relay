@@ -9,10 +9,6 @@
   $: contactId = $page.params.id;
 </script>
 
-<Header>
-  <button class="pr-5 text-4xl" on:click={() => goto("/create")}>
-    <SvgIcon icon="caretLeft" color={$modeCurrent ? "%232e2e2e" : "white"} size="10" />
-  </button>
-</Header>
+<Header backUrl="/create" />
 
 <ContactEditor editContactId={contactId} />

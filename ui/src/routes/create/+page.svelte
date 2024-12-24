@@ -92,13 +92,7 @@
   }
 </script>
 
-<Header>
-  <button class="absolute z-10 pr-5 text-4xl" on:click={() => goto("/welcome")}>
-    <SvgIcon icon="caretLeft" color={$modeCurrent ? "%232e2e2e" : "white"} size="10" />
-  </button>
-
-  <h1 class="flex-1 text-center">{$t("create.page_title")}</h1>
-</Header>
+<Header backUrl="/welcome" title={$t("create.page_title")} />
 
 <div
   class="text-secondary-500 container relative mx-auto flex w-full flex-1 flex-col items-center p-5"
