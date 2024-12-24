@@ -15,6 +15,7 @@
 
   const dispatch = createEventDispatcher<{
     select: ActionHashB64;
+    unselect: undefined;
   }>();
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext("relayStore");
@@ -23,7 +24,6 @@
 
   export let message: MessageType;
   export let isSelected: boolean = false;
-  export let unselectMessage: () => void;
 
   $: fromMe = message.authorKey === myPubKeyB64;
 
@@ -113,7 +113,7 @@
 
   {#if isSelected}
     <div data-message-actions>
-      <MessageActions {message} {unselectMessage} />
+      <MessageActions {message} on:unselect />
     </div>
   {/if}
 </li>

@@ -215,10 +215,6 @@
 
   let selectedMessageHash: string | null = null;
 
-  function unselectMessage() {
-    selectedMessageHash = null;
-  }
-
   function clickOutside(node: HTMLElement, callback: () => void) {
     const handleClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
@@ -332,8 +328,8 @@
               <BaseMessage
                 {message}
                 isSelected={selectedMessageHash === message.hash}
-                {unselectMessage}
-                on:select={(e) => (selectedMessageHash = message.hash)}
+                on:unselect={() => (selectedMessageHash = null)}
+                on:select={() => (selectedMessageHash = message.hash)}
               />
             {/each}
           </ul>

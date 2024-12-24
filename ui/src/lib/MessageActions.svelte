@@ -8,9 +8,13 @@
   import { writeFile } from "@tauri-apps/plugin-fs";
   import { downloadDir } from "@tauri-apps/api/path";
   import toast from "svelte-french-toast";
+  import { createEventDispatcher } from "svelte";
+
+  const dispatch = createEventDispatcher<{
+    unselect: undefined;
+  }>();
 
   export let message: Message;
-  export let unselectMessage: () => void;
 
   $: hasText = !!message?.content && message.content.trim() !== "";
   $: hasImages = message?.images ? message.images.some((img) => img.status === "loaded") : false;
@@ -57,7 +61,8 @@
         toast.error(`${$t("common.copy_error")}: ${e.message}`);
       }
     }
-    unselectMessage();
+
+    dispatch("unselect");
   };
 
   const download = async () => {
@@ -69,7 +74,8 @@
         }
       }
     }
-    unselectMessage();
+
+    dispatch("unselect");
   };
 </script>
 
