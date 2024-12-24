@@ -12,6 +12,7 @@
   import { modeCurrent } from "@skeletonlabs/skeleton";
   import { createEventDispatcher } from "svelte";
   import type { ActionHashB64 } from "@holochain/client";
+  import type { OutsideClickEventDetail } from "../app";
 
   const dispatch = createEventDispatcher<{
     select: ActionHashB64;
@@ -38,9 +39,23 @@
 
     dispatch("select", message.hash);
   }
+
+  function clickOutside(node: HTMLElement) {
+    const handleClick = (event: MouseEvent) => {
+      if (node && !node.contains(event.target as Node) && !event.defaultPrevented) {
+        node.dispatchEvent(new CustomEvent<OutsideClickEventDetail>("outsideClick"));
+      }
+    };
+    document.addEventListener("click", handleClick, true);
+
+    return {
+      destroy: () => {
+        document.removeEventListener("click", handleClick, true);
+      },
+    };
+  }
 </script>
 
-<b>{isSelected}</b>
 {#if message.header}
   <li class="mb-2 mt-auto">
     <div class="text-secondary-400 dark:text-secondary-300 text-center text-xs">
@@ -61,6 +76,8 @@
     use:press={{ timeframe: 300, triggerBeforeFinished: true }}
     on:press={handlePress}
     on:click={handleClick}
+    use:clickOutside
+    on:outsideClick={() => dispatch("unselect")}
     aria-pressed={isSelected}
     aria-label={`Message from ${fromMe ? "you" : message.author}`}
   >

@@ -318,10 +318,7 @@
         <ConversationEmpty {conversation} />
       {:else}
         <!-- Display conversation messages -->
-        <div
-          class="flex w-full flex-1 flex-col-reverse p-4"
-          use:clickOutside={() => (selectedMessageHash = null)}
-        >
+        <div class="flex w-full flex-1 flex-col-reverse p-4">
           <ul>
             {#each $processedMessages as message (message.hash)}
               <BaseMessage
