@@ -211,13 +211,7 @@
   }
 </script>
 
-<Header>
-  <button
-    class="flex-none pr-5"
-    on:click={() => goto(`/conversations${conversation?.archived ? "/archive" : ""}`)}
-  >
-    <SvgIcon icon="caretLeft" color={$modeCurrent ? "%232e2e2e" : "white"} size="10" />
-  </button>
+<Header backUrl={`/conversations${conversation?.archived ? "/archive" : ""}`}>
   {#if conversation}
     <h1 class="block grow self-center overflow-hidden text-ellipsis whitespace-nowrap text-center">
       <button on:click={() => goto(`/conversations/${conversationId}/details`)} class="w-full">

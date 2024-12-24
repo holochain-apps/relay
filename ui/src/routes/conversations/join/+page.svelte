@@ -44,12 +44,7 @@
   }
 </script>
 
-<Header>
-  <button class="absolute z-10 pr-5 text-4xl" on:click={() => history.back()}
-    ><SvgIcon icon="caretLeft" color={$modeCurrent ? "%232e2e2e" : "white"} size="10" /></button
-  >
-  <h1 class="flex-1 text-center">{$t("conversations.join_conversation")}</h1>
-</Header>
+<Header back title={$t("conversations.join_conversation")} />
 
 <form on:submit|preventDefault={() => joinConversation()} class="contents">
   <div class="container mx-auto flex grow flex-col items-start justify-center px-10">
