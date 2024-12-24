@@ -4,7 +4,7 @@
   import { type Profile } from "@holochain-open-dev/profiles";
   import { modeCurrent } from "@skeletonlabs/skeleton";
   import { getContext, onDestroy, onMount } from "svelte";
-  import { type Unsubscriber, derived, writable, type Writable } from "svelte/store";
+  import { type Unsubscriber, derived } from "svelte/store";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import Header from "$lib/Header.svelte";
@@ -12,10 +12,10 @@
   import { t } from "$translations";
   import { RelayStore } from "$store/RelayStore";
   import { Privacy, type Conversation, type Image, type Message } from "../../../types";
-  import BaseMessage from "./Message.svelte";
   import ConversationMessageInput from "./ConversationMessageInput.svelte";
   import ConversationEmpty from "./ConversationEmpty.svelte";
   import ConversationMembers from "./ConversationMembers.svelte";
+  import ConversationMessages from "./ConversationMessages.svelte";
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
   const tAny = t as any;
@@ -31,7 +31,6 @@
 
   let agentProfiles: { [key: AgentPubKeyB64]: Profile } = {};
   let numMembers = 0;
-  let selectedMessageHash: string | null = null;
 
   let unsubscribe: Unsubscriber;
 
@@ -292,18 +291,7 @@
         <ConversationEmpty {conversation} />
       {:else}
         <!-- Display conversation messages -->
-        <div class="flex w-full flex-1 flex-col-reverse p-4">
-          <ul>
-            {#each $processedMessages as message (message.hash)}
-              <BaseMessage
-                {message}
-                isSelected={selectedMessageHash === message.hash}
-                on:unselect={() => (selectedMessageHash = null)}
-                on:select={() => (selectedMessageHash = message.hash)}
-              />
-            {/each}
-          </ul>
-        </div>
+        <ConversationMessages messages={$processedMessages} />
       {/if}
     </div>
   </div>

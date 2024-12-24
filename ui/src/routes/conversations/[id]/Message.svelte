@@ -7,19 +7,11 @@
   import MessageActions from "./MessageActions.svelte";
   import Avatar from "$lib/Avatar.svelte";
   import { press } from "svelte-gestures";
-  import { isMobile } from "../../../lib/utils";
   import SvgIcon from "../../../lib/SvgIcon.svelte";
   import { modeCurrent } from "@skeletonlabs/skeleton";
-  import { createEventDispatcher } from "svelte";
-  import type { ActionHashB64 } from "@holochain/client";
-  import type { OutsideClickEventDetail } from "../../../app";
   import DOMPurify from "dompurify";
   import linkifyStr from "linkify-string";
-
-  const dispatch = createEventDispatcher<{
-    select: ActionHashB64;
-    unselect: undefined;
-  }>();
+  import { clickoutside } from "@svelte-put/clickoutside";
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext("relayStore");
   let relayStore = relayStoreContext.getStore();
@@ -29,33 +21,6 @@
   export let isSelected: boolean = false;
 
   $: fromMe = message.authorKey === myPubKeyB64;
-
-  function handleClick() {
-    if (isMobile()) return;
-
-    dispatch("select", message.hash);
-  }
-
-  function handlePress() {
-    if (!isMobile()) return;
-
-    dispatch("select", message.hash);
-  }
-
-  function clickOutside(node: HTMLElement) {
-    const handleClick = (event: MouseEvent) => {
-      if (node && !node.contains(event.target as Node) && !event.defaultPrevented) {
-        node.dispatchEvent(new CustomEvent<OutsideClickEventDetail>("outsideClick"));
-      }
-    };
-    document.addEventListener("click", handleClick, true);
-
-    return {
-      destroy: () => {
-        document.removeEventListener("click", handleClick, true);
-      },
-    };
-  }
 </script>
 
 {#if message.header}
@@ -65,23 +30,18 @@
     </div>
   </li>
 {/if}
-<li
-  class="mt-auto {!message.hideDetails && 'mt-3'} relative {isSelected
-    ? 'bg-secondary-500 mb-20 mt-2 rounded-t-xl'
-    : ''}"
+<button
+  class="message-content mt-3 block w-full border-0 text-left
+    {isSelected ? 'bg-secondary-500 rounded-xl px-2.5 py-1.5' : 'bg-transparent'}"
+  on:click
+  use:press={{ timeframe: 300, triggerBeforeFinished: true }}
+  on:press
+  use:clickoutside
+  on:clickoutside
+  aria-pressed={isSelected}
+  aria-label={`Message from ${fromMe ? "you" : message.author}`}
 >
-  <button
-    class="flex w-full {fromMe ? 'justify-end' : 'justify-start'} {isSelected
-      ? 'bg-secondary-500 rounded-b-none rounded-t-xl px-2.5 py-1.5'
-      : 'bg-transparent'} border-0 bg-transparent text-left"
-    use:press={{ timeframe: 300, triggerBeforeFinished: true }}
-    on:press={handlePress}
-    on:click={handleClick}
-    use:clickOutside
-    on:outsideClick={() => dispatch("unselect")}
-    aria-pressed={isSelected}
-    aria-label={`Message from ${fromMe ? "you" : message.author}`}
-  >
+  <div class="flex {fromMe ? 'justify-end' : 'justify-start'}">
     {#if !fromMe}
       {#if !message.hideDetails}
         <Avatar
@@ -95,7 +55,7 @@
       {/if}
     {/if}
 
-    <div class="ml-3 w-2/3 {fromMe && 'items-end text-end'}">
+    <div class="ml-3 {fromMe && 'items-end text-end'}">
       {#if !message.hideDetails}
         <span class="flex items-baseline {fromMe && 'flex-row-reverse opacity-80'}">
           <span class="font-bold">{fromMe ? "You" : message.author}</span>
@@ -135,12 +95,12 @@
         )}
       </div>
     </div>
-  </button>
+  </div>
 
   {#if isSelected}
     <MessageActions {message} on:unselect />
   {/if}
-</li>
+</button>
 
 <style>
   :global(.message a) {
