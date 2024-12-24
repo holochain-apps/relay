@@ -205,7 +205,7 @@
     if (conversation && (text.trim() || images.length > 0)) {
       conversation.sendMessage(myPubKeyB64, text, images);
       setTimeout(scrollToBottom, 100);
-      newMessageInput.focus();
+      conversationMessageInputRef.focus();
     }
   }
 
