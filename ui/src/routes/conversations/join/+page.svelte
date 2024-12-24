@@ -44,9 +44,7 @@
   }
 </script>
 
-<Header back>
-  <h1 class="flex-1 text-center">{$t("conversations.join_conversation")}</h1>
-</Header>
+<Header back title={$t("conversations.join_conversation")} />
 
 <form on:submit|preventDefault={() => joinConversation()} class="contents">
   <div class="container mx-auto flex grow flex-col items-start justify-center px-10">

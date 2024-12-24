@@ -16,8 +16,7 @@
   loadScanResult();
 </script>
 
-<Header backUrl="/create">
-  <h1 class="flex-1 text-center">{$t("contacts.create_new_contact")}</h1>
+<Header backUrl="/create" title={$t("contacts.create_new_contact")}>
   {#if isMobile()}
     <div class="absolute right-0">
       <button class="z-10 mr-5 text-4xl" on:click={() => scanStore.scan()}>

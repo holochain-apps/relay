@@ -66,13 +66,12 @@
   }
 </script>
 
-<Header back>
-  <h1 class="flex-1 text-center">
-    {$tAny("conversations.add_people", {
-      public: conversation && conversation.data.privacy === Privacy.Public,
-    })}
-  </h1>
-</Header>
+<Header
+  back
+  title={$tAny("conversations.add_people", {
+    public: conversation && conversation.data.privacy === Privacy.Public,
+  })}
+/>
 
 {#if conversation}
   {#if conversation.data.privacy === Privacy.Public}

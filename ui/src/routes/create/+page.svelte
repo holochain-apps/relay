@@ -92,9 +92,7 @@
   }
 </script>
 
-<Header backUrl="/welcome">
-  <h1 class="flex-1 text-center">{$t("create.page_title")}</h1>
-</Header>
+<Header backUrl="/welcome" title={$t("create.page_title")} />
 
 <div
   class="text-secondary-500 container relative mx-auto flex w-full flex-1 flex-col items-center p-5"

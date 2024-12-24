@@ -36,9 +36,7 @@
   $: valid = title.trim().length >= MIN_TITLE_LENGTH;
 </script>
 
-<Header back>
-  <h1 class="flex-1 text-center">{$t("common.new_group")}</h1>
-</Header>
+<Header back title={$t("common.new_group")} />
 
 <div class="my-10 flex flex-col items-center justify-center">
   <HiddenFileInput
