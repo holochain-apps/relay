@@ -10,10 +10,6 @@
   import toast from "svelte-french-toast";
   import { createEventDispatcher } from "svelte";
 
-  const dispatch = createEventDispatcher<{
-    unselect: undefined;
-  }>();
-
   export let message: Message;
 
   $: hasText = !!message?.content && message.content.trim() !== "";
@@ -61,8 +57,6 @@
         toast.error(`${$t("common.copy_error")}: ${e.message}`);
       }
     }
-
-    dispatch("unselect");
   };
 
   const download = async () => {
@@ -74,8 +68,6 @@
         }
       }
     }
-
-    dispatch("unselect");
   };
 </script>
 

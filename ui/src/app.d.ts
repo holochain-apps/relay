@@ -15,16 +15,4 @@ declare global {
   }
 }
 
-export type OutsideClickEventDetail = {
-  target: EventTarget | null;
-  pointerType: string;
-};
-
-declare module "svelte/elements" {
-  // allows for more granular control over what element to add the typings to
-  export interface DOMAttributes<T> {
-    "on:outsideClick"?: (event: CustomEvent<OutsideClickEventDetail>) => void;
-  }
-}
-
 export {};
