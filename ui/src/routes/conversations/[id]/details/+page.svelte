@@ -72,7 +72,7 @@
     {#if conversation.data.privacy === Privacy.Private && encodeHashToBase64(conversation.data.progenitor) === relayStore.client.myPubKeyB64}
       <button
         class="absolute right-5"
-        on:click={() => goto("/conversations/{conversation.data.id}/invite")}
+        on:click={() => goto(`/conversations/${conversation.data.id}/invite`)}
       >
         <SvgIcon icon="addPerson" color="white" />
       </button>

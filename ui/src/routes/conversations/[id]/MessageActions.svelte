@@ -1,16 +1,16 @@
 <script lang="ts">
-  import type { Message, Image } from "../types";
+  import type { Message, Image } from "../../../types";
   import Button from "$lib/Button.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$translations";
   import { convertDataURIToUint8Array, copyToClipboard } from "$lib/utils";
   import { save } from "@tauri-apps/plugin-dialog";
-  import { create, writeFile } from "@tauri-apps/plugin-fs";
+  import { writeFile } from "@tauri-apps/plugin-fs";
   import { downloadDir } from "@tauri-apps/api/path";
   import toast from "svelte-french-toast";
+  import { createEventDispatcher } from "svelte";
 
   export let message: Message;
-  export let unselectMessage: () => void;
 
   $: hasText = !!message?.content && message.content.trim() !== "";
   $: hasImages = message?.images ? message.images.some((img) => img.status === "loaded") : false;
@@ -57,7 +57,6 @@
         toast.error(`${$t("common.copy_error")}: ${e.message}`);
       }
     }
-    unselectMessage();
   };
 
   const download = async () => {
@@ -69,32 +68,27 @@
         }
       }
     }
-    unselectMessage();
   };
 </script>
 
-<div class="absolute left-0 z-50 flex w-full items-center justify-center">
-  <div
-    class="bg-tertiary-500 dark:bg-secondary-500 flex w-full flex-wrap justify-center gap-1 rounded-b-xl shadow-lg sm:gap-2 md:gap-4"
-  >
-    {#if hasText}
-      <Button
-        on:click={copy}
-        moreClasses="flex items-center gap-1 px-2 sm:px-3 md:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm variant-filled-tertiary dark:!bg-tertiary-200"
-      >
-        <SvgIcon icon="copy" size="15" color="%23FD3524" moreClasses="w-3 h-3 sm:w-4 sm:h-4" />
-        <span class="text-xs text-black sm:text-sm">{$t("conversations.copy_text")}</span>
-      </Button>
-    {/if}
+<div class="flex w-full items-center justify-center space-x-2">
+  {#if hasText}
+    <Button
+      on:click={copy}
+      moreClasses="flex items-center gap-1 px-2 sm:px-3 md:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm variant-filled-tertiary dark:!bg-tertiary-200"
+    >
+      <SvgIcon icon="copy" size="15" color="%23FD3524" moreClasses="w-3 h-3 sm:w-4 sm:h-4" />
+      <span class="text-xs text-black sm:text-sm">{$t("conversations.copy_text")}</span>
+    </Button>
+  {/if}
 
-    {#if hasImages}
-      <Button
-        on:click={download}
-        moreClasses="flex items-center gap-1 px-2 sm:px-3 md:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm variant-filled-tertiary dark:!bg-tertiary-200"
-      >
-        <SvgIcon icon="download" size="15" color="%23FD3524" moreClasses="w-3 h-3 sm:w-4 sm:h-4" />
-        <span class="text-xs text-black sm:text-sm">{$t("conversations.download")}</span>
-      </Button>
-    {/if}
-  </div>
+  {#if hasImages}
+    <Button
+      on:click={download}
+      moreClasses="flex items-center gap-1 px-2 sm:px-3 md:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm variant-filled-tertiary dark:!bg-tertiary-200"
+    >
+      <SvgIcon icon="download" size="15" color="%23FD3524" moreClasses="w-3 h-3 sm:w-4 sm:h-4" />
+      <span class="text-xs text-black sm:text-sm">{$t("conversations.download")}</span>
+    </Button>
+  {/if}
 </div>
