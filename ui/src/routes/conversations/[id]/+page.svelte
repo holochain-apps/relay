@@ -17,6 +17,7 @@
   import { Privacy, type Conversation, type Image, type Message } from "../../../types";
   import BaseMessage from "$lib/Message.svelte";
   import toast from "svelte-french-toast";
+  import MessageInput from "$lib/MessageInput.svelte";
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
   const tAny = t as any;
@@ -204,55 +205,11 @@
     }
   }
 
-  async function sendMessage() {
-    if (conversation && (newMessageText.trim() || $newMessageImages.length > 0)) {
-      conversation.sendMessage(myPubKeyB64, newMessageText, $newMessageImages);
-      newMessageText = ""; // Clear input after sending
-      newMessageImages.set([]);
+  async function sendMessage(text: string, images: Image[]) {
+    if (conversation && (text.trim() || images.length > 0)) {
+      conversation.sendMessage(myPubKeyB64, text, images);
       setTimeout(scrollToBottom, 100);
       newMessageInput.focus();
-    }
-  }
-
-  async function handleImagesSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      const files = Array.from(input.files);
-      const readers: Promise<Image>[] = files.map((file) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        return new Promise<Image>((resolve) => {
-          reader.onload = async () => {
-            if (typeof reader.result === "string") {
-              resolve({
-                dataURL: reader.result,
-                lastModified: file.lastModified,
-                fileType: file.type,
-                file,
-                name: file.name,
-                size: file.size,
-                status: "pending",
-              });
-            }
-          };
-          reader.onerror = () => {
-            console.error("Error reading file");
-            resolve({
-              dataURL: "",
-              lastModified: file.lastModified,
-              fileType: file.type,
-              file,
-              name: file.name,
-              size: file.size,
-              status: "error",
-            });
-          };
-        });
-      });
-
-      // When all files are read, update the images store
-      const newImages: Image[] = await Promise.all(readers);
-      newMessageImages.update((currentImages) => [...currentImages, ...newImages]);
     }
   }
 
@@ -527,55 +484,10 @@
       {/if}
     </div>
   </div>
-  <div class="bg-tertiary-500 dark:bg-secondary-500 w-full flex-shrink-0 p-2">
-    <form class="flex" method="POST" on:submit|preventDefault={sendMessage}>
-      <input
-        type="file"
-        accept="image/jpeg, image/png, image/gif"
-        multiple
-        id="images"
-        class="hidden"
-        on:change={handleImagesSelected}
-      />
-      <label for="images" class="flex cursor-pointer">
-        <SvgIcon
-          icon="image"
-          color={$modeCurrent ? "%232e2e2e" : "white"}
-          size="26"
-          moreClasses="ml-3"
-        />
-      </label>
-      <div class="flex w-full flex-col">
-        <!-- svelte-ignore a11y-autofocus -->
-        <input
-          autofocus
-          type="text"
-          bind:this={newMessageInput}
-          bind:value={newMessageText}
-          class="bg-tertiary-500 w-full border-0 placeholder:text-sm placeholder:text-gray-400 focus:border-gray-500 focus:ring-0"
-          placeholder={$t("conversations.message_placeholder")}
-        />
-        <div class="flex flex-row px-4">
-          {#each $newMessageImages as image, i}
-            {#if image.status === "loading"}
-              <div class="bg-tertiary-500 mr-2 flex h-10 w-10 items-center justify-center">
-                <SvgIcon icon="spinner" color="white" size="10" />
-              </div>
-            {:else}
-              <!-- svelte-ignore a11y-missing-attribute -->
-              <img src={image.dataURL} class="mr-2 h-10 w-10 object-cover" />
-            {/if}
-          {/each}
-        </div>
-      </div>
-      <button
-        disabled={newMessageText.trim() === "" && $newMessageImages.length === 0}
-        class="pr-2 disabled:opacity-50"
-      >
-        <SvgIcon icon="caretRight" color={$modeCurrent ? "#2e2e2e" : "white"} size="10" />
-      </button>
-    </form>
-  </div>
+  <MessageInput
+    bind:ref={newMessageInput}
+    on:send={(e) => sendMessage(e.detail.text, e.detail.images)}
+  />
 {/if}
 
 <style type="text/css">
