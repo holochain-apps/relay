@@ -313,9 +313,3 @@
     on:send={(e) => sendMessage(e.detail.text, e.detail.images)}
   />
 {/if}
-
-<style type="text/css">
-  .message :global(a) {
-    color: rgba(var(--color-primary-500));
-  }
-</style>

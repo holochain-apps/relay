@@ -131,3 +131,9 @@
     <MessageActions {message} on:unselect />
   {/if}
 </li>
+
+<style>
+  :global(.message a) {
+    color: rgba(var(--color-primary-500));
+  }
+</style>
