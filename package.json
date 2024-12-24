@@ -45,12 +45,5 @@
     "tslib": "^2.6.2",
     "typescript": "^5.4.4"
   },
-  "dependencies": {
-    "@tauri-apps/plugin-dialog": "^2.0.1",
-    "dompurify": "^3.1.6",
-    "lodash-es": "^4.17.21",
-    "svelte-gestures": "^5.0.4",
-    "svelte-qrcode-image": "^2.0.0-alpha.1",
-    "uuid": "^9.0.1"
-  }
+  "dependencies": {}
 }

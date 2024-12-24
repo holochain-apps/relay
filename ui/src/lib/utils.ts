@@ -8,33 +8,7 @@ import { shareText as sharesheetShareText } from "@buildyourwebapp/tauri-plugin-
 import { platform } from "@tauri-apps/plugin-os";
 import { setModeCurrent } from "@skeletonlabs/skeleton";
 import { open } from "@tauri-apps/plugin-shell";
-import linkifyStr from "linkify-string";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
-
-/**
- * Sanitize user-inputted HTML before we render it to prevent XSS attacks
- *
- * @param html
- * @returns
- */
-export function sanitizeHTML(html: string) {
-  return DOMPurify.sanitize(html);
-}
-
-/**
- * Search the provided text for URLs, replacing them with HTML link tags pointing to that URL
- *
- * @param text
- * @returns
- */
-export const linkify = (text: string): string =>
-  linkifyStr(text, {
-    defaultProtocol: "https",
-    rel: {
-      url: "noopener noreferrer",
-    },
-    target: "_blank",
-  });
 
 /**
  * Share text via sharesheet
