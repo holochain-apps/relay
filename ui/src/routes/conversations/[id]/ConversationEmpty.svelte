@@ -3,9 +3,9 @@
   import toast from "svelte-french-toast";
   import { copyToClipboard, isMobile, shareText } from "$lib/utils";
   import { modeCurrent } from "@skeletonlabs/skeleton";
-  import SvgIcon from "./SvgIcon.svelte";
+  import SvgIcon from "../../../lib/SvgIcon.svelte";
   import { t } from "$translations";
-  import { Privacy } from "../types";
+  import { Privacy } from "../../../types";
   import { goto } from "$app/navigation";
   import type { ConversationStore } from "$store/ConversationStore";
 

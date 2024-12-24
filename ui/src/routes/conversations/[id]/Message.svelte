@@ -1,18 +1,18 @@
 <script lang="ts">
   import type { RelayStore } from "$store/RelayStore";
   import { getContext } from "svelte";
-  import { type Message as MessageType } from "../types";
+  import { type Message as MessageType } from "../../../types";
   import Time from "svelte-time";
   import LightboxImage from "$lib/LightboxImage.svelte";
-  import MessageActions from "$lib/MessageActions.svelte";
+  import MessageActions from "./MessageActions.svelte";
   import Avatar from "$lib/Avatar.svelte";
   import { press } from "svelte-gestures";
-  import { isMobile, linkify, sanitizeHTML } from "./utils";
-  import SvgIcon from "./SvgIcon.svelte";
+  import { isMobile, linkify, sanitizeHTML } from "../../../lib/utils";
+  import SvgIcon from "../../../lib/SvgIcon.svelte";
   import { modeCurrent } from "@skeletonlabs/skeleton";
   import { createEventDispatcher } from "svelte";
   import type { ActionHashB64 } from "@holochain/client";
-  import type { OutsideClickEventDetail } from "../app";
+  import type { OutsideClickEventDetail } from "../../../app";
 
   const dispatch = createEventDispatcher<{
     select: ActionHashB64;

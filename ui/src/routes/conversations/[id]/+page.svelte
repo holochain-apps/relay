@@ -7,17 +7,15 @@
   import { type Unsubscriber, derived, writable, type Writable } from "svelte/store";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
-  import Avatar from "$lib/Avatar.svelte";
   import Header from "$lib/Header.svelte";
   import SvgIcon from "$lib/SvgIcon.svelte";
   import { t } from "$translations";
-  import { isMobile } from "$lib/utils";
   import { RelayStore } from "$store/RelayStore";
   import { Privacy, type Conversation, type Image, type Message } from "../../../types";
-  import BaseMessage from "$lib/Message.svelte";
-  import MessageInput from "$lib/MessageInput.svelte";
-  import ConversationEmpty from "$lib/ConversationEmpty.svelte";
-  import ConversationMembers from "$lib/ConversationMembers.svelte";
+  import BaseMessage from "./Message.svelte";
+  import ConversationMessageInput from "./ConversationMessageInput.svelte";
+  import ConversationEmpty from "./ConversationEmpty.svelte";
+  import ConversationMembers from "./ConversationMembers.svelte";
 
   // Silly hack to get around issues with typescript in sveltekit-i18n
   const tAny = t as any;
@@ -39,9 +37,7 @@
   let agentTimeout: NodeJS.Timeout;
   let messageTimeout: NodeJS.Timeout;
 
-  let newMessageInput: HTMLInputElement;
-  let newMessageText = "";
-  const newMessageImages: Writable<Image[]> = writable([]);
+  let conversationMessageInputRef: HTMLInputElement;
   let conversationContainer: HTMLElement;
   let scrollAtBottom = true;
   let scrollAtTop = false;
@@ -109,7 +105,7 @@
       checkForData();
       conversationContainer.addEventListener("scroll", handleScroll);
       window.addEventListener("resize", debouncedHandleResize);
-      newMessageInput.focus();
+      conversationMessageInputRef.focus();
       conversation.setUnread(false);
     }
   });
@@ -334,8 +330,8 @@
     </div>
   </div>
 
-  <MessageInput
-    bind:ref={newMessageInput}
+  <ConversationMessageInput
+    bind:ref={conversationMessageInputRef}
     on:send={(e) => sendMessage(e.detail.text, e.detail.images)}
   />
 {/if}
