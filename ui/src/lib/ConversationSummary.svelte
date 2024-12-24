@@ -7,10 +7,11 @@
   import Avatar from "./Avatar.svelte";
   import SvgIcon from "./SvgIcon.svelte";
   import { t } from "$translations";
-  import { isMobile, sanitizeHTML } from "$lib/utils";
+  import { isMobile } from "$lib/utils";
   import type { ConversationStore } from "$store/ConversationStore";
   import { Privacy } from "../types";
   import { goto } from "$app/navigation";
+  import DOMPurify from "dompurify";
 
   export let store: ConversationStore;
   $: conversation = store.conversation;
@@ -224,7 +225,7 @@
             <span class="text-secondary-400">{$t("conversations.unconfirmed")}</span>
           {:else if $lastMessage}
             {lastMessageAuthor || ""}:&nbsp;
-            {@html sanitizeHTML($lastMessage.content || "")}
+            {@html DOMPurify.sanitize($lastMessage.content || "")}
             {#if $lastMessage.images.length > 0}
               &nbsp;<span class="text-secondary-400 italic"
                 >({$tAny("conversations.images", { count: $lastMessage.images.length })})</span

@@ -7,12 +7,14 @@
   import MessageActions from "./MessageActions.svelte";
   import Avatar from "$lib/Avatar.svelte";
   import { press } from "svelte-gestures";
-  import { isMobile, linkify, sanitizeHTML } from "../../../lib/utils";
+  import { isMobile } from "../../../lib/utils";
   import SvgIcon from "../../../lib/SvgIcon.svelte";
   import { modeCurrent } from "@skeletonlabs/skeleton";
   import { createEventDispatcher } from "svelte";
   import type { ActionHashB64 } from "@holochain/client";
   import type { OutsideClickEventDetail } from "../../../app";
+  import DOMPurify from "dompurify";
+  import linkifyStr from "linkify-string";
 
   const dispatch = createEventDispatcher<{
     select: ActionHashB64;
@@ -122,7 +124,15 @@
       {/if}
 
       <div class="message w-full break-words font-light {fromMe && 'text-end'}">
-        {@html sanitizeHTML(linkify(message.content))}
+        {@html DOMPurify.sanitize(
+          linkifyStr(message.content, {
+            defaultProtocol: "https",
+            rel: {
+              url: "noopener noreferrer",
+            },
+            target: "_blank",
+          }),
+        )}
       </div>
     </div>
   </button>
