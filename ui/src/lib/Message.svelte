@@ -7,9 +7,15 @@
   import MessageActions from "$lib/MessageActions.svelte";
   import Avatar from "$lib/Avatar.svelte";
   import { press } from "svelte-gestures";
-  import { linkify, sanitizeHTML } from "./utils";
+  import { isMobile, linkify, sanitizeHTML } from "./utils";
   import SvgIcon from "./SvgIcon.svelte";
   import { modeCurrent } from "@skeletonlabs/skeleton";
+  import { createEventDispatcher } from "svelte";
+  import type { ActionHashB64 } from "@holochain/client";
+
+  const dispatch = createEventDispatcher<{
+    select: ActionHashB64;
+  }>();
 
   const relayStoreContext: { getStore: () => RelayStore } = getContext("relayStore");
   let relayStore = relayStoreContext.getStore();
@@ -20,8 +26,21 @@
   export let unselectMessage: () => void;
 
   $: fromMe = message.authorKey === myPubKeyB64;
+
+  function handleClick() {
+    if (isMobile()) return;
+
+    dispatch("select", message.hash);
+  }
+
+  function handlePress() {
+    if (!isMobile()) return;
+
+    dispatch("select", message.hash);
+  }
 </script>
 
+<b>{isSelected}</b>
 {#if message.header}
   <li class="mb-2 mt-auto">
     <div class="text-secondary-400 dark:text-secondary-300 text-center text-xs">
@@ -39,9 +58,9 @@
     class="flex w-full {fromMe ? 'justify-end' : 'justify-start'} {isSelected
       ? 'bg-secondary-500 rounded-b-none rounded-t-xl px-2.5 py-1.5'
       : 'bg-transparent'} border-0 bg-transparent text-left"
-    use:press={{ timeframe: 300, triggerBeforeFinished: false }}
-    on:press
-    on:click|preventDefault
+    use:press={{ timeframe: 300, triggerBeforeFinished: true }}
+    on:press={handlePress}
+    on:click={handleClick}
     aria-pressed={isSelected}
     aria-label={`Message from ${fromMe ? "you" : message.author}`}
   >
