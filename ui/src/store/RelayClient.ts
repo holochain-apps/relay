@@ -211,31 +211,33 @@ export class RelayClient {
   public async getAllAgents(conversationId: string): Promise<{ [key: AgentPubKeyB64]: Profile }> {
     const cellId = this.conversations[conversationId].cell.cell_id;
 
-    const agentsResponse = await this.client.callZome({
+    // Fetcha all AgentPubKeys of agents with profiles
+    const agentsResponse: AgentPubKey[] = await this.client.callZome({
       cell_id: cellId,
       zome_name: "profiles",
       fn_name: "get_agents_with_profile",
       payload: null,
     });
 
-    return await agentsResponse.reduce(
-      async (resultsPromise: { [key: AgentPubKeyB64]: Profile }, a: any) => {
-        const agentRecord = await this.client.callZome({
-          cell_id: cellId,
-          zome_name: "profiles",
-          fn_name: "get_agent_profile",
-          payload: a,
-        });
-        const results = await resultsPromise;
+    // Get profile for each AgentPubKey
+    // If profile not found, exclude from results.
+    const profileEntries = (
+      await Promise.allSettled(
+        agentsResponse.map(async (agentPubKey) => {
+          const record = await this.client.callZome({
+            cell_id: cellId,
+            zome_name: "profiles",
+            fn_name: "get_agent_profile",
+            payload: agentPubKey,
+          });
+          return [encodeHashToBase64(agentPubKey), new EntryRecord<Profile>(record).entry];
+        }),
+      )
+    )
+      .filter((p) => p.status === "fulfilled")
+      .map((p) => p.value);
 
-        if (!!agentRecord?.entry?.Present?.entry) {
-          results[encodeHashToBase64(a)] = decode(agentRecord.entry.Present.entry) as Profile;
-        }
-
-        return results;
-      },
-      Promise.resolve<{ [key: AgentPubKeyB64]: Profile }>({}),
-    );
+    return Object.fromEntries(profileEntries);
   }
 
   async _setConfig(config: Config, cellId: CellId): Promise<null> {
