@@ -31,6 +31,8 @@
 
   let agentProfiles: { [key: AgentPubKeyB64]: Profile } = {};
   let numMembers = 0;
+  let selectedMessageHash: string | null = null;
+
   let unsubscribe: Unsubscriber;
 
   let configTimeout: NodeJS.Timeout;
@@ -207,30 +209,6 @@
       setTimeout(scrollToBottom, 100);
       conversationMessageInputRef.focus();
     }
-  }
-
-  let selectedMessageHash: string | null = null;
-
-  function clickOutside(node: HTMLElement, callback: () => void) {
-    const handleClick = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (
-        node &&
-        !node.contains(target) &&
-        !target.closest("[data-message-actions]") &&
-        !target.closest("[data-message-selection]")
-      ) {
-        callback();
-      }
-    };
-
-    document.addEventListener("click", handleClick, true);
-
-    return {
-      destroy() {
-        document.removeEventListener("click", handleClick, true);
-      },
-    };
   }
 </script>
 

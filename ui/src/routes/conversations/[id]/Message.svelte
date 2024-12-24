@@ -67,7 +67,6 @@
   class="mt-auto {!message.hideDetails && 'mt-3'} relative {isSelected
     ? 'bg-secondary-500 mb-20 mt-2 rounded-t-xl'
     : ''}"
-  data-message-selection={isSelected ? "true" : undefined}
 >
   <button
     class="flex w-full {fromMe ? 'justify-end' : 'justify-start'} {isSelected
@@ -129,8 +128,6 @@
   </button>
 
   {#if isSelected}
-    <div data-message-actions>
-      <MessageActions {message} on:unselect />
-    </div>
+    <MessageActions {message} on:unselect />
   {/if}
 </li>
