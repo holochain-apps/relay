@@ -21,10 +21,7 @@
   });
 </script>
 
-<Header>
-  <button class="absolute z-10 pr-5 text-4xl" on:click={() => goto("/conversations")}
-    ><SvgIcon icon="caretLeft" color={$modeCurrent ? "%232e2e2e" : "white"} size="10" /></button
-  >
+<Header backUrl="/conversations">
   <h1 class="flex-1 text-center">{$t("conversations.archive")}</h1>
 </Header>
 

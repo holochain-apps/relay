@@ -58,11 +58,7 @@
   });
 </script>
 
-<Header>
-  <button class="pr-5 text-4xl" on:click={() => history.back()}
-    ><SvgIcon icon="caretLeft" color={$modeCurrent ? "%232e2e2e" : "white"} size="10" /></button
-  >
-</Header>
+<Header back />
 
 {#if $prof && $prof.status === "complete" && $prof.value}
   <div class="flex w-full grow flex-col items-center pt-10">

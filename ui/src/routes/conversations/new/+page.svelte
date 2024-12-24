@@ -36,10 +36,7 @@
   $: valid = title.trim().length >= MIN_TITLE_LENGTH;
 </script>
 
-<Header>
-  <button class="absolute z-10 pr-5 text-4xl" on:click={() => history.back()}
-    ><SvgIcon icon="caretLeft" color={$modeCurrent ? "%232e2e2e" : "white"} size="10" /></button
-  >
+<Header back>
   <h1 class="flex-1 text-center">{$t("common.new_group")}</h1>
 </Header>
 

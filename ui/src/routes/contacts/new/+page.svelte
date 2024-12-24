@@ -16,10 +16,7 @@
   loadScanResult();
 </script>
 
-<Header>
-  <button class="absolute z-10 pr-5 text-4xl" on:click={() => goto("/create")}>
-    <SvgIcon icon="caretLeft" color={$modeCurrent ? "%232e2e2e" : "white"} size="10" />
-  </button>
+<Header backUrl="/create">
   <h1 class="flex-1 text-center">{$t("contacts.create_new_contact")}</h1>
   {#if isMobile()}
     <div class="absolute right-0">
